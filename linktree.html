@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#121712">
+  <title>Creator links</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root { color-scheme: dark; font-family: 'DM Sans',sans-serif; background: #121712; color: #f0f3ed; font-synthesis: none; }
+    * { box-sizing: border-box; }
+    body { display: grid; min-width: 320px; min-height: 100vh; place-items: center; margin: 0; padding: 28px 16px; background: radial-gradient(ellipse at 50% -18%, #34422e 0, transparent 54%), #121712; }
+    .linktree { width: min(100%,420px); animation: arrive .45s ease-out both; }
+    .linktree-card { padding: 34px 25px 24px; border: 1px solid #ffffff20; border-radius: 17px; text-align: center; box-shadow: 0 28px 80px #0005; }
+    .avatar { display: grid; width: 94px; height: 94px; place-items: center; overflow: hidden; margin: 0 auto 18px; border: 2px solid #ffffff48; border-radius: 50%; background: #ffffff19; font: 600 25px 'Space Grotesk',sans-serif; }
+    .avatar img { width: 100%; height: 100%; object-fit: cover; }
+    h1 { margin: 0; font: 600 27px 'Space Grotesk',sans-serif; letter-spacing: 0; overflow-wrap: anywhere; }
+    .handle { margin: 7px 0 0; opacity: .7; font-size: 12px; }
+    .bio { margin: 17px 0 22px; font-size: 13px; line-height: 1.65; white-space: pre-wrap; overflow-wrap: anywhere; }
+    .links { display: grid; gap: 11px; }
+    .profile-link { display: flex; min-height: 54px; align-items: center; gap: 12px; padding: 9px 15px; border: 1px solid transparent; color: inherit; text-align: left; text-decoration: none; transition: transform .16s ease, filter .16s ease; }
+    .profile-link:hover { filter: brightness(1.1); transform: translateY(-2px); }
+    .profile-link:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
+    .link-icon { display: grid; width: 30px; height: 30px; flex: 0 0 30px; place-items: center; border-radius: 50%; background: #00000018; font-size: 12px; font-weight: 700; }
+    .link-label { flex: 1; font-size: 13px; font-weight: 600; }
+    .link-arrow { opacity: .62; }
+    .solid { background: var(--button); color: var(--button-text); }
+    .outline { border-color: currentColor; background: transparent; }
+    .glass { border-color: #ffffff38; background: #ffffff14; backdrop-filter: blur(8px); }
+    .square { border-radius: 4px; }.rounded { border-radius: 9px; }.pill { border-radius: 99px; }
+    .footer { margin: 25px 0 0; color: #a8b0a5; font-size: 10px; text-align: center; }
+    .footer a { color: inherit; text-decoration: none; }
+    .empty { width: min(100%,430px); padding: 25px; border: 1px solid #ffffff20; border-radius: 12px; background: #191e19; }
+    .empty h1 { font-size: 20px; }.empty p { margin: 10px 0 0; color: #a8b0a5; font-size: 13px; line-height: 1.6; }
+    @keyframes arrive { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    @media (max-width: 440px) { body { padding: 16px 12px; }.linktree-card { padding: 28px 18px 20px; } }
+    @media (prefers-reduced-motion: reduce) { *,*::before,*::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; } }
+  </style>
+</head>
+<body>
+  <main class="linktree" id="linktree-root" aria-live="polite"></main>
+  <script>
+    (() => {
+      const icons = { play: '▶', stream: '◉', camera: '◎', chat: '✦', music: '♫', link: '↗', mail: '@', shop: '◇', community: '✳' };
+      const escapeHtml = value => String(value || '').replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]);
+      const validColor = (value, fallback) => /^#[\da-f]{6}$/i.test(value || '') ? value : fallback;
+      const safeUrl = value => {
+        const input = String(value || '').trim();
+        try { const url = new URL(input); return ['https:', 'http:'].includes(url.protocol) ? url.href : ''; }
+        catch { return /^mailto:[^\s@]+@[^\s@]+$/i.test(input) ? input : ''; }
+      };
+      const safeImage = value => {
+        try { const url = new URL(String(value || '')); return url.protocol === 'https:' ? url.href : ''; }
+        catch { return ''; }
+      };
+      const root = document.getElementById('linktree-root');
+      let profile;
+      try { profile = JSON.parse(new URLSearchParams(location.hash.slice(1)).get('p') || 'null'); }
+      catch {}
+      if (!profile || typeof profile !== 'object') {
+        root.innerHTML = '<section class="empty"><h1>Linktree unavailable</h1><p>This link does not contain a Linktree profile. Ask the creator to share their Linktree URL again.</p></section>';
+        return;
+      }
+      const name = String(profile.name || 'Creator').slice(0, 60);
+      const handle = String(profile.handle || '').slice(0, 60);
+      const bio = String(profile.bio || '').slice(0, 320);
+      const avatarUrl = safeImage(profile.avatarUrl);
+      const background = validColor(profile.backgroundColor, '#121712');
+      const text = validColor(profile.textColor, '#f0f3ed');
+      const button = validColor(profile.buttonColor, '#c6f36b');
+      const buttonText = validColor(profile.buttonTextColor, '#17200f');
+      const style = ['solid', 'outline', 'glass'].includes(profile.buttonStyle) ? profile.buttonStyle : 'solid';
+      const shape = ['rounded', 'square', 'pill'].includes(profile.linkShape) ? profile.linkShape : 'rounded';
+      const tracking = profile.tracking && typeof profile.tracking === 'object' ? profile.tracking : {};
+      const trackingEndpoint = (() => {
+        try {
+          const url = new URL(String(tracking.endpoint || ''));
+          return url.protocol === 'https:' || ['localhost', '127.0.0.1'].includes(url.hostname) ? url.href : '';
+        } catch { return ''; }
+      })();
+      const trackingAnonKey = typeof tracking.anonKey === 'string' && tracking.anonKey.length <= 4096 ? tracking.anonKey : '';
+      const initials = name.split(/\s+/).slice(0, 2).map(part => part[0] || '').join('').toUpperCase() || 'C';
+      const avatar = avatarUrl ? `<img src="${escapeHtml(avatarUrl)}" alt="${escapeHtml(name)}">` : escapeHtml(initials);
+      const links = Array.isArray(profile.links) ? profile.links.slice(0, 20).map(link => {
+        const href = safeUrl(link.url);
+        const label = String(link.label || '').slice(0, 80);
+        if (!href || !label) return '';
+        const external = href.startsWith('mailto:') ? '' : ' target="_blank" rel="noopener noreferrer"';
+        const trackingId = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(link.id || '')) ? ` data-track-link="${escapeHtml(link.id)}"` : '';
+        return `<a class="profile-link ${style} ${shape}" style="--button:${escapeHtml(button)};--button-text:${escapeHtml(buttonText)}" href="${escapeHtml(href)}"${trackingId}${external}><span class="link-icon">${escapeHtml(icons[link.icon] || icons.link)}</span><span class="link-label">${escapeHtml(label)}</span><span class="link-arrow" aria-hidden="true">↗</span></a>`;
+      }).join('') : '';
+      document.title = `${name} · Linktree`;
+      document.querySelector('meta[name="theme-color"]').content = background;
+      root.innerHTML = `<section class="linktree-card" style="background:${escapeHtml(background)};color:${escapeHtml(text)}"><div class="avatar">${avatar}</div><h1>${escapeHtml(name)}</h1>${handle ? `<p class="handle">${escapeHtml(handle.startsWith('@') ? handle : `@${handle}`)}</p>` : ''}${bio ? `<p class="bio">${escapeHtml(bio)}</p>` : ''}<nav class="links" aria-label="${escapeHtml(name)} links">${links}</nav></section><p class="footer">CREATOR LINKS</p>`;
+      if (trackingEndpoint && trackingAnonKey && !new URLSearchParams(location.search).has('preview')) {
+        root.addEventListener('click', event => {
+          const anchor = event.target.closest('a[data-track-link]');
+          if (!anchor) return;
+          fetch(trackingEndpoint, {
+            method: 'POST',
+            mode: 'cors',
+            keepalive: true,
+            headers: { 'Content-Type': 'application/json', apikey: trackingAnonKey },
+            body: JSON.stringify({ action: 'track', linkId: anchor.dataset.trackLink })
+          }).catch(() => {});
+        });
+      }
+    })();
+  </script>
+</body>
+</html>

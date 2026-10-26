@@ -1,0 +1,24 @@
+{
+  "name": "Your creator name",
+  "handle": "",
+  "bio": "",
+  "avatarUrl": "",
+  "backgroundColor": "#121712",
+  "textColor": "#f0f3ed",
+  "buttonColor": "#c6f36b",
+  "buttonTextColor": "#17200f",
+  "buttonStyle": "solid",
+  "linkShape": "rounded",
+  "links": [],
+  "website": {
+    "tagline": "The stream starts here.",
+    "heroImage": "",
+    "primaryCta": "Watch on Twitch",
+    "twitchUrl": "",
+    "aboutHeading": "Pull up a chair",
+    "about": "",
+    "schedule": [],
+    "featured": [],
+    "products": []
+  }
+}
