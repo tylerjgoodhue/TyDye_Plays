@@ -221,8 +221,14 @@ async function initializePublicProfile() {
     if (error) throw error;
     const currentProfiles = storage()?.getPublicCreatorProfiles?.() || { website: storage()?.getPublicCreatorProfile?.() };
     if (data?.profile) {
-      storage()?.restorePublicCreatorProfiles?.(data.profile);
-      lastPublishedPublicProfile = JSON.stringify(storage()?.getPublicCreatorProfiles?.() || currentProfiles);
+      const hasProfileEnvelope = data.profile.website && typeof data.profile.website === 'object' && data.profile.linktree && typeof data.profile.linktree === 'object';
+      const savedProfiles = hasProfileEnvelope
+        ? data.profile
+        : { website: data.profile, linktree: currentProfiles.linktree || {} };
+      storage()?.restorePublicCreatorProfiles?.(savedProfiles);
+      const restoredProfiles = storage()?.getPublicCreatorProfiles?.() || currentProfiles;
+      lastPublishedPublicProfile = JSON.stringify(data.profile);
+      if (!hasProfileEnvelope) queuePublicProfileSync(restoredProfiles);
       setPublicProfileStatus('Database profile loaded. Website edits update the live site automatically.');
     } else if (hasPublicProfileContent(currentProfiles)) {
       queuePublicProfileSync(currentProfiles);

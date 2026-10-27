@@ -961,7 +961,7 @@
         const publicProfile = profilePublicData();
         const publicProfileSnapshot = JSON.stringify(publicCreatorProfilesData());
         if (lastPublicProfileSnapshot !== null && publicProfileSnapshot !== lastPublicProfileSnapshot && !options.skipPublicProfile) {
-          window.CreatorHQCloud?.queuePublicProfileSync?.(publicProfile);
+          window.CreatorHQCloud?.queuePublicProfileSync?.(publicCreatorProfilesData());
         }
         lastPublicProfileSnapshot = publicProfileSnapshot;
       }
@@ -1841,12 +1841,12 @@
               handle: savedWebsite.handle || current.website.handle,
               bio: savedWebsite.bio || current.website.bio,
               avatarUrl: savedWebsite.avatarUrl || current.website.avatarUrl,
-              backgroundColor: websiteDetails.backgroundColor || savedWebsite.backgroundColor || '#121712',
-              textColor: websiteDetails.textColor || savedWebsite.textColor || '#f0f3ed',
-              buttonColor: websiteDetails.buttonColor || savedWebsite.buttonColor || '#c6f36b',
-              buttonTextColor: websiteDetails.buttonTextColor || savedWebsite.buttonTextColor || '#17200f',
-              buttonStyle: websiteDetails.buttonStyle || savedWebsite.buttonStyle || 'solid',
-              linkShape: websiteDetails.linkShape || savedWebsite.linkShape || 'rounded'
+              backgroundColor: websiteDetails.backgroundColor || savedWebsite.backgroundColor || current.website.backgroundColor || '#121712',
+              textColor: websiteDetails.textColor || savedWebsite.textColor || current.website.textColor || '#f0f3ed',
+              buttonColor: websiteDetails.buttonColor || savedWebsite.buttonColor || current.website.buttonColor || '#c6f36b',
+              buttonTextColor: websiteDetails.buttonTextColor || savedWebsite.buttonTextColor || current.website.buttonTextColor || '#17200f',
+              buttonStyle: websiteDetails.buttonStyle || savedWebsite.buttonStyle || current.website.buttonStyle || 'solid',
+              linkShape: websiteDetails.linkShape || savedWebsite.linkShape || current.website.linkShape || 'rounded'
             }
           });
           saveState({ skipCloud: true, skipPublicProfile: true });
