@@ -403,7 +403,9 @@
           });
           if (response.ok) {
             const liveProfile = await response.json();
-            if (liveProfile && typeof liveProfile === 'object') profile = liveProfile;
+            if (liveProfile && typeof liveProfile === 'object') {
+              profile = liveProfile.website?.website ? liveProfile.website : liveProfile;
+            }
           }
         } catch {}
       }
