@@ -1386,6 +1386,7 @@
           linkShape: ['rounded', 'square', 'pill'].includes(profile.linkShape) ? profile.linkShape : 'rounded',
           links: [],
           website: {
+            heroTitleImage: profileImageUrl(website.heroTitleImage),
             tagline: String(website.tagline || '').slice(0, 100), heroImage: profileImageUrl(website.heroImage), twitchUrl: profileImageUrl(website.twitchUrl),
             aboutHeading: String(website.aboutHeading || '').slice(0, 80),
             about: String(website.about || '').slice(0, 1200), schedule: websiteScheduleData(),
@@ -1791,6 +1792,13 @@
       }
       function renderCreatorProfile() {
         const profile = state.creatorProfile.website;
+        const heroImageField = document.querySelector('#creator-profile-hero-image')?.closest('.form-field');
+        if (heroImageField && !document.querySelector('[data-website-field="heroTitleImage"]')) {
+          const titleImageField = document.createElement('div');
+          titleImageField.className = 'form-field full';
+          titleImageField.innerHTML = '<label for="creator-profile-hero-title-image">Hero title image URL</label><input id="creator-profile-hero-title-image" data-website-field="heroTitleImage" type="url" maxlength="500" placeholder="https://..." inputmode="url">';
+          heroImageField.after(titleImageField);
+        }
         for (const field of ['name', 'handle', 'bio', 'avatarUrl', 'backgroundColor', 'textColor', 'buttonColor', 'buttonTextColor', 'buttonStyle', 'linkShape']) {
           const input = document.querySelector(`[data-website-profile-field="${field}"]`);
           if (input) input.value = profile[field] || (field === 'name' ? state.settings.handle || state.settings.name || state.profile?.name || '' : '');
