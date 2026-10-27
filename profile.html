@@ -252,6 +252,10 @@
     .site-featured .site-feature-meta { margin: 0 0 6px; font-size: 8px; }
     .site-featured .site-feature h3 { margin: 0; font-size: 13px; line-height: 1.35; overflow-wrap: anywhere; }
     .site-featured .site-feature p { margin: 5px 0 0; font-size: 10px; line-height: 1.45; }
+    .site-featured .site-feature:only-child { display: block; grid-template-columns: none; align-items: initial; max-width: none; }
+    .site-featured .site-feature:only-child .site-feature-image-wrap { height: auto; min-height: 0; aspect-ratio: 16/9; }
+    .site-featured .site-feature:only-child h3 { margin: 0; font-size: 13px; }
+    .site-featured .site-feature:only-child p { margin: 5px 0 0; font-size: 10px; }
     .site-feature-carousel { margin-top: 20px; }
     .site-feature-carousel[hidden], .site-feature-slide[hidden] { display: none !important; }
     .site-feature-carousel-controls { display: flex; align-items: center; justify-content: flex-end; gap: 9px; margin-bottom: 10px; }
