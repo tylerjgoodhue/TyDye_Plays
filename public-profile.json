@@ -10,6 +10,11 @@
   "buttonStyle": "solid",
   "linkShape": "rounded",
   "links": [],
+  "publication": {
+    "supabaseUrl": "https://asqszzgunsrdclunbxfq.supabase.co",
+    "anonKey": "sb_publishable_dzWKZDTMUAZhiIkYvz3fFg_oehHq33-",
+    "userId": "85667610-fdd2-47af-9f90-354fe0123076"
+  },
   "website": {
     "tagline": "The stream starts here.",
     "heroImage": "",

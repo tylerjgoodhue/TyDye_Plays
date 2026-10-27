@@ -27,6 +27,13 @@ let platformCallbackNotices = {};
 let lastSocialAnalyticsRefresh = 0;
 let lastPlatformMetricsRefresh = 0;
 let analyticsRefreshPromise = null;
+let publicProfileConfigPromise = null;
+let publicProfileSyncTimer = null;
+let publicProfileSyncPromise = null;
+let pendingPublicProfile = null;
+let lastPublishedPublicProfile = '';
+let publicProfileCheckedForUser = null;
+let publicProfileCheckPromise = null;
 let bufferCalendarMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
 let bufferQueueView = 'list';
 
@@ -76,8 +83,10 @@ function setAccountState() {
     socialLinksSyncedForUser = session.user.id;
     syncSocialLinks().catch(error => setSocialAnalyticsStatus(error.message || 'Could not register social links.'));
     loadPlatformAccounts().catch(error => setPlatformAccountsStatus(error.message || 'Could not load platform accounts.'));
+    initializePublicProfile();
   } else if (!session?.user) {
     socialLinksSyncedForUser = null;
+    publicProfileCheckedForUser = null;
     platformAccounts = [];
     platformMetrics = [];
     setSocialAnalyticsStatus('Sign in to view private social click analytics.');
@@ -168,6 +177,107 @@ function queueSync() {
   syncTimer = setTimeout(flushSync, 700);
 }
 
+async function getPublicProfileConfig() {
+  if (!publicProfileConfigPromise) {
+    const basePath = window.CREATOR_HQ_PUBLIC_BASE || '/';
+    const configUrl = new URL(`${basePath.replace(/\/$/, '')}/public-profile.json`, window.location.origin);
+    publicProfileConfigPromise = fetch(configUrl, { cache: 'no-store' })
+      .then(response => response.ok ? response.json() : null)
+      .then(config => config?.publication || null)
+      .catch(() => null);
+  }
+  return publicProfileConfigPromise;
+}
+
+function setPublicProfileStatus(text) {
+  const node = document.getElementById('creator-profile-publish-status');
+  if (node) node.textContent = text;
+}
+
+function hasPublicProfileContent(profile) {
+  if (!profile) return false;
+  const website = profile.website || {};
+  const name = String(profile.name || '').trim();
+  return Boolean(
+    (name && !['Your name', 'Your creator name', 'Creator'].includes(name)) ||
+    profile.handle || profile.bio || profile.avatarUrl ||
+    website.tagline || website.heroImage || website.twitchUrl || website.about ||
+    (website.featured || []).length || (website.products || []).length
+  );
+}
+
+async function initializePublicProfile() {
+  if (!client || !session?.user || publicProfileCheckedForUser === session.user.id || publicProfileCheckPromise) return publicProfileCheckPromise;
+  const userId = session.user.id;
+  publicProfileCheckPromise = (async () => {
+    const config = await getPublicProfileConfig();
+    if (!config?.userId || userId !== config.userId) {
+      setPublicProfileStatus('Signed in, but this account does not own the public site.');
+      return;
+    }
+    const { data, error } = await client.from('creator_public_profiles').select('profile').eq('user_id', userId).maybeSingle();
+    if (error) throw error;
+    const currentProfile = storage()?.getPublicCreatorProfile?.();
+    if (data?.profile) {
+      lastPublishedPublicProfile = JSON.stringify(data.profile);
+      if (hasPublicProfileContent(currentProfile) && JSON.stringify(currentProfile) !== lastPublishedPublicProfile) {
+        queuePublicProfileSync(currentProfile);
+      } else {
+        setPublicProfileStatus('Live site is connected. Public website edits update automatically.');
+      }
+    } else if (hasPublicProfileContent(currentProfile)) {
+      queuePublicProfileSync(currentProfile);
+    } else {
+      setPublicProfileStatus('Connected. Edit public website content to publish the first live version.');
+    }
+    publicProfileCheckedForUser = userId;
+  })().catch(error => {
+    setPublicProfileStatus(error.message || 'Could not check the live profile.');
+  }).finally(() => { publicProfileCheckPromise = null; });
+  return publicProfileCheckPromise;
+}
+
+function queuePublicProfileSync(profile = storage()?.getPublicCreatorProfile?.()) {
+  if (!profile) return;
+  pendingPublicProfile = structuredClone(profile);
+  clearTimeout(publicProfileSyncTimer);
+  if (!client || !session?.user) {
+    setPublicProfileStatus('Saved in this browser. Sign in to Supabase here to update the live site automatically.');
+    return;
+  }
+  setPublicProfileStatus('Changes saved. Updating the live site…');
+  publicProfileSyncTimer = setTimeout(() => { publishPendingPublicProfile(); }, 900);
+}
+
+async function publishPendingPublicProfile() {
+  if (publicProfileSyncPromise || !pendingPublicProfile) return publicProfileSyncPromise;
+  const profile = pendingPublicProfile;
+  pendingPublicProfile = null;
+  publicProfileSyncPromise = (async () => {
+    if (!client || !session?.user) throw new Error('Connect and sign in to Supabase to publish website changes.');
+    const config = await getPublicProfileConfig();
+    if (!config?.userId || !config.supabaseUrl || !config.anonKey) throw new Error('The public profile config is missing its Supabase publication settings. Download and deploy a fresh public-profile.json.');
+    if (session.user.id !== config.userId) throw new Error('Sign in with the Supabase account that owns this public site.');
+    const profileText = JSON.stringify(profile);
+    if (new TextEncoder().encode(profileText).byteLength > 500_000) throw new Error('The public profile is too large to publish. Reduce its text or product details.');
+    if (profileText === lastPublishedPublicProfile) return;
+    const { error } = await client.from('creator_public_profiles').upsert({
+      user_id: session.user.id,
+      profile,
+      updated_at: new Date().toISOString()
+    }, { onConflict: 'user_id' });
+    if (error) throw error;
+    lastPublishedPublicProfile = profileText;
+    setPublicProfileStatus(`Live site updated at ${new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}.`);
+  })().catch(error => {
+    setPublicProfileStatus(error.message || 'Could not update the live site.');
+  }).finally(() => {
+    publicProfileSyncPromise = null;
+    if (pendingPublicProfile) queuePublicProfileSync(pendingPublicProfile);
+  });
+  return publicProfileSyncPromise;
+}
+
 function publicTrackingConfig() {
   const config = readConfig();
   if (!config.url || !config.anonKey) return null;
@@ -176,6 +286,8 @@ function publicTrackingConfig() {
 
 window.CreatorHQCloud = {
   queueSync,
+  queuePublicProfileSync,
+  getPublicProfileConfig,
   publicTrackingConfig,
   syncSocialLinks,
   loadSocialAnalytics,

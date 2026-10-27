@@ -788,7 +788,7 @@
         </section>
 
         <section class="view" id="view-website" hidden>
-          <div class="page-heading"><div><div class="eyebrow">Your public-facing creator home</div><h1>Twitch creator website</h1><p class="subtitle">Edit your public-facing site and export its publish file. Private workspace data is never included.</p></div><div class="button-row"><button class="button" id="profile-open-link">Preview website</button><button class="button" id="profile-download-config">Download publish file</button><button class="button primary" id="profile-copy-link">Copy website link</button></div></div>
+          <div class="page-heading"><div><div class="eyebrow">Your public-facing creator home</div><h1>Twitch creator website</h1><p class="subtitle">Changes publish automatically when you are signed in to the connected Supabase account. Private workspace data is never included.</p></div><div class="button-row"><button class="button" id="profile-open-link">Preview website</button><button class="button" id="profile-download-config">Download publish file</button><button class="button primary" id="profile-copy-link">Copy website link</button></div></div>
           <div class="shop-panel" id="shop-panel-products">
           <div class="profile-builder-grid">
             <div class="profile-builder-form">
@@ -796,7 +796,7 @@
               <article class="panel"><div class="panel-head"><div class="panel-title"><h2>About and schedule</h2></div></div><div class="panel-body"><div class="form-grid"><div class="form-field full"><label for="creator-profile-about-heading">About section heading</label><input id="creator-profile-about-heading" data-website-field="aboutHeading" maxlength="80" placeholder="Pull up a chair"></div><div class="form-field full"><label for="creator-profile-about">About the stream</label><textarea id="creator-profile-about" data-website-field="about" maxlength="1200" placeholder="What do you stream? What should a new viewer expect?"></textarea></div><div class="form-field full"><label>Website stream schedule</label><div id="website-schedule-preview" class="website-schedule-preview"></div><p class="settings-hint" style="margin:0">This list updates automatically from Stream Schedule and your weekly rhythm in Settings.</p></div></div></div></article>
               <article class="panel"><div class="panel-head"><div class="panel-title"><h2>Featured videos and links</h2></div><button class="mini-button" id="profile-add-featured" aria-label="Add featured video" title="Add featured video"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 5v14M5 12h14"/></svg></button></div><div class="panel-body"><div class="profile-link-list" id="creator-profile-featured"></div></div></article>
               <article class="panel"><div class="panel-head"><div class="panel-title"><h2>Website appearance</h2></div></div><div class="panel-body"><div class="form-grid"><div class="form-field"><label for="creator-profile-background">Page color</label><input class="profile-color-input" id="creator-profile-background" data-website-profile-field="backgroundColor" type="color"></div><div class="form-field"><label for="creator-profile-text-color">Text color</label><input class="profile-color-input" id="creator-profile-text-color" data-website-profile-field="textColor" type="color"></div><div class="form-field"><label for="creator-profile-button-color">Accent color</label><input class="profile-color-input" id="creator-profile-button-color" data-website-profile-field="buttonColor" type="color"></div><div class="form-field"><label for="creator-profile-button-text">Button text color</label><input class="profile-color-input" id="creator-profile-button-text" data-website-profile-field="buttonTextColor" type="color"></div><div class="form-field"><label for="creator-profile-button-style">Button treatment</label><select id="creator-profile-button-style" data-website-profile-field="buttonStyle"><option value="solid">Solid</option><option value="outline">Outline</option><option value="glass">Glass</option></select></div><div class="form-field"><label for="creator-profile-link-shape">Button shape</label><select id="creator-profile-link-shape" data-website-profile-field="linkShape"><option value="rounded">Rounded</option><option value="square">Square</option><option value="pill">Pill</option></select></div></div></div></article>
-              <article class="panel"><div class="panel-body"><p class="settings-hint">This website has its own public URL and settings, separate from your Linktree page.</p><input class="field-control profile-share-url" id="creator-profile-share-url" readonly aria-label="Creator website URL"><div class="button-row" style="margin-top:10px"><button class="button" id="profile-copy-link-bottom">Copy website link</button><button class="button" id="profile-open-link-bottom">Open website</button></div></div></article>
+              <article class="panel"><div class="panel-body"><p class="settings-hint">This website has its own public URL and settings, separate from your Linktree page.</p><p class="settings-hint" id="creator-profile-publish-status" role="status" aria-live="polite">Connect and sign in to Supabase to publish changes automatically.</p><input class="field-control profile-share-url" id="creator-profile-share-url" readonly aria-label="Creator website URL"><div class="button-row" style="margin-top:10px"><button class="button" id="profile-copy-link-bottom">Copy website link</button><button class="button" id="profile-open-link-bottom">Open website</button></div></div></article>
             </div>
             <article class="panel"><div class="panel-head"><div class="panel-title"><h2>Website preview</h2></div><span class="nav-count">PUBLIC WEBSITE</span></div><div class="panel-body"><div class="profile-preview-stage"><iframe class="profile-preview-frame" id="creator-profile-preview" title="Live creator website preview"></iframe></div></div></article>
           </div>
@@ -907,6 +907,7 @@
         } catch { return false; }
       })();
       let state = loadState();
+      let lastPublicProfileSnapshot = null;
       if (needsSocialLinkIdMigration) {
         try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); }
         catch (error) { console.warn('Could not persist social link tracking IDs', error); }
@@ -956,6 +957,12 @@
         try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); }
         catch (error) { console.error('Unable to save Creator HQ data', error); toast('Could not save. Check available browser storage.'); }
         if (!options.skipCloud) window.CreatorHQCloud?.queueSync?.();
+        const publicProfile = profilePublicData();
+        const publicProfileSnapshot = JSON.stringify(publicProfile);
+        if (lastPublicProfileSnapshot !== null && publicProfileSnapshot !== lastPublicProfileSnapshot && !options.skipPublicProfile) {
+          window.CreatorHQCloud?.queuePublicProfileSync?.(publicProfile);
+        }
+        lastPublicProfileSnapshot = publicProfileSnapshot;
       }
       function normalizeCreatorProfile(profile) {
         const source = profile && typeof profile === 'object' ? profile : {};
@@ -1404,6 +1411,7 @@
           links: profile.links.slice(0, 20).map(link => ({ id: link.id, label: String(link.label || '').slice(0, 80), url: safeProfileLink(link.url), icon: PROFILE_LINK_ICONS[link.icon] ? link.icon : 'link' }))
         };
       }
+      lastPublicProfileSnapshot = JSON.stringify(profilePublicData());
       function profileCardMarkup(profile, includeEmpty = false) {
         const avatar = profile.avatarUrl
           ? `<img src="${escapeHtml(profile.avatarUrl)}" alt="${escapeHtml(profile.name)}">`
@@ -1803,6 +1811,7 @@
       function renderAll() { applyAccent(); renderProfile(); renderDashboard(); renderTaskBoard(); renderSchedule(); renderContentBoard(); renderIdeas(); renderGoals(); renderRoutines(); renderAssets(); renderAnalytics(); renderCommunity(); renderNotifications(); renderCrm(); renderSettings(); renderCreatorProfile(); renderLinktree(); }
       window.CreatorHQStorage = {
         getWorkspace: () => structuredClone(state),
+        getPublicCreatorProfile: () => profilePublicData(),
         refreshAnalytics: () => renderAnalytics(),
         renderAnalyticsReport: () => renderPlatformReport(new Map((window.CreatorHQCloud?.getPlatformAccounts?.() || []).map(account => [account.provider, account]))),
         refreshSocialLinks: () => { renderCreatorProfileLinks(); renderLinktreePreview(); },
@@ -2337,8 +2346,10 @@
         }
       };
       const openProfileLink = () => window.open(profileShareUrl(), '_blank', 'noopener,noreferrer');
-      const downloadPublicProfileConfig = () => {
-        const content = JSON.stringify(profilePublicData(), null, 2);
+      const downloadPublicProfileConfig = async () => {
+        const publication = await window.CreatorHQCloud?.getPublicProfileConfig?.();
+        const publicProfile = { ...profilePublicData(), ...(publication ? { publication } : {}) };
+        const content = JSON.stringify(publicProfile, null, 2);
         const url = URL.createObjectURL(new Blob([content], { type: 'application/json' }));
         const link = document.createElement('a');
         link.href = url;
