@@ -958,7 +958,7 @@
         catch (error) { console.error('Unable to save Creator HQ data', error); toast('Could not save. Check available browser storage.'); }
         if (!options.skipCloud) window.CreatorHQCloud?.queueSync?.();
         const publicProfile = profilePublicData();
-        const publicProfileSnapshot = JSON.stringify(publicProfile);
+        const publicProfileSnapshot = JSON.stringify(publicCreatorProfilesData());
         if (lastPublicProfileSnapshot !== null && publicProfileSnapshot !== lastPublicProfileSnapshot && !options.skipPublicProfile) {
           window.CreatorHQCloud?.queuePublicProfileSync?.(publicProfile);
         }
@@ -1411,7 +1411,10 @@
           links: profile.links.slice(0, 20).map(link => ({ id: link.id, label: String(link.label || '').slice(0, 80), url: safeProfileLink(link.url), icon: PROFILE_LINK_ICONS[link.icon] ? link.icon : 'link' }))
         };
       }
-      lastPublicProfileSnapshot = JSON.stringify(profilePublicData());
+      function publicCreatorProfilesData() {
+        return { website: profilePublicData(), linktree: linktreePublicData() };
+      }
+      lastPublicProfileSnapshot = JSON.stringify(publicCreatorProfilesData());
       function profileCardMarkup(profile, includeEmpty = false) {
         const avatar = profile.avatarUrl
           ? `<img src="${escapeHtml(profile.avatarUrl)}" alt="${escapeHtml(profile.name)}">`
@@ -1425,6 +1428,9 @@
         return `${pageUrl.href}#p=${encodeURIComponent(JSON.stringify(profile))}`;
       }
       function linktreeShareUrl() {
+        return new URL('linktree.html', new URL(window.CREATOR_HQ_PUBLIC_BASE || '/', window.location.origin)).href;
+      }
+      function linktreePreviewUrl() {
         const profile = linktreePublicData();
         const pageUrl = new URL('linktree.html', new URL(window.CREATOR_HQ_PUBLIC_BASE || '/', window.location.origin));
         return `${pageUrl.href}#p=${encodeURIComponent(JSON.stringify(profile))}`;
@@ -1777,7 +1783,7 @@
       }
       function renderLinktreePreview() {
         const frame = document.getElementById('linktree-preview');
-        const source = linktreeShareUrl();
+        const source = linktreePreviewUrl();
         const previewUrl = new URL(source);
         previewUrl.searchParams.set('preview', String(Date.now()));
         if (frame && frame.getAttribute('src') !== previewUrl.href) frame.src = previewUrl.href;
@@ -1812,6 +1818,7 @@
       window.CreatorHQStorage = {
         getWorkspace: () => structuredClone(state),
         getPublicCreatorProfile: () => profilePublicData(),
+        getPublicCreatorProfiles: () => publicCreatorProfilesData(),
         refreshAnalytics: () => renderAnalytics(),
         renderAnalyticsReport: () => renderPlatformReport(new Map((window.CreatorHQCloud?.getPlatformAccounts?.() || []).map(account => [account.provider, account]))),
         refreshSocialLinks: () => { renderCreatorProfileLinks(); renderLinktreePreview(); },

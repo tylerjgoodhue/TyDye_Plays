@@ -196,13 +196,15 @@ function setPublicProfileStatus(text) {
 
 function hasPublicProfileContent(profile) {
   if (!profile) return false;
-  const website = profile.website || {};
-  const name = String(profile.name || '').trim();
+  const website = profile.website || profile;
+  const linktree = profile.linktree || {};
+  const websiteName = String(website.name || '').trim();
+  const linktreeName = String(linktree.name || '').trim();
   return Boolean(
-    (name && !['Your name', 'Your creator name', 'Creator'].includes(name)) ||
-    profile.handle || profile.bio || profile.avatarUrl ||
-    website.tagline || website.heroImage || website.twitchUrl || website.about ||
-    (website.featured || []).length || (website.products || []).length
+    (websiteName && !['Your name', 'Your creator name', 'Creator'].includes(websiteName)) ||
+    website.handle || website.bio || website.avatarUrl || website.website?.tagline || website.tagline || website.website?.heroImage || website.heroImage || website.website?.twitchUrl || website.twitchUrl || website.website?.about || website.about ||
+    (website.website?.featured || website.featured || []).length || (website.website?.products || website.products || []).length ||
+    (linktreeName && !['Your name', 'Your creator name', 'Creator'].includes(linktreeName)) || linktree.handle || linktree.bio || linktree.avatarUrl || (linktree.links || []).some(link => link.label && link.url)
   );
 }
 
@@ -217,16 +219,17 @@ async function initializePublicProfile() {
     }
     const { data, error } = await client.from('creator_public_profiles').select('profile').eq('user_id', userId).maybeSingle();
     if (error) throw error;
-    const currentProfile = storage()?.getPublicCreatorProfile?.();
+    const currentProfiles = storage()?.getPublicCreatorProfiles?.() || { website: storage()?.getPublicCreatorProfile?.() };
     if (data?.profile) {
-      lastPublishedPublicProfile = JSON.stringify(data.profile);
-      if (hasPublicProfileContent(currentProfile) && JSON.stringify(currentProfile) !== lastPublishedPublicProfile) {
-        queuePublicProfileSync(currentProfile);
+      const currentStoredProfile = data.profile.website ? data.profile : { website: data.profile };
+      lastPublishedPublicProfile = JSON.stringify(currentStoredProfile);
+      if (hasPublicProfileContent(currentProfiles) && JSON.stringify(currentProfiles) !== lastPublishedPublicProfile) {
+        queuePublicProfileSync(currentProfiles);
       } else {
         setPublicProfileStatus('Live site is connected. Public website edits update automatically.');
       }
-    } else if (hasPublicProfileContent(currentProfile)) {
-      queuePublicProfileSync(currentProfile);
+    } else if (hasPublicProfileContent(currentProfiles)) {
+      queuePublicProfileSync(currentProfiles);
     } else {
       setPublicProfileStatus('Connected. Edit public website content to publish the first live version.');
     }
@@ -237,7 +240,7 @@ async function initializePublicProfile() {
   return publicProfileCheckPromise;
 }
 
-function queuePublicProfileSync(profile = storage()?.getPublicCreatorProfile?.()) {
+function queuePublicProfileSync(profile = storage()?.getPublicCreatorProfiles?.()) {
   if (!profile) return;
   pendingPublicProfile = structuredClone(profile);
   clearTimeout(publicProfileSyncTimer);

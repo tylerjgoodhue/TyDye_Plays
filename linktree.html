@@ -42,7 +42,7 @@
 <body>
   <main class="linktree" id="linktree-root" aria-live="polite"></main>
   <script>
-    (() => {
+    (async () => {
       const icons = { play: '▶', stream: '◉', camera: '◎', chat: '✦', music: '♫', link: '↗', mail: '@', shop: '◇', community: '✳' };
       const escapeHtml = value => String(value || '').replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]);
       const validColor = (value, fallback) => /^#[\da-f]{6}$/i.test(value || '') ? value : fallback;
@@ -59,8 +59,32 @@
       let profile;
       try { profile = JSON.parse(new URLSearchParams(location.hash.slice(1)).get('p') || 'null'); }
       catch {}
+      let publicConfig;
       if (!profile || typeof profile !== 'object') {
-        root.innerHTML = '<section class="empty"><h1>Linktree unavailable</h1><p>This link does not contain a Linktree profile. Ask the creator to share their Linktree URL again.</p></section>';
+        try {
+          const response = await fetch(new URL('public-profile.json', location.href), { cache: 'no-store' });
+          if (response.ok) publicConfig = await response.json();
+        } catch {}
+      }
+      if ((!new URLSearchParams(location.hash.slice(1)).has('p')) && publicConfig?.publication?.supabaseUrl && publicConfig.publication.anonKey && publicConfig.publication.userId) {
+        try {
+          const publication = publicConfig.publication;
+          const response = await fetch(`${publication.supabaseUrl.replace(/\/$/, '')}/rest/v1/rpc/get_creator_public_linktree`, {
+            method: 'POST',
+            headers: { apikey: publication.anonKey, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ profile_owner: publication.userId }),
+            cache: 'no-store'
+          });
+          if (response.ok) {
+            const liveProfile = await response.json();
+            if (liveProfile && typeof liveProfile === 'object') profile = liveProfile;
+          }
+        } catch {}
+      }
+      if ((!profile || typeof profile !== 'object') && publicConfig?.linktree && typeof publicConfig.linktree === 'object') profile = publicConfig.linktree;
+      if ((!profile || typeof profile !== 'object') && publicConfig && typeof publicConfig === 'object') profile = publicConfig;
+      if (!profile || typeof profile !== 'object') {
+        root.innerHTML = '<section class="empty"><h1>Linktree unavailable</h1><p>The public Linktree profile could not be loaded.</p></section>';
         return;
       }
       const name = String(profile.name || 'Creator').slice(0, 60);
