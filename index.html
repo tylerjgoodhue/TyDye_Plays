@@ -830,7 +830,7 @@
           <div class="profile-builder-grid"><div class="profile-builder-form">
             <article class="panel"><div class="panel-head"><div class="panel-title"><h2>Linktree identity</h2></div></div><div class="panel-body"><div class="form-grid"><div class="form-field"><label for="linktree-name">Display name</label><input id="linktree-name" data-linktree-field="name" maxlength="60" placeholder="Your creator name"></div><div class="form-field"><label for="linktree-handle">Handle</label><input id="linktree-handle" data-linktree-field="handle" maxlength="60" placeholder="@yourhandle"></div><div class="form-field full"><label for="linktree-bio">Short bio</label><textarea id="linktree-bio" data-linktree-field="bio" maxlength="320" placeholder="A short intro for your community"></textarea></div><div class="form-field full"><label for="linktree-avatar">Profile image URL</label><input id="linktree-avatar" data-linktree-field="avatarUrl" type="url" maxlength="500" placeholder="https://..."></div></div></div></article>
             <article class="panel"><div class="panel-head"><div class="panel-title"><h2>Linktree appearance</h2></div></div><div class="panel-body"><div class="form-grid"><div class="form-field"><label for="linktree-background">Page color</label><input class="profile-color-input" id="linktree-background" data-linktree-field="backgroundColor" type="color"></div><div class="form-field"><label for="linktree-text-color">Text color</label><input class="profile-color-input" id="linktree-text-color" data-linktree-field="textColor" type="color"></div><div class="form-field"><label for="linktree-button-color">Link color</label><input class="profile-color-input" id="linktree-button-color" data-linktree-field="buttonColor" type="color"></div><div class="form-field"><label for="linktree-button-text">Link text color</label><input class="profile-color-input" id="linktree-button-text" data-linktree-field="buttonTextColor" type="color"></div><div class="form-field"><label for="linktree-button-style">Link treatment</label><select id="linktree-button-style" data-linktree-field="buttonStyle"><option value="solid">Solid</option><option value="outline">Outline</option><option value="glass">Glass</option></select></div><div class="form-field"><label for="linktree-link-shape">Link shape</label><select id="linktree-link-shape" data-linktree-field="linkShape"><option value="rounded">Rounded</option><option value="square">Square</option><option value="pill">Pill</option></select></div></div></div></article>
-            <article class="panel"><div class="panel-head"><div class="panel-title"><h2>Links</h2></div><button class="mini-button" id="linktree-add-link" aria-label="Add Linktree link" title="Add link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 5v14M5 12h14"/></svg></button></div><div class="panel-body"><div class="profile-link-list" id="linktree-links"></div></div></article>
+            <article class="panel"><div class="panel-head"><div class="panel-title"><h2>Links</h2></div><div class="button-row"><button class="button" type="button" id="linktree-restore-cloud">Restore saved links</button><button class="mini-button" id="linktree-add-link" aria-label="Add Linktree link" title="Add link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 5v14M5 12h14"/></svg></button></div></div><div class="panel-body"><p class="settings-hint" id="linktree-admin-status" role="status" aria-live="polite"></p><div class="profile-link-list" id="linktree-links"></div></div></article>
             <article class="panel"><div class="panel-body"><p class="settings-hint">Linktree is published as its own page and URL. Its links and appearance are separate from the Twitch website.</p><input class="field-control profile-share-url" id="linktree-share-url" readonly aria-label="Linktree URL"><div class="button-row" style="margin-top:10px"><button class="button" id="linktree-copy-bottom">Copy Linktree URL</button><button class="button" id="linktree-open-bottom">Open Linktree</button></div></div></article>
           </div><article class="panel"><div class="panel-head"><div class="panel-title"><h2>Linktree preview</h2></div><span class="nav-count">LINKTREE</span></div><div class="panel-body"><div class="profile-preview-stage"><iframe class="profile-preview-frame" id="linktree-preview" title="Linktree preview"></iframe></div></div></article></div>
         </section>
@@ -1819,6 +1819,28 @@
         getWorkspace: () => structuredClone(state),
         getPublicCreatorProfile: () => profilePublicData(),
         getPublicCreatorProfiles: () => publicCreatorProfilesData(),
+        restoreLinktreeProfile: savedProfile => {
+          const source = savedProfile && typeof savedProfile === 'object' ? savedProfile : {};
+          const current = state.creatorProfile;
+          state.creatorProfile = normalizeCreatorProfile({
+            ...current,
+            name: source.name || current.name,
+            handle: source.handle || current.handle,
+            bio: source.bio || current.bio,
+            avatarUrl: source.avatarUrl || current.avatarUrl,
+            backgroundColor: source.backgroundColor || current.backgroundColor,
+            textColor: source.textColor || current.textColor,
+            buttonColor: source.buttonColor || current.buttonColor,
+            buttonTextColor: source.buttonTextColor || current.buttonTextColor,
+            buttonStyle: source.buttonStyle || current.buttonStyle,
+            linkShape: source.linkShape || current.linkShape,
+            links: Array.isArray(source.links) ? source.links : current.links,
+            website: current.website
+          });
+          saveState();
+          renderLinktree();
+          return state.creatorProfile.links.length;
+        },
         refreshAnalytics: () => renderAnalytics(),
         renderAnalyticsReport: () => renderPlatformReport(new Map((window.CreatorHQCloud?.getPlatformAccounts?.() || []).map(account => [account.provider, account]))),
         refreshSocialLinks: () => { renderCreatorProfileLinks(); renderLinktreePreview(); },
@@ -2380,6 +2402,7 @@
       document.getElementById('linktree-copy-bottom').addEventListener('click', copyLinktreeLink);
       document.getElementById('linktree-open').addEventListener('click', openLinktreeLink);
       document.getElementById('linktree-open-bottom').addEventListener('click', openLinktreeLink);
+      document.getElementById('linktree-restore-cloud').addEventListener('click', () => window.CreatorHQCloud?.restoreSavedLinktree?.());
       document.getElementById('task-search').addEventListener('input', renderTaskBoard);
       document.getElementById('filter-priority').addEventListener('change', renderTaskBoard);
       document.getElementById('filter-category').addEventListener('change', renderTaskBoard);

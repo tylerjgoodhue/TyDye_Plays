@@ -281,6 +281,27 @@ async function publishPendingPublicProfile() {
   return publicProfileSyncPromise;
 }
 
+async function restoreSavedLinktree() {
+  const status = document.getElementById('linktree-admin-status');
+  try {
+    const user = await currentUser();
+    const { data, error } = await client.from('creator_workspaces').select('workspace_data').eq('user_id', user.id).maybeSingle();
+    if (error) throw error;
+    const savedProfile = data?.workspace_data?.creatorProfile;
+    if (!savedProfile || !Array.isArray(savedProfile.links) || !savedProfile.links.length) {
+      throw new Error('No saved Linktree links were found in this cloud workspace.');
+    }
+    const currentLinks = storage()?.getWorkspace?.()?.creatorProfile?.links || [];
+    if (currentLinks.length && !window.confirm(`Replace the ${currentLinks.length} current Linktree links with ${savedProfile.links.length} links saved in your cloud workspace?`)) return;
+    const count = storage()?.restoreLinktreeProfile?.(savedProfile);
+    await syncSocialLinks();
+    await publishPendingPublicProfile();
+    if (status) status.textContent = `Restored ${count} saved links and updated the public Linktree.`;
+  } catch (error) {
+    if (status) status.textContent = error.message || 'Could not restore saved Linktree links.';
+  }
+}
+
 function publicTrackingConfig() {
   const config = readConfig();
   if (!config.url || !config.anonKey) return null;
@@ -290,6 +311,7 @@ function publicTrackingConfig() {
 window.CreatorHQCloud = {
   queueSync,
   queuePublicProfileSync,
+  restoreSavedLinktree,
   getPublicProfileConfig,
   publicTrackingConfig,
   syncSocialLinks,
