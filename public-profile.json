@@ -1,39 +1,7 @@
 {
-  "name": "Ty-Dye Plays",
-  "handle": "TyDye_plays",
-  "bio": "Gamer, chaos coordinator, and professional tease 💁‍♂️✨\nServing top-tier gameplay, unfiltered sass, and endless laughs. Get comfy, talk your trash, and try to keep up.",
-  "avatarUrl": "https://ik.imagekit.io/e8lcurrdm/Neon%20TyDye%20Plays%20Gamer%20Emblem.png",
-  "backgroundColor": "#7c567b",
-  "textColor": "#000000",
-  "buttonColor": "#782855",
-  "buttonTextColor": "#000000",
-  "buttonStyle": "outline",
-  "linkShape": "pill",
-  "links": [],
   "publication": {
     "supabaseUrl": "https://asqszzgunsrdclunbxfq.supabase.co",
     "anonKey": "sb_publishable_dzWKZDTMUAZhiIkYvz3fFg_oehHq33-",
     "userId": "85667610-fdd2-47af-9f90-354fe0123076"
-  },
-  "website": {
-    "tagline": "Test Gehkjhdckjhxckdh",
-    "heroImage": "https://ik.imagekit.io/e8lcurrdm/Neon%20Kawaii%20Gamer%20Room.png",
-    "primaryCta": "Watch on Twitch",
-    "twitchUrl": "https://www.twitch.tv/TyDye_plays",
-    "aboutHeading": "jkhkjhkjh",
-    "about": "kjhkj,hkjhkj",
-    "schedule": {
-      "weekly": [
-        { "day": "Tuesday", "time": "20:00", "duration": 3 },
-        { "day": "Thursday", "time": "20:00", "duration": 3 },
-        { "day": "Saturday", "time": "20:00", "duration": 3 }
-      ],
-      "sessions": []
-    },
-    "featured": [
-      { "title": "jhjhj", "description": "j,hkhokhokl", "url": "", "imageUrl": "" }
-    ],
-    "fourthwallDomain": "https://ty-dye-plays-shop.fourthwall.com",
-    "products": []
   }
 }

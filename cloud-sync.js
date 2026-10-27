@@ -221,13 +221,9 @@ async function initializePublicProfile() {
     if (error) throw error;
     const currentProfiles = storage()?.getPublicCreatorProfiles?.() || { website: storage()?.getPublicCreatorProfile?.() };
     if (data?.profile) {
-      const currentStoredProfile = data.profile.website ? data.profile : { website: data.profile };
-      lastPublishedPublicProfile = JSON.stringify(currentStoredProfile);
-      if (hasPublicProfileContent(currentProfiles) && JSON.stringify(currentProfiles) !== lastPublishedPublicProfile) {
-        queuePublicProfileSync(currentProfiles);
-      } else {
-        setPublicProfileStatus('Live site is connected. Public website edits update automatically.');
-      }
+      storage()?.restorePublicCreatorProfiles?.(data.profile);
+      lastPublishedPublicProfile = JSON.stringify(storage()?.getPublicCreatorProfiles?.() || currentProfiles);
+      setPublicProfileStatus('Database profile loaded. Website edits update the live site automatically.');
     } else if (hasPublicProfileContent(currentProfiles)) {
       queuePublicProfileSync(currentProfiles);
     } else {

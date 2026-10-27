@@ -384,7 +384,8 @@
       const root = document.getElementById('profile-root');
       let profile;
       let publicProfileConfig;
-      try {
+      let publicProfileError = '';
+      if (new URLSearchParams(location.search).has('preview')) try {
         const params = new URLSearchParams(location.hash.slice(1));
         profile = JSON.parse(params.get('p') || 'null');
       } catch {}
@@ -393,29 +394,46 @@
           const response = await fetch(new URL('public-profile.json', location.href), { cache: 'no-store' });
           if (response.ok) {
             publicProfileConfig = await response.json();
-            profile = publicProfileConfig;
-          }
-        } catch {}
-      }
-      if ((!new URLSearchParams(location.hash.slice(1)).has('p')) && publicProfileConfig?.publication?.supabaseUrl && publicProfileConfig.publication.anonKey && publicProfileConfig.publication.userId) {
-        try {
-          const publication = publicProfileConfig.publication;
-          const response = await fetch(`${publication.supabaseUrl.replace(/\/$/, '')}/rest/v1/rpc/get_creator_public_profile`, {
-            method: 'POST',
-            headers: { apikey: publication.anonKey, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ profile_owner: publication.userId }),
-            cache: 'no-store'
-          });
-          if (response.ok) {
-            const liveProfile = await response.json();
-            if (liveProfile && typeof liveProfile === 'object') {
-              profile = liveProfile.website?.website ? liveProfile.website : liveProfile;
+            const publication = publicProfileConfig.publication;
+            if (publication?.supabaseUrl && publication.anonKey && publication.userId) {
+              const response = await fetch(`${publication.supabaseUrl.replace(/\/$/, '')}/rest/v1/rpc/get_creator_public_profile`, {
+                method: 'POST',
+                headers: { apikey: publication.anonKey, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ profile_owner: publication.userId }),
+                cache: 'no-store'
+              });
+              if (!response.ok) throw new Error(`Database request failed (${response.status}).`);
+              const liveProfile = await response.json();
+              if (liveProfile && typeof liveProfile === 'object') {
+                const identity = liveProfile.website?.website ? liveProfile.website : liveProfile;
+                const website = identity.website && typeof identity.website === 'object' ? identity.website : identity;
+                profile = {
+                  name: identity.name || website.name || 'Creator',
+                  handle: identity.handle || website.handle || '',
+                  bio: identity.bio || website.bio || '',
+                  avatarUrl: identity.avatarUrl || website.avatarUrl || '',
+                  backgroundColor: identity.backgroundColor || website.backgroundColor || '#121712',
+                  textColor: identity.textColor || website.textColor || '#f0f3ed',
+                  buttonColor: identity.buttonColor || website.buttonColor || '#c6f36b',
+                  buttonTextColor: identity.buttonTextColor || website.buttonTextColor || '#17200f',
+                  buttonStyle: identity.buttonStyle || website.buttonStyle || 'solid',
+                  linkShape: identity.linkShape || website.linkShape || 'rounded',
+                  links: identity.links || website.links || [],
+                  website
+                };
+              } else {
+                publicProfileError = 'No public creator profile is published in the connected database.';
+              }
+            } else {
+              publicProfileError = 'The public profile database connection is not configured.';
             }
+          } else {
+            publicProfileError = 'The public profile configuration could not be loaded.';
           }
-        } catch {}
+        } catch (error) { publicProfileError = error.message || 'The public profile database could not be reached.'; }
       }
       if (!profile || typeof profile !== 'object') {
-        root.innerHTML = '<section class="empty"><h1>Creator website unavailable</h1><p>The public profile configuration could not be loaded. Check public-profile.json in the site deployment.</p></section>';
+        root.innerHTML = `<section class="empty"><h1>Creator website unavailable</h1><p>${escapeHtml(publicProfileError || 'Open the published website link from Creator HQ to view this profile.')}</p></section>`;
         return;
       }
       const name = String(profile.name || 'Creator').slice(0, 60);

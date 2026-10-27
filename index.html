@@ -1425,8 +1425,11 @@
         return `<article class="creator-profile-card" style="background:${escapeHtml(profile.backgroundColor)};color:${escapeHtml(profile.textColor)}"><div class="creator-profile-avatar">${avatar}</div><h2 class="creator-profile-name">${escapeHtml(profile.name)}</h2>${profile.handle ? `<p class="creator-profile-handle">${escapeHtml(profile.handle.startsWith('@') ? profile.handle : `@${profile.handle}`)}</p>` : ''}${profile.bio ? `<p class="creator-profile-bio">${escapeHtml(profile.bio)}</p>` : ''}<div class="creator-profile-links">${links || (includeEmpty ? '<p class="creator-profile-bio">Add your first link to see it here.</p>' : '')}</div><p class="profile-copyright">CREATOR LINKS</p></article>`;
       }
       function profileShareUrl() {
+        return new URL(window.CREATOR_HQ_PUBLIC_BASE || '/', window.location.origin).href;
+      }
+      function profilePreviewUrl() {
         const profile = profilePublicData();
-        const pageUrl = new URL(window.CREATOR_HQ_PUBLIC_BASE || '/', window.location.origin);
+        const pageUrl = new URL(profileShareUrl());
         return `${pageUrl.href}#p=${encodeURIComponent(JSON.stringify(profile))}`;
       }
       function linktreeShareUrl() {
@@ -1493,7 +1496,7 @@
       }
       function renderCreatorProfilePreview() {
         const frame = document.getElementById('creator-profile-preview');
-        const source = profileShareUrl();
+        const source = profilePreviewUrl();
         const previewUrl = new URL(source);
         previewUrl.searchParams.set('preview', String(Date.now()));
         if (frame && frame.getAttribute('src') !== previewUrl.href) {
@@ -1777,7 +1780,7 @@
         if (frame) {
           clearTimeout(shopPreviewTimer);
           shopPreviewTimer = setTimeout(() => {
-            const previewUrl = new URL(profileShareUrl());
+            const previewUrl = new URL(profilePreviewUrl());
             previewUrl.searchParams.set('preview', String(Date.now()));
             frame.src = previewUrl.href;
           }, 220);
@@ -1821,6 +1824,35 @@
         getWorkspace: () => structuredClone(state),
         getPublicCreatorProfile: () => profilePublicData(),
         getPublicCreatorProfiles: () => publicCreatorProfilesData(),
+        restorePublicCreatorProfiles: savedProfiles => {
+          const source = savedProfiles && typeof savedProfiles === 'object' ? savedProfiles : {};
+          const savedWebsite = source.website && typeof source.website === 'object' ? source.website : source;
+          const websiteDetails = savedWebsite.website && typeof savedWebsite.website === 'object' ? savedWebsite.website : savedWebsite;
+          const savedLinktree = source.linktree && typeof source.linktree === 'object' ? source.linktree : {};
+          const current = state.creatorProfile;
+          state.creatorProfile = normalizeCreatorProfile({
+            ...current,
+            ...savedLinktree,
+            links: Array.isArray(savedLinktree.links) ? savedLinktree.links : current.links,
+            website: {
+              ...current.website,
+              ...websiteDetails,
+              name: savedWebsite.name || current.website.name,
+              handle: savedWebsite.handle || current.website.handle,
+              bio: savedWebsite.bio || current.website.bio,
+              avatarUrl: savedWebsite.avatarUrl || current.website.avatarUrl,
+              backgroundColor: savedWebsite.backgroundColor || current.website.backgroundColor,
+              textColor: savedWebsite.textColor || current.website.textColor,
+              buttonColor: savedWebsite.buttonColor || current.website.buttonColor,
+              buttonTextColor: savedWebsite.buttonTextColor || current.website.buttonTextColor,
+              buttonStyle: savedWebsite.buttonStyle || current.website.buttonStyle,
+              linkShape: savedWebsite.linkShape || current.website.linkShape
+            }
+          });
+          saveState({ skipCloud: true, skipPublicProfile: true });
+          renderCreatorProfile();
+          renderLinktree();
+        },
         restoreLinktreeProfile: savedProfile => {
           const source = savedProfile && typeof savedProfile === 'object' ? savedProfile : {};
           const current = state.creatorProfile;
