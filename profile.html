@@ -408,10 +408,10 @@
                 const identity = liveProfile.website?.website ? liveProfile.website : liveProfile;
                 const website = identity.website && typeof identity.website === 'object' ? identity.website : identity;
                 profile = {
-                  name: identity.name || website.name || 'Creator',
-                  handle: identity.handle || website.handle || '',
+                  name: identity.name || website.name || publicProfileConfig.name || 'Creator',
+                  handle: identity.handle || website.handle || publicProfileConfig.handle || '',
                   bio: identity.bio || website.bio || '',
-                  avatarUrl: identity.avatarUrl || website.avatarUrl || '',
+                  avatarUrl: identity.avatarUrl || website.avatarUrl || publicProfileConfig.avatarUrl || '',
                   backgroundColor: identity.backgroundColor || website.backgroundColor || '#121712',
                   textColor: identity.textColor || website.textColor || '#f0f3ed',
                   buttonColor: identity.buttonColor || website.buttonColor || '#c6f36b',
@@ -448,7 +448,7 @@
       const shape = ['rounded', 'square', 'pill'].includes(profile.linkShape) ? profile.linkShape : 'rounded';
       const links = Array.isArray(profile.links) ? profile.links.slice(0, 20) : [];
       const website = profile.website && typeof profile.website === 'object' ? profile.website : {};
-      const tagline = String(website.tagline || bio || 'A place for games, good company, and the occasional questionable decision.').slice(0, 120);
+      const tagline = website.tagline === 'Test Gehkjhdckjhxckdh' ? '' : String(website.tagline || bio || 'A place for games, good company, and the occasional questionable decision.').slice(0, 120);
       const twitchUrl = safeLink(website.twitchUrl) || (handle ? `https://www.twitch.tv/${encodeURIComponent(handle.replace(/^@/, ''))}` : '');
       const twitchLogin = (() => {
         try {
@@ -516,9 +516,9 @@
       }).join('');
       document.title = `${name} · Twitch Creator`;
       document.querySelector('meta[name="theme-color"]').content = backgroundColor;
-      document.querySelector('meta[name="description"]').content = `${tagline} Visit the ${name} Twitch creator site for live updates, stream times, and highlights.`;
+      document.querySelector('meta[name="description"]').content = `${tagline || 'Live updates, stream times, highlights, and community links.'} Visit the ${name} Twitch creator site.`;
       document.querySelector('meta[property="og:title"]').content = `${name} · Twitch Creator`;
-      document.querySelector('meta[property="og:description"]').content = tagline;
+      document.querySelector('meta[property="og:description"]').content = tagline || `Visit ${name} for live updates, stream times, highlights, and community links.`;
       document.querySelector('meta[property="og:image"]').content = heroImage;
       document.documentElement.style.setProperty('--site-bg', backgroundColor);
       document.documentElement.style.setProperty('--site-ink', textColor);
@@ -567,6 +567,7 @@
           if (price) price.textContent = `${variant.price} ${variant.currency}`;
         });
       }
+      if (!tagline) document.querySelector('.site-hero-tagline')?.remove();
       const heroCopy = document.querySelector('.site-hero-copy');
       const statusBadge = heroCopy.querySelector('[data-live-status]');
       const handleLabel = heroCopy.querySelector('.site-eyebrow');

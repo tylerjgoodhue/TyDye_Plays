@@ -1,4 +1,7 @@
 {
+  "name": "Ty-Dye Plays",
+  "handle": "TyDye_plays",
+  "avatarUrl": "https://ik.imagekit.io/e8lcurrdm/Neon%20TyDye%20Plays%20Gamer%20Emblem.png",
   "publication": {
     "supabaseUrl": "https://asqszzgunsrdclunbxfq.supabase.co",
     "anonKey": "sb_publishable_dzWKZDTMUAZhiIkYvz3fFg_oehHq33-",
