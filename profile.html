@@ -246,6 +246,20 @@
     .site-socials { padding-top: 30px; padding-bottom: 30px; }
     .site-footer { align-items: center; border-top: 1px solid var(--site-line); font-size: 10px; }
     .site-footer a:hover { color: var(--site-accent); }
+    .site-featured .site-feature-grid.site-feature-row, .site-featured .site-feature-grid.site-feature-slide { grid-template-columns: repeat(3,minmax(0,1fr)); gap: clamp(10px,1.8vw,22px); }
+    .site-featured .site-feature-image-wrap { aspect-ratio: 16/9; }
+    .site-featured .site-feature-content { min-width: 0; padding: 12px 13px 15px; border-bottom: 1px solid var(--site-line); background: color-mix(in srgb,var(--site-bg) 76%,var(--site-accent)); }
+    .site-featured .site-feature-meta { margin: 0 0 6px; font-size: 8px; }
+    .site-featured .site-feature h3 { margin: 0; font-size: 13px; line-height: 1.35; overflow-wrap: anywhere; }
+    .site-featured .site-feature p { margin: 5px 0 0; font-size: 10px; line-height: 1.45; }
+    .site-feature-carousel { margin-top: 20px; }
+    .site-feature-carousel[hidden], .site-feature-slide[hidden] { display: none !important; }
+    .site-feature-carousel-controls { display: flex; align-items: center; justify-content: flex-end; gap: 9px; margin-bottom: 10px; }
+    .site-feature-carousel-controls button { display: grid; width: 38px; height: 38px; place-items: center; border: 1px solid var(--site-line); border-radius: 50%; color: var(--site-ink); background: color-mix(in srgb,var(--site-ink) 5%,var(--site-bg)); font: 600 18px 'DM Sans',sans-serif; cursor: pointer; }
+    .site-feature-carousel-controls button:hover:not(:disabled) { border-color: var(--site-accent); color: var(--site-accent); }
+    .site-feature-carousel-controls button:disabled { opacity: .38; cursor: not-allowed; }
+    .site-feature-carousel-page { min-width: 48px; color: var(--site-muted); font-size: 10px; text-align: center; }
+    @media (max-width: 760px) { .site-featured .site-feature-grid.site-feature-row, .site-featured .site-feature-grid.site-feature-slide { grid-template-columns: repeat(3,minmax(0,1fr)); gap: 8px; }.site-featured .site-feature-content { padding: 8px 7px 10px; }.site-featured .site-feature-meta { margin-bottom: 4px; font-size: 7px; }.site-featured .site-feature h3 { font-size: 11px; }.site-featured .site-feature p { font-size: 9px; } }
     @media (max-width: 760px) {
       .site-hero { min-height: min(650px,calc(100svh - 96px)); height: auto; padding: 50px 24px 68px; }
       .site-hero-copy { margin: auto 0; }
@@ -425,7 +439,7 @@
       const schedule = website.schedule && typeof website.schedule === 'object' ? website.schedule : String(website.schedule || '').slice(0, 600);
       const primaryCta = String(website.primaryCta || 'Watch on Twitch').slice(0, 40);
       const heroImage = safeImage(website.heroImage) || 'https://images.unsplash.com/photo-1593305841991-05c297ba4575?auto=format&fit=crop&w=2200&q=90';
-      const featured = Array.isArray(website.featured) ? website.featured.slice(0, 3).filter(item => item && item.title).map(item => ({
+      const featured = Array.isArray(website.featured) ? website.featured.slice(0, 30).filter(item => item && item.title).map(item => ({
         title: String(item.title || '').slice(0, 80),
         description: String(item.description || '').slice(0, 240),
         url: safeLink(item.url),
@@ -546,6 +560,53 @@
       identityCopy.append(handleLabel, creatorName);
       identity.append(logo, identityCopy);
       statusBadge.after(identity);
+      const featureGrid = document.querySelector('.site-featured .site-feature-grid');
+      const featureCards = featureGrid ? [...featureGrid.children].filter(card => card.matches('.site-feature')) : [];
+      if (featureGrid && featureCards.length) {
+        featureGrid.classList.add('site-feature-row');
+        featureGrid.replaceChildren(...featureCards.slice(0, 3));
+        const remainingCards = featureCards.slice(3);
+        if (remainingCards.length) {
+          const carousel = document.createElement('div');
+          carousel.className = 'site-feature-carousel';
+          carousel.setAttribute('aria-label', 'More recent highlights');
+          const controls = document.createElement('div');
+          controls.className = 'site-feature-carousel-controls';
+          const previous = document.createElement('button');
+          previous.type = 'button';
+          previous.setAttribute('aria-label', 'Previous highlights');
+          previous.textContent = '‹';
+          const pageLabel = document.createElement('span');
+          pageLabel.className = 'site-feature-carousel-page';
+          pageLabel.setAttribute('aria-live', 'polite');
+          const next = document.createElement('button');
+          next.type = 'button';
+          next.setAttribute('aria-label', 'Next highlights');
+          next.textContent = '›';
+          controls.append(previous, pageLabel, next);
+          const slides = [];
+          for (let offset = 0; offset < remainingCards.length; offset += 3) {
+            const slide = document.createElement('div');
+            slide.className = 'site-feature-grid site-feature-slide';
+            slide.append(...remainingCards.slice(offset, offset + 3));
+            slide.hidden = slides.length > 0;
+            slides.push(slide);
+          }
+          let currentPage = 0;
+          const showPage = page => {
+            currentPage = Math.max(0, Math.min(slides.length - 1, page));
+            slides.forEach((slide, index) => { slide.hidden = index !== currentPage; });
+            previous.disabled = currentPage === 0;
+            next.disabled = currentPage === slides.length - 1;
+            pageLabel.textContent = `${currentPage + 1} / ${slides.length}`;
+          };
+          previous.addEventListener('click', () => showPage(currentPage - 1));
+          next.addEventListener('click', () => showPage(currentPage + 1));
+          showPage(0);
+          carousel.append(controls, ...slides);
+          featureGrid.insertAdjacentElement('afterend', carousel);
+        }
+      }
       const broadcast = document.createElement('section');
       broadcast.className = 'site-broadcast';
       broadcast.setAttribute('aria-label', 'Twitch broadcast status');

@@ -968,7 +968,7 @@
         const source = profile && typeof profile === 'object' ? profile : {};
         const links = Array.isArray(source.links) ? source.links.filter(link => link && typeof link === 'object').slice(0, 20).map(link => ({ id: /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(link.id || '')) ? String(link.id) : crypto.randomUUID(), icon: PROFILE_LINK_ICONS[link.icon] ? link.icon : 'link', platform: String(link.platform || inferSocialPlatform(link.url)).slice(0, 40), label: String(link.label || '').slice(0, 80), url: String(link.url || '').slice(0, 500) })) : [];
         const website = source.website && typeof source.website === 'object' ? source.website : {};
-        const featured = Array.isArray(website.featured) ? website.featured.filter(item => item && typeof item === 'object').slice(0, 3).map(item => ({ title: String(item.title || '').slice(0, 80), description: String(item.description || '').slice(0, 240), url: String(item.url || '').slice(0, 500), imageUrl: String(item.imageUrl || '').slice(0, 500) })) : [];
+        const featured = Array.isArray(website.featured) ? website.featured.filter(item => item && typeof item === 'object').slice(0, 30).map(item => ({ title: String(item.title || '').slice(0, 80), description: String(item.description || '').slice(0, 240), url: String(item.url || '').slice(0, 500), imageUrl: String(item.imageUrl || '').slice(0, 500) })) : [];
         const products = Array.isArray(website.products) ? website.products.filter(item => item && typeof item === 'object').slice(0, 100).map(item => ({
           id: String(item.id || '').slice(0, 120), fourthwallId: String(item.fourthwallId || item.id || '').slice(0, 120), provider: item.provider === 'fourthwall' ? 'fourthwall' : 'external',
           name: String(item.name || '').slice(0, 100), slug: String(item.slug || '').slice(0, 120), price: String(item.price || '').slice(0, 48), currency: String(item.currency || 'USD').slice(0, 8),
@@ -1390,7 +1390,7 @@
             aboutHeading: String(website.aboutHeading || '').slice(0, 80),
             about: String(website.about || '').slice(0, 1200), schedule: websiteScheduleData(),
             primaryCta: String(website.primaryCta || 'Watch on Twitch').slice(0, 40),
-            featured: website.featured.slice(0, 3).map(item => ({ title: String(item.title || '').slice(0, 80), description: String(item.description || '').slice(0, 240), url: profileImageUrl(item.url), imageUrl: profileImageUrl(item.imageUrl) })),
+            featured: website.featured.slice(0, 30).map(item => ({ title: String(item.title || '').slice(0, 80), description: String(item.description || '').slice(0, 240), url: profileImageUrl(item.url), imageUrl: profileImageUrl(item.imageUrl) })),
             fourthwallDomain: String(website.fourthwallDomain || '').slice(0, 240),
             products: website.products.filter(item => item.provider !== 'fourthwall' || (item.access === 'PUBLIC' && item.available !== false)).slice(0, 100).map(item => ({ id: String(item.id || '').slice(0, 120), fourthwallId: String(item.fourthwallId || '').slice(0, 120), provider: item.provider === 'fourthwall' ? 'fourthwall' : 'external', name: String(item.name || '').slice(0, 100), slug: String(item.slug || '').slice(0, 120), price: String(item.price || '').slice(0, 48), currency: String(item.currency || 'USD').slice(0, 8), description: String(item.description || '').slice(0, 2000), imageUrl: profileImageUrl(item.imageUrl), checkoutUrl: safeProfileLink(item.checkoutUrl), access: String(item.access || ''), available: item.available !== false, variants: Array.isArray(item.variants) ? item.variants.filter(variant => item.provider !== 'fourthwall' || variant.inStock !== false).slice(0, 100).map(variant => ({ id: String(variant.id || '').slice(0, 120), name: String(variant.name || '').slice(0, 100), price: String(variant.price || '').slice(0, 48), currency: String(variant.currency || item.currency || 'USD').slice(0, 8), inStock: variant.inStock !== false })) : [] }))
           }
@@ -2293,7 +2293,7 @@
       profileView.addEventListener('click', event => {
         const addFeatured = event.target.closest('#profile-add-featured');
         if (addFeatured) {
-          if (state.creatorProfile.website.featured.length >= 3) { toast('Feature up to three videos or clips'); return; }
+          if (state.creatorProfile.website.featured.length >= 30) { toast('Feature up to 30 videos or clips'); return; }
           state.creatorProfile.website.featured.push({ title: '', description: '', url: '', imageUrl: '' });
           saveState(); renderCreatorProfile();
           document.querySelector(`#featured-title-${state.creatorProfile.website.featured.length - 1}`)?.focus();
