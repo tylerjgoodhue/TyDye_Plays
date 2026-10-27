@@ -894,7 +894,7 @@
       const PROFILE_LINK_ICONS = { play: '▶', stream: '◉', camera: '◎', chat: '✦', music: '♫', link: '↗', mail: '@', shop: '◇', community: '✳' };
       const defaults = {
         profile: null,
-        creatorProfile: { name: '', handle: '', bio: '', avatarUrl: '', backgroundColor: '#121712', textColor: '#f0f3ed', buttonColor: '#c6f36b', buttonTextColor: '#17200f', buttonStyle: 'solid', linkShape: 'rounded', links: [], website: { separate: true, name: '', handle: '', bio: '', avatarUrl: '', backgroundColor: '#111411', textColor: '#f0f3ed', buttonColor: '#c6f36b', buttonTextColor: '#17200f', buttonStyle: 'solid', linkShape: 'rounded', tagline: '', heroImage: '', twitchUrl: '', liveStatus: 'offline', aboutHeading: '', about: '', schedule: '', primaryCta: 'Watch on Twitch', featured: [], products: [], fourthwallDomain: '' } },
+        creatorProfile: { name: '', handle: '', bio: '', avatarUrl: '', backgroundColor: '#121712', textColor: '#f0f3ed', buttonColor: '#c6f36b', buttonTextColor: '#17200f', buttonStyle: 'solid', linkShape: 'rounded', links: [], website: { separate: true, name: '', handle: '', bio: '', avatarUrl: '', backgroundColor: '#121712', textColor: '#f0f3ed', buttonColor: '#c6f36b', buttonTextColor: '#17200f', buttonStyle: 'solid', linkShape: 'rounded', tagline: '', heroImage: '', twitchUrl: '', liveStatus: 'offline', aboutHeading: '', about: '', schedule: '', primaryCta: 'Watch on Twitch', featured: [], products: [], fourthwallDomain: '' } },
         settings: { name: '', handle: '', timezone: 'local', accent: 'lime', days: [2, 4, 6], start: '20:00', duration: 3, hiddenWidgets: [] },
         tasks: [], streams: [], content: [], ideas: [], goals: [], assets: [], routineChecks: {}, reflections: {},
         metrics: [], communityLinks: [], communityEvents: [], communityFeedback: [],
@@ -985,7 +985,7 @@
           handle: migrateLegacyFields ? (website.handle || source.handle || '') : (website.handle || ''),
           bio: migrateLegacyFields ? (website.bio || source.bio || '') : (website.bio || ''),
           avatarUrl: migrateLegacyFields ? (website.avatarUrl || source.avatarUrl || '') : (website.avatarUrl || ''),
-          backgroundColor: migrateLegacyFields ? (website.backgroundColor || source.backgroundColor || '#111411') : (website.backgroundColor || '#111411'),
+          backgroundColor: migrateLegacyFields ? (website.backgroundColor || source.backgroundColor || '#121712') : (website.backgroundColor || '#121712'),
           textColor: migrateLegacyFields ? (website.textColor || source.textColor || '#f0f3ed') : (website.textColor || '#f0f3ed'),
           buttonColor: migrateLegacyFields ? (website.buttonColor || source.buttonColor || '#c6f36b') : (website.buttonColor || '#c6f36b'),
           buttonTextColor: migrateLegacyFields ? (website.buttonTextColor || source.buttonTextColor || '#17200f') : (website.buttonTextColor || '#17200f'),
@@ -1841,12 +1841,12 @@
               handle: savedWebsite.handle || current.website.handle,
               bio: savedWebsite.bio || current.website.bio,
               avatarUrl: savedWebsite.avatarUrl || current.website.avatarUrl,
-              backgroundColor: savedWebsite.backgroundColor || current.website.backgroundColor,
-              textColor: savedWebsite.textColor || current.website.textColor,
-              buttonColor: savedWebsite.buttonColor || current.website.buttonColor,
-              buttonTextColor: savedWebsite.buttonTextColor || current.website.buttonTextColor,
-              buttonStyle: savedWebsite.buttonStyle || current.website.buttonStyle,
-              linkShape: savedWebsite.linkShape || current.website.linkShape
+              backgroundColor: websiteDetails.backgroundColor || savedWebsite.backgroundColor || '#121712',
+              textColor: websiteDetails.textColor || savedWebsite.textColor || '#f0f3ed',
+              buttonColor: websiteDetails.buttonColor || savedWebsite.buttonColor || '#c6f36b',
+              buttonTextColor: websiteDetails.buttonTextColor || savedWebsite.buttonTextColor || '#17200f',
+              buttonStyle: websiteDetails.buttonStyle || savedWebsite.buttonStyle || 'solid',
+              linkShape: websiteDetails.linkShape || savedWebsite.linkShape || 'rounded'
             }
           });
           saveState({ skipCloud: true, skipPublicProfile: true });
