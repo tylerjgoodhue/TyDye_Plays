@@ -363,6 +363,27 @@
     .site-shop-empty strong { color: var(--site-ink); font: 600 17px 'Space Grotesk',sans-serif; }
     .site-shop-empty span { max-width: 420px; font-size: 12px; line-height: 1.6; }
     @media (max-width: 560px) { .site-shop-heading { align-items: flex-start; flex-direction: column; gap: 9px; margin-bottom: 18px; }.site-shop-grid { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 11px; }.site-product-image-wrap { padding: 7px; }.site-product-info { min-height: 150px; padding: 10px; }.site-product-title-row { align-items: flex-start; flex-direction: column; gap: 5px; }.site-product h3 { font-size: 13px; }.site-product p { font-size: 10px; }.site-product-buy { width: 100%; padding: 0 8px; font-size: 9px; } }
+
+    .site-product-link { display: flex; flex: 1; flex-direction: column; color: inherit; text-decoration: none; }
+    .site-product-link:focus-visible { outline: 3px solid var(--site-accent); outline-offset: -3px; }
+    .site-product-link .site-product-info { min-height: 90px; gap: 16px; }
+    .site-product-view { margin-top: auto; color: var(--site-accent); font-size: 11px; }
+    .product-page { max-width: 1200px; margin: auto; padding: 40px 24px 80px; }
+    .product-back { display: inline-block; margin-bottom: 28px; color: var(--site-muted); font-size: 13px; }
+    .product-layout { display: grid; grid-template-columns: minmax(0,1.15fr) minmax(0,1fr); gap: clamp(24px,5vw,64px); align-items: start; }
+    .product-photo { display: grid; place-items: center; aspect-ratio: 1; padding: 24px; border: 1px solid var(--site-line); border-radius: 12px; background: color-mix(in srgb,var(--site-ink) 5%,var(--site-bg)); overflow: hidden; }
+    .product-photo img { display: block; width: 100%; height: 100%; min-height: 0; object-fit: contain; }
+    .product-details h1 { margin: 12px 0 18px; font: 600 clamp(28px,4vw,44px)/1.12 'Space Grotesk',sans-serif; overflow-wrap: anywhere; }
+    .product-detail-price { color: var(--site-accent); font-size: 24px; margin: 0 0 12px; }
+    .product-stock { color: var(--site-muted); font-size: 12px; }
+    .product-options { display: grid; gap: 10px; margin: 28px 0; }
+    .product-options label { font-size: 13px; }
+    .product-options select { min-height: 46px; font-size: 13px; margin: 0; }
+    .product-purchase { width: 100%; min-height: 48px; justify-content: center; }
+    .product-description { margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--site-line); }
+    .product-description h2 { font: 600 18px 'Space Grotesk',sans-serif; }
+    .product-description p { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 14px; line-height: 1.8; color: var(--site-muted); }
+    @media (max-width: 700px) { .product-layout { grid-template-columns: minmax(0,1fr); }.product-page { padding: 24px 18px 56px; }.product-photo { max-width: 480px; width: 100%; margin: auto; } }
   </style>
 </head>
 <body>
@@ -489,7 +510,7 @@
         name: String(item.name || '').slice(0, 80),
         price: String(item.price || '').slice(0, 24),
         currency: String(item.currency || 'USD').slice(0, 8),
-        description: String(item.description || '').slice(0, 240),
+        description: String(item.description || '').slice(0, 12000),
         imageUrl: safeImage(item.imageUrl),
         checkoutUrl: safeLink(item.checkoutUrl),
         access: String(item.access || ''),
@@ -550,6 +571,50 @@
       document.documentElement.style.setProperty('--site-accent', buttonColor);
       document.documentElement.style.setProperty('--site-button-text', buttonTextColor);
       root.className = 'creator-site';
+      const pageParams = new URLSearchParams(location.search);
+      if (location.pathname.endsWith('/product.html')) {
+        const backUrl = new URL('./', location.href);
+        if (pageParams.has('preview')) {
+          backUrl.pathname = new URL('profile.html', location.href).pathname;
+          backUrl.searchParams.set('preview', '1');
+          backUrl.hash = location.hash;
+        } else backUrl.hash = 'shop';
+        const productKey = pageParams.get('product');
+        const item = products.find((product, index) => (product.id || product.slug || `item-${index}`) === productKey);
+        const header = `<header class="site-nav"><a class="site-wordmark" href="${escapeHtml(backUrl.href)}">${escapeHtml(name)}</a><a class="product-back" style="margin:0" href="${escapeHtml(backUrl.href)}">← Back to shop</a></header>`;
+        if (!item) {
+          document.title = `Product unavailable · ${name}`;
+          root.innerHTML = `${header}<main class="product-page"><h1>Product unavailable</h1><p>This product may have been removed or is no longer available.</p><a class="site-button ${style} shape-${shape}" href="${escapeHtml(backUrl.href)}">Browse the shop</a></main>`;
+          return;
+        }
+        document.title = `${item.name} · ${name}`;
+        document.querySelector('meta[property="og:title"]').content = document.title;
+        document.querySelector('meta[property="og:description"]').content = item.description.slice(0, 240) || item.name;
+        document.querySelector('meta[property="og:image"]').content = item.imageUrl || avatar;
+        const variants = item.variants.filter(variant => variant.id);
+        const firstVariant = variants.find(variant => variant.inStock);
+        const checkoutFor = variant => {
+          if (item.provider === 'fourthwall' && variants.length && !variant?.inStock) return '';
+          if (item.provider === 'fourthwall' && fourthwallDomain && variant) {
+            const checkout = new URL('/cart/checkout', fourthwallDomain);
+            checkout.searchParams.set('products', `${variant.id}:1`);
+            checkout.searchParams.set('currency', variant.currency || item.currency);
+            return checkout.href;
+          }
+          return item.checkoutUrl;
+        };
+        const priceFor = variant => variant?.price ? `${variant.price} ${variant.currency}` : item.price;
+        const checkout = checkoutFor(firstVariant);
+        root.innerHTML = `${header}<main class="product-page"><a class="product-back" href="${escapeHtml(backUrl.href)}">Shop / ${escapeHtml(item.name)}</a><div class="product-layout"><div class="product-photo">${item.imageUrl ? `<img src="${escapeHtml(item.imageUrl)}" alt="${escapeHtml(item.name)}" fetchpriority="high">` : `<span class="site-product-image-placeholder">${escapeHtml(item.name.slice(0,1))}</span>`}</div><div class="product-details"><p class="site-kicker">${escapeHtml(name)} collection</p><h1>${escapeHtml(item.name)}</h1><p class="product-detail-price" data-detail-price>${escapeHtml(priceFor(firstVariant))}</p><p class="product-stock">${variants.length ? firstVariant ? 'In stock' : 'Currently unavailable' : 'See checkout for availability'}</p>${variants.length ? `<div class="product-options"><label for="product-variant">Choose size / color</label><select id="product-variant" class="site-product-variant">${variants.map(variant => `<option value="${escapeHtml(variant.id)}" ${variant.id === firstVariant?.id ? 'selected' : ''} ${variant.inStock ? '' : 'disabled'}>${escapeHtml(variant.name)}${variant.price ? ` · ${escapeHtml(variant.price)} ${escapeHtml(variant.currency)}` : ''}${variant.inStock ? '' : ' — Sold out'}</option>`).join('')}</select></div>` : ''}${checkout ? `<a class="site-button product-purchase ${style} shape-${shape}" data-detail-buy href="${escapeHtml(checkout)}" target="_blank" rel="noopener noreferrer">Buy now ↗</a>` : '<p class="product-stock">Purchasing is currently unavailable.</p>'}<section class="product-description"><h2>Product details</h2><p>${escapeHtml(item.description || 'More product details are coming soon.')}</p></section></div></div></main>`;
+        document.getElementById('product-variant')?.addEventListener('change', event => {
+          const variant = variants.find(option => option.id === event.target.value && option.inStock);
+          if (!variant) return;
+          root.querySelector('[data-detail-price]').textContent = priceFor(variant);
+          const buy = root.querySelector('[data-detail-buy]');
+          if (buy) buy.href = checkoutFor(variant);
+        });
+        return;
+      }
       root.innerHTML = `<header class="site-nav"><a class="site-wordmark" href="#top"><span class="site-mark">${avatar ? `<img src="${escapeHtml(avatar)}" alt="">` : escapeHtml(initials || 'C')}</span>${escapeHtml(name)}</a><nav class="site-nav-links" aria-label="Website navigation"><a href="#about">About</a><a href="#highlights">Highlights</a><a href="#shop">Shop</a><a href="#community">Community</a></nav>${twitchUrl ? `<a class="site-nav-cta ${style} shape-${shape}" data-nav-live-cta style="--site-accent:${escapeHtml(buttonColor)};--site-button-text:${escapeHtml(buttonTextColor)}" href="${escapeHtml(twitchUrl)}" target="_blank" rel="noopener noreferrer">${live ? 'Live now' : 'Twitch'} <span aria-hidden="true">↗</span></a>` : ''}</header><section class="site-hero" id="top"><img class="site-hero-image" src="${escapeHtml(heroImage)}" alt="Gaming setup" fetchpriority="high"><div class="site-hero-copy"><span class="site-status ${liveStatusClass}" data-live-status aria-live="polite"><span class="site-status-dot"></span>${escapeHtml(liveStatusLabel)}</span><p class="site-eyebrow">${handle ? escapeHtml(handle.startsWith('@') ? handle : `@${handle}`) : 'Twitch creator'}</p><h1>${escapeHtml(name)}</h1><p class="site-hero-tagline">${escapeHtml(tagline)}</p><div class="site-hero-actions">${watchButton}</div></div><a class="site-scroll-cue" href="#about">Scroll to explore</a></section><section class="site-section site-about" id="about"><div><div class="site-section-head"><p class="site-kicker">The person behind the stream</p><h2>${escapeHtml(aboutHeading)}</h2></div><div class="site-about-copy">${escapeHtml(about || 'A little more about the stream is on the way.')}</div></div><aside class="site-schedule"><p class="site-kicker">Stream schedule</p><h3>Catch the next one</h3><div class="site-schedule-list">${scheduleRows}</div></aside></section><section class="site-section site-featured" id="highlights"><div class="site-section-head"><p class="site-kicker">From the channel</p><h2>Recent highlights</h2></div><div class="site-feature-grid">${featuredMarkup}</div></section><section class="site-section site-community" id="community"><div><p class="site-kicker">The community</p><h2>Make yourself at home.</h2><p>Come by the stream, say hello, and be part of what we build next.</p></div>${watchButton}</section>${linkMarkup ? `<nav class="site-socials" aria-label="More ways to follow">${linkMarkup}</nav>` : ''}<footer class="site-footer"><span>${escapeHtml(name)} · Twitch creator</span><a href="#top">Back to top ↑</a></footer>`;
       {
         const shop = document.createElement('section');
@@ -557,40 +622,16 @@
         shop.id = 'shop';
         const shopContent = products.length ? `<div class="site-shop-grid">${products.map((item, index) => {
           const image = item.imageUrl ? `<img class="site-product-image" src="${escapeHtml(item.imageUrl)}" alt="${escapeHtml(item.name)}" loading="lazy">` : `<div class="site-product-image-placeholder" aria-hidden="true">${escapeHtml(item.name.slice(0, 1).toUpperCase())}</div>`;
-          const variants = item.variants.filter(variant => variant.id && variant.inStock);
-          const checkoutFor = variantId => {
-            if (item.checkoutUrl) return item.checkoutUrl;
-            if (fourthwallDomain && variantId && item.provider === 'fourthwall') {
-              const checkout = new URL('/cart/checkout', fourthwallDomain);
-              checkout.searchParams.set('products', `${variantId}:1`);
-              checkout.searchParams.set('currency', variants.find(variant => variant.id === variantId)?.currency || item.currency || 'USD');
-              return checkout.href;
-            }
-            return '';
-          };
-          const firstVariant = variants[0];
-          const checkoutUrl = checkoutFor(firstVariant?.id || '');
-          const price = item.price || (firstVariant ? `${firstVariant.price} ${firstVariant.currency}` : '');
-          const selector = variants.length > 1 ? `<label class="sr-only" for="site-product-variant-${index}">Choose size or color for ${escapeHtml(item.name)}</label><select class="site-product-variant" id="site-product-variant-${index}" data-product-variant data-product-index="${index}">${variants.map(variant => `<option value="${escapeHtml(variant.id)}">${escapeHtml(variant.name)} · ${escapeHtml(variant.price)} ${escapeHtml(variant.currency)}</option>`).join('')}</select>` : '';
-          const purchase = checkoutUrl ? `<a class="site-button site-product-buy ${style} shape-${shape}" data-product-buy data-product-index="${index}" href="${escapeHtml(checkoutUrl)}" target="_blank" rel="noopener noreferrer">${item.provider === 'fourthwall' ? 'Buy now' : 'Shop now'} <span aria-hidden="true">↗</span></a>` : '<span class="site-product-buy site-product-coming-soon">Checkout link coming soon</span>';
-          return `<article class="site-product"><div class="site-product-image-wrap">${image}</div><div class="site-product-info"><div class="site-product-title-row"><h3>${escapeHtml(item.name)}</h3>${price ? `<span class="site-product-price">${escapeHtml(price)}</span>` : ''}</div>${item.description ? `<p>${escapeHtml(item.description)}</p>` : ''}${selector}${purchase}</div></article>`;
+          const detailUrl = new URL('product.html', location.href);
+          detailUrl.searchParams.set('product', item.id || item.slug || `item-${index}`);
+          if (new URLSearchParams(location.search).has('preview')) {
+            detailUrl.searchParams.set('preview', '1');
+            detailUrl.hash = location.hash;
+          }
+          return `<article class="site-product"><a class="site-product-link" href="${escapeHtml(detailUrl.href)}"><div class="site-product-image-wrap">${image}</div><div class="site-product-info"><div class="site-product-title-row"><h3>${escapeHtml(item.name)}</h3>${item.price ? `<span class="site-product-price">${escapeHtml(item.price)}</span>` : ''}</div><span class="site-product-view">View product →</span></div></a></article>`;
         }).join('')}</div>` : '<div class="site-shop-empty"><strong>Merch drop in progress</strong><span>New creator gear is on the way. Check back soon for shirts, stream-inspired designs, and more.</span></div>';
         shop.innerHTML = `<div class="site-shop-heading"><div class="site-section-head"><p class="site-kicker">Creator merch</p><h2>Shop the collection</h2><p class="site-shop-intro">Channel-inspired essentials and community favorites, in one place.</p></div><span class="site-shop-count">${products.length} ${products.length === 1 ? 'item' : 'items'}</span></div>${shopContent}`;
         document.querySelector('.site-featured').insertAdjacentElement('afterend', shop);
-        shop.addEventListener('change', event => {
-          const selector = event.target.closest('[data-product-variant]');
-          if (!selector) return;
-          const product = products[Number(selector.dataset.productIndex)];
-          const variant = product?.variants.find(item => item.id === selector.value);
-          const buyLink = shop.querySelector(`[data-product-buy][data-product-index="${selector.dataset.productIndex}"]`);
-          if (!product || !variant || !buyLink || !fourthwallDomain) return;
-          const checkout = new URL('/cart/checkout', fourthwallDomain);
-          checkout.searchParams.set('products', `${variant.id}:1`);
-          checkout.searchParams.set('currency', variant.currency || product.currency || 'USD');
-          buyLink.href = checkout.href;
-          const price = buyLink.closest('.site-product-info')?.querySelector('.site-product-price');
-          if (price) price.textContent = `${variant.price} ${variant.currency}`;
-        });
       }
       if (!tagline) document.querySelector('.site-hero-tagline')?.remove();
       const heroCopy = document.querySelector('.site-hero-copy');
