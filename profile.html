@@ -512,6 +512,7 @@
         currency: String(item.currency || 'USD').slice(0, 8),
         description: String(item.description || '').slice(0, 12000),
         imageUrl: safeImage(item.imageUrl),
+        fullImageUrl: safeImage(item.fullImageUrl) || safeImage(item.imageUrl),
         checkoutUrl: safeLink(item.checkoutUrl),
         access: String(item.access || ''),
         available: item.available !== false,
@@ -590,7 +591,7 @@
         document.title = `${item.name} · ${name}`;
         document.querySelector('meta[property="og:title"]').content = document.title;
         document.querySelector('meta[property="og:description"]').content = item.description.slice(0, 240) || item.name;
-        document.querySelector('meta[property="og:image"]').content = item.imageUrl || avatar;
+        document.querySelector('meta[property="og:image"]').content = item.fullImageUrl || avatar;
         const variants = item.variants.filter(variant => variant.id);
         const firstVariant = variants.find(variant => variant.inStock);
         const checkoutFor = variant => {
@@ -605,7 +606,7 @@
         };
         const priceFor = variant => variant?.price ? `${variant.price} ${variant.currency}` : item.price;
         const checkout = checkoutFor(firstVariant);
-        root.innerHTML = `${header}<main class="product-page"><a class="product-back" href="${escapeHtml(backUrl.href)}">Shop / ${escapeHtml(item.name)}</a><div class="product-layout"><div class="product-photo">${item.imageUrl ? `<img src="${escapeHtml(item.imageUrl)}" alt="${escapeHtml(item.name)}" fetchpriority="high">` : `<span class="site-product-image-placeholder">${escapeHtml(item.name.slice(0,1))}</span>`}</div><div class="product-details"><p class="site-kicker">${escapeHtml(name)} collection</p><h1>${escapeHtml(item.name)}</h1><p class="product-detail-price" data-detail-price>${escapeHtml(priceFor(firstVariant))}</p><p class="product-stock">${variants.length ? firstVariant ? 'In stock' : 'Currently unavailable' : 'See checkout for availability'}</p>${variants.length ? `<div class="product-options"><label for="product-variant">Choose size / color</label><select id="product-variant" class="site-product-variant">${variants.map(variant => `<option value="${escapeHtml(variant.id)}" ${variant.id === firstVariant?.id ? 'selected' : ''} ${variant.inStock ? '' : 'disabled'}>${escapeHtml(variant.name)}${variant.price ? ` · ${escapeHtml(variant.price)} ${escapeHtml(variant.currency)}` : ''}${variant.inStock ? '' : ' — Sold out'}</option>`).join('')}</select></div>` : ''}${checkout ? `<a class="site-button product-purchase ${style} shape-${shape}" data-detail-buy href="${escapeHtml(checkout)}" target="_blank" rel="noopener noreferrer">Buy now ↗</a>` : '<p class="product-stock">Purchasing is currently unavailable.</p>'}<section class="product-description"><h2>Product details</h2><p>${escapeHtml(item.description || 'More product details are coming soon.')}</p></section></div></div></main>`;
+        root.innerHTML = `${header}<main class="product-page"><a class="product-back" href="${escapeHtml(backUrl.href)}">Shop / ${escapeHtml(item.name)}</a><div class="product-layout"><div class="product-photo">${item.fullImageUrl ? `<img src="${escapeHtml(item.fullImageUrl)}" alt="${escapeHtml(item.name)}" fetchpriority="high">` : `<span class="site-product-image-placeholder">${escapeHtml(item.name.slice(0,1))}</span>`}</div><div class="product-details"><p class="site-kicker">${escapeHtml(name)} collection</p><h1>${escapeHtml(item.name)}</h1><p class="product-detail-price" data-detail-price>${escapeHtml(priceFor(firstVariant))}</p><p class="product-stock">${variants.length ? firstVariant ? 'In stock' : 'Currently unavailable' : 'See checkout for availability'}</p>${variants.length ? `<div class="product-options"><label for="product-variant">Choose size / color</label><select id="product-variant" class="site-product-variant">${variants.map(variant => `<option value="${escapeHtml(variant.id)}" ${variant.id === firstVariant?.id ? 'selected' : ''} ${variant.inStock ? '' : 'disabled'}>${escapeHtml(variant.name)}${variant.price ? ` · ${escapeHtml(variant.price)} ${escapeHtml(variant.currency)}` : ''}${variant.inStock ? '' : ' — Sold out'}</option>`).join('')}</select></div>` : ''}${checkout ? `<a class="site-button product-purchase ${style} shape-${shape}" data-detail-buy href="${escapeHtml(checkout)}" target="_blank" rel="noopener noreferrer">Buy now ↗</a>` : '<p class="product-stock">Purchasing is currently unavailable.</p>'}<section class="product-description"><h2>Product details</h2><p>${escapeHtml(item.description || 'More product details are coming soon.')}</p></section></div></div></main>`;
         document.getElementById('product-variant')?.addEventListener('change', event => {
           const variant = variants.find(option => option.id === event.target.value && option.inStock);
           if (!variant) return;

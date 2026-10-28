@@ -974,7 +974,7 @@
         const products = Array.isArray(website.products) ? website.products.filter(item => item && typeof item === 'object').slice(0, 100).map(item => ({
           id: String(item.id || '').slice(0, 120), fourthwallId: String(item.fourthwallId || item.id || '').slice(0, 120), provider: item.provider === 'fourthwall' ? 'fourthwall' : 'external',
           name: String(item.name || '').slice(0, 100), slug: String(item.slug || '').slice(0, 120), price: String(item.price || '').slice(0, 48), currency: String(item.currency || 'USD').slice(0, 8),
-          description: String(item.description || '').slice(0, 2000), imageUrl: String(item.imageUrl || '').slice(0, 1000), checkoutUrl: String(item.checkoutUrl || '').slice(0, 1000),
+          description: String(item.description || '').slice(0, 2000), imageUrl: String(item.imageUrl || '').slice(0, 1000), fullImageUrl: String(item.fullImageUrl || '').slice(0, 4000), checkoutUrl: String(item.checkoutUrl || '').slice(0, 1000),
           access: String(item.access || ''), available: typeof item.available === 'boolean' ? item.available : true,
           variants: Array.isArray(item.variants) ? item.variants.slice(0, 100).map(variant => ({ id: String(variant.id || '').slice(0, 120), name: String(variant.name || '').slice(0, 100), price: String(variant.price || '').slice(0, 48), currency: String(variant.currency || item.currency || 'USD').slice(0, 8), inStock: typeof variant.inStock === 'boolean' ? variant.inStock : true })) : []
         })) : [];
@@ -1401,7 +1401,7 @@
             primaryCta: String(website.primaryCta || 'Watch on Twitch').slice(0, 40),
             featured: website.featured.slice(0, 30).map(item => ({ title: String(item.title || '').slice(0, 80), description: String(item.description || '').slice(0, 240), url: profileImageUrl(item.url), imageUrl: profileImageUrl(item.imageUrl) })),
             fourthwallDomain: String(website.fourthwallDomain || '').slice(0, 240),
-            products: website.products.filter(item => item.provider !== 'fourthwall' || (item.access === 'PUBLIC' && item.available !== false)).slice(0, 100).map(item => ({ id: String(item.id || '').slice(0, 120), fourthwallId: String(item.fourthwallId || '').slice(0, 120), provider: item.provider === 'fourthwall' ? 'fourthwall' : 'external', name: String(item.name || '').slice(0, 100), slug: String(item.slug || '').slice(0, 120), price: String(item.price || '').slice(0, 48), currency: String(item.currency || 'USD').slice(0, 8), description: String(item.description || '').slice(0, 2000), imageUrl: profileImageUrl(item.imageUrl), checkoutUrl: safeProfileLink(item.checkoutUrl), access: String(item.access || ''), available: item.available !== false, variants: Array.isArray(item.variants) ? item.variants.filter(variant => item.provider !== 'fourthwall' || variant.inStock !== false).slice(0, 100).map(variant => ({ id: String(variant.id || '').slice(0, 120), name: String(variant.name || '').slice(0, 100), price: String(variant.price || '').slice(0, 48), currency: String(variant.currency || item.currency || 'USD').slice(0, 8), inStock: variant.inStock !== false })) : [] }))
+            products: website.products.filter(item => item.provider !== 'fourthwall' || (item.access === 'PUBLIC' && item.available !== false)).slice(0, 100).map(item => ({ id: String(item.id || '').slice(0, 120), fourthwallId: String(item.fourthwallId || '').slice(0, 120), provider: item.provider === 'fourthwall' ? 'fourthwall' : 'external', name: String(item.name || '').slice(0, 100), slug: String(item.slug || '').slice(0, 120), price: String(item.price || '').slice(0, 48), currency: String(item.currency || 'USD').slice(0, 8), description: String(item.description || '').slice(0, 2000), imageUrl: profileImageUrl(item.imageUrl), fullImageUrl: profileImageUrl(item.fullImageUrl || item.imageUrl), checkoutUrl: safeProfileLink(item.checkoutUrl), access: String(item.access || ''), available: item.available !== false, variants: Array.isArray(item.variants) ? item.variants.filter(variant => item.provider !== 'fourthwall' || variant.inStock !== false).slice(0, 100).map(variant => ({ id: String(variant.id || '').slice(0, 120), name: String(variant.name || '').slice(0, 100), price: String(variant.price || '').slice(0, 48), currency: String(variant.currency || item.currency || 'USD').slice(0, 8), inStock: variant.inStock !== false })) : [] }))
           }
         };
       }
@@ -1556,11 +1556,12 @@
         const access = String(product.access?.type || 'HIDDEN');
         const available = String(product.state?.type || 'AVAILABLE') !== 'SOLD_OUT' && variants.some(variant => variant.inStock);
         const thumbnail = product.thumbnailImage?.transformedUrl || product.thumbnailImage?.url || product.images?.[0]?.transformedUrl || product.images?.[0]?.url || '';
+        const fullImage = product.images?.[0]?.url || product.images?.[0]?.transformedUrl || product.thumbnailImage?.url || thumbnail;
         return {
           id: String(product.id || ''), fourthwallId: String(product.id || ''), provider: 'fourthwall',
           name: String(product.name || ''), slug: String(product.slug || ''), description: String(product.description || ''),
           price: prices.length ? `${Math.min(...prices).toFixed(2)} ${variants[0]?.currency || 'USD'}` : '', currency: variants[0]?.currency || 'USD',
-          imageUrl: String(thumbnail), checkoutUrl: '', access, available, variants
+          imageUrl: String(thumbnail), fullImageUrl: String(fullImage), checkoutUrl: '', access, available, variants
         };
       }
       async function syncFourthwallCatalog() {
