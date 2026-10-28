@@ -344,16 +344,16 @@
     .site-shop-heading .site-section-head h2 { margin-bottom: 0; }
     .site-shop-intro { max-width: 490px; margin: 10px 0 0; color: var(--site-muted); font-size: 13px; line-height: 1.6; }
     .site-shop-count { flex: 0 0 auto; padding-bottom: 4px; color: var(--site-muted); font-size: 10px; }
-    .site-shop-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,245px),1fr)); gap: 20px; }
+    .site-shop-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(0,220px)); justify-content: start; gap: 16px; }
     .site-product { display: flex; min-width: 0; flex-direction: column; overflow: hidden; border: 1px solid var(--site-line); border-radius: 7px; background: color-mix(in srgb,var(--site-ink) 4%,var(--site-bg)); transition: border-color .2s ease,transform .2s ease; }
     .site-product:hover { border-color: color-mix(in srgb,var(--site-accent) 45%,var(--site-line)); transform: translateY(-2px); }
     .site-product-image-wrap { display: grid; aspect-ratio: 1; place-items: center; overflow: hidden; padding: 12px; background: color-mix(in srgb,var(--site-ink) 7%,var(--site-bg)); }
     .site-product-image { display: block; width: 100%; height: 100%; object-fit: contain; transition: transform .25s ease; }
     .site-product:hover .site-product-image { transform: scale(1.025); }
     .site-product-image-placeholder { display: grid; width: 100%; height: 100%; place-items: center; color: color-mix(in srgb,var(--site-accent) 70%,var(--site-ink)); font: 600 28px 'Space Grotesk',sans-serif; }
-    .site-product-info { display: flex; min-height: 178px; flex: 1; flex-direction: column; align-items: flex-start; padding: 17px; }
-    .site-product-title-row { display: flex; width: 100%; align-items: baseline; justify-content: space-between; gap: 12px; }
-    .site-product h3 { margin: 0; font: 600 16px/1.3 'Space Grotesk',sans-serif; overflow-wrap: anywhere; }
+    .site-product-info { display: flex; min-height: 150px; flex: 1; flex-direction: column; align-items: flex-start; padding: 13px; }
+    .site-product-title-row { display: flex; width: 100%; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 10px; }
+    .site-product h3 { margin: 0; font: 600 14px/1.3 'Space Grotesk',sans-serif; overflow-wrap: anywhere; }
     .site-product-price { flex: 0 0 auto; color: var(--site-accent); font: 600 13px 'Space Grotesk',sans-serif; }
     .site-product p { display: -webkit-box; overflow: hidden; margin: 9px 0 16px; color: var(--site-muted); font-size: 11px; line-height: 1.6; line-clamp: 3; -webkit-box-orient: vertical; -webkit-line-clamp: 3; }
     .site-product-variant { width: 100%; min-height: 38px; margin: 2px 0 12px; padding: 0 10px; border: 1px solid var(--site-line); border-radius: 5px; color: var(--site-ink); background: var(--site-bg); font: inherit; font-size: 10px; }
@@ -362,7 +362,7 @@
     .site-shop-empty { display: grid; min-height: 180px; align-content: center; justify-items: center; gap: 10px; padding: 28px; border: 1px dashed var(--site-line); border-radius: 8px; color: var(--site-muted); text-align: center; }
     .site-shop-empty strong { color: var(--site-ink); font: 600 17px 'Space Grotesk',sans-serif; }
     .site-shop-empty span { max-width: 420px; font-size: 12px; line-height: 1.6; }
-    @media (max-width: 560px) { .site-shop-heading { align-items: flex-start; flex-direction: column; gap: 9px; margin-bottom: 18px; }.site-shop-grid { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 11px; }.site-product-image-wrap { padding: 7px; }.site-product-info { min-height: 166px; padding: 12px; }.site-product-title-row { align-items: flex-start; flex-direction: column; gap: 5px; }.site-product h3 { font-size: 13px; }.site-product p { font-size: 10px; }.site-product-buy { width: 100%; padding: 0 8px; font-size: 9px; } }
+    @media (max-width: 560px) { .site-shop-heading { align-items: flex-start; flex-direction: column; gap: 9px; margin-bottom: 18px; }.site-shop-grid { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 11px; }.site-product-image-wrap { padding: 7px; }.site-product-info { min-height: 150px; padding: 10px; }.site-product-title-row { align-items: flex-start; flex-direction: column; gap: 5px; }.site-product h3 { font-size: 13px; }.site-product p { font-size: 10px; }.site-product-buy { width: 100%; padding: 0 8px; font-size: 9px; } }
   </style>
 </head>
 <body>
