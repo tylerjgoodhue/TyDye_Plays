@@ -16,7 +16,12 @@ await mkdir(creatorHq, { recursive: true });
 
 await cp(path.join(root, 'profile.html'), path.join(output, 'index.html'));
 await cp(path.join(root, 'profile.html'), path.join(output, 'profile.html'));
-await cp(path.join(root, 'product.html'), path.join(output, 'product.html'));
+for (const page of ['product.html', 'shop.html', 'cart.html']) {
+	await cp(path.join(root, 'profile.html'), path.join(output, page));
+}
+for (const asset of ['storefront.js', 'storefront.css', 'storefront-config.json']) {
+	await cp(path.join(root, asset), path.join(output, asset));
+}
 await cp(path.join(root, 'linktree.html'), path.join(output, 'linktree.html'));
 await cp(path.join(root, 'public-profile.json'), path.join(output, 'public-profile.json'));
 const customDomain = process.env.PAGES_CUSTOM_DOMAIN?.trim().toLowerCase();

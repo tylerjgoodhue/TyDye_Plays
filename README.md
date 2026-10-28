@@ -199,3 +199,20 @@ The current workspace migration stores `creator_workspaces` (one JSONB snapshot 
 ## Data behavior
 
 The analytics view intentionally shows no demonstration numbers. Audience metrics appear only after an explicitly authorized platform integration; Linktree click counts are collected automatically after social analytics is configured. Reminders are derived from saved workspace dates and are limited to overdue items plus the next 14 days. No email or automatic Discord announcement service is active.
+
+## Live Fourthwall storefront
+
+The public shop now uses Fourthwall's Storefront API directly. `storefront-config.json` contains the **public storefront token**, the checkout origin, and the collection slug. This token is intended for browser use. Never put the Platform API username/password or a Supabase secret key in this file.
+
+- `shop.html`: live collection, search, price/name sorting, availability, and compact product cards.
+- `product.html?product=<slug>`: full-resolution gallery, color-specific photos, size/color choices, live price and stock, quantity, sizing guidance, product details, and the actual Fourthwall returns policy. Older published product-ID links are resolved through the public profile.
+- `cart.html`: a real Fourthwall cart, persisted by cart ID in this browser, with quantity changes, removal, server prices, and checkout validation. No local prices are trusted for checkout. The preview uses separate cart storage.
+- `storefront.js` / `storefront.css`: shared shopping behavior and responsive layout. `profile.html` is the canonical page template; the build copies it to all public shopping routes.
+
+Catalog data comes from the configured public Fourthwall collection (`all` by default) on each visit. Product/stock/photo changes do not require re-publishing the creator profile. Checkout uses the API-created cart at `/checkout/?cartCurrency=USD&cartId=...` on the configured Fourthwall shop domain. Shipping addresses, payment, tax, promo codes, and order confirmation are handled there. Fourthwall's public Storefront API does not expose a standalone payment form or a customer order-history API. The existing authenticated Creator HQ order/inventory/fulfillment tools remain available to the shop owner. Bundles are not included in this version of the product grid; the current store's regular products are supported.
+
+The storefront reports loading failures with a retry control and disables unavailable variants. A cart is cleared only when Fourthwall confirms its ID no longer exists; network failures do not erase it. Cart mutations are never automatically replayed after a timeout, to avoid adding an item twice.
+
+Build with `node scripts/build-site.mjs` and publish the generated `dist/` folder through the existing GitHub Pages workflow. The build includes all shop/cart/product pages, shared assets, and public configuration. Test locally by serving `dist/` over HTTP; opening HTML files directly cannot load configuration or call the APIs correctly.
+
+Official references: [Storefront getting started](https://docs.fourthwall.com/storefront/getting-started), [Cart and checkout](https://docs.fourthwall.com/storefront/cart-checkout-tutorial), [Checkout setup](https://docs.fourthwall.com/storefront/checkout).

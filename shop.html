@@ -1,0 +1,781 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#121712">
+  <meta name="description" content="Visit the creator's Twitch home for live updates, stream times, highlights, and community links.">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Twitch creator">
+  <meta property="og:description" content="Live updates, stream times, highlights, and community links.">
+  <meta property="og:image" content="https://images.unsplash.com/photo-1593305841991-05c297ba4575?auto=format&fit=crop&w=1200&h=630&q=85">
+  <meta name="twitter:card" content="summary_large_image">
+  <title>Creator profile</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root { color-scheme: dark; font-family: 'DM Sans',sans-serif; background: #121712; color: #f0f3ed; font-synthesis: none; }
+    * { box-sizing: border-box; }
+    body { display: grid; min-width: 320px; min-height: 100vh; place-items: center; margin: 0; padding: 28px 16px; background: radial-gradient(ellipse at 50% -18%, #34422e 0, transparent 54%), #121712; }
+    .profile-shell { width: min(100%,420px); animation: arrive .45s ease-out both; }
+    .profile-card { padding: 34px 25px 24px; border: 1px solid #ffffff20; border-radius: 17px; text-align: center; box-shadow: 0 28px 80px #0005; }
+    .profile-avatar { display: grid; width: 94px; height: 94px; place-items: center; overflow: hidden; margin: 0 auto 18px; border: 2px solid #ffffff48; border-radius: 50%; background: #ffffff19; font: 600 25px 'Space Grotesk',sans-serif; }
+    .profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    h1 { margin: 0; font: 600 27px 'Space Grotesk',sans-serif; overflow-wrap: anywhere; }
+    .handle { margin: 7px 0 0; opacity: .7; font-size: 12px; }
+    .bio { margin: 17px 0 22px; font-size: 13px; line-height: 1.65; white-space: pre-wrap; overflow-wrap: anywhere; }
+    .links { display: grid; gap: 11px; }
+    .profile-link { display: flex; min-height: 54px; align-items: center; gap: 12px; padding: 9px 15px; border: 1px solid transparent; color: inherit; text-align: left; text-decoration: none; transition: transform .16s ease, filter .16s ease; }
+    .profile-link:hover { filter: brightness(1.1); transform: translateY(-2px); }
+    .profile-link:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
+    .link-icon { display: grid; width: 30px; height: 30px; flex: 0 0 30px; place-items: center; border-radius: 50%; background: #00000018; font-size: 12px; font-weight: 700; }
+    .link-label { flex: 1; font-size: 13px; font-weight: 600; }
+    .link-arrow { opacity: .62; }
+    .solid { background: var(--button); color: var(--button-text); }
+    .outline { border-color: currentColor; background: transparent; }
+    .glass { border-color: #ffffff38; background: #ffffff14; backdrop-filter: blur(8px); }
+    .square { border-radius: 4px; }
+    .rounded { border-radius: 9px; }
+    .pill { border-radius: 99px; }
+    .footer { margin: 25px 0 0; color: #a8b0a5; font-size: 10px; text-align: center; }
+    .footer a { color: inherit; text-decoration: none; }
+    .empty { width: min(100%,430px); padding: 25px; border: 1px solid #ffffff20; border-radius: 12px; background: #191e19; }
+    .empty h1 { font-size: 20px; }
+    .empty p { margin: 10px 0 0; color: #a8b0a5; font-size: 13px; line-height: 1.6; }
+    @keyframes arrive { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    @media (max-width: 440px) { body { padding: 16px 12px; }.profile-card { padding: 28px 18px 20px; } }
+    @media (prefers-reduced-motion: reduce) { *,*::before,*::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; } }
+    :root { --site-bg: #111411; --site-ink: #f0f3ed; --site-muted: #bdc5b9; --site-accent: #c6f36b; --site-button-text: #17200f; --site-line: #ffffff24; color-scheme: dark; scroll-behavior: smooth; }
+    .creator-site { width: 100%; min-width: 0; overflow-x: clip; }
+    body { display: block; min-width: 320px; padding: 0; background: var(--site-bg); color: var(--site-ink); }
+    a { color: inherit; }
+    .site-nav { position: sticky; top: 0; z-index: 10; display: flex; width: 100%; min-width: 0; min-height: 74px; align-items: center; justify-content: space-between; gap: 24px; padding: 0 max(5vw,24px); border-bottom: 1px solid #ffffff20; background: color-mix(in srgb,var(--site-bg) 90%,transparent); backdrop-filter: blur(18px); }
+    .site-wordmark { display: inline-flex; min-width: max-content; align-items: center; gap: 10px; font: 600 14px 'Space Grotesk',sans-serif; text-decoration: none; }
+    .site-mark { display: grid; width: 31px; height: 31px; place-items: center; border: 1px solid var(--site-accent); border-radius: 50%; color: var(--site-accent); font-size: 12px; }
+    .site-nav-links { display: flex; min-width: 0; flex: 1; align-items: center; justify-content: center; gap: 8px; overflow-x: auto; padding: 0 8px; color: #e6ebe3; font-size: 11px; scrollbar-width: none; overscroll-behavior-x: contain; scroll-padding-inline: 8px; scroll-snap-type: x mandatory; }
+    .site-nav-links::-webkit-scrollbar { display: none; }
+    .site-nav-links a { min-width: max-content; padding: 10px 13px; border-radius: 99px; scroll-snap-align: center; text-decoration: none; opacity: .72; transition: background .16s, color .16s, opacity .16s; }
+    .site-nav-links a:hover, .site-nav-links a.is-active { color: var(--site-accent); background: #ffffff0d; opacity: 1; }
+    .site-nav-cta, .site-button { display: inline-flex; min-height: 45px; align-items: center; justify-content: center; gap: 10px; padding: 0 17px; border: 1px solid transparent; color: var(--site-button-text); background: var(--site-accent); font-size: 11px; font-weight: 700; text-decoration: none; transition: transform .16s, filter .16s; }
+    .site-nav-cta:hover, .site-button:hover { filter: brightness(1.08); transform: translateY(-2px); }
+    .site-button.outline, .site-nav-cta.outline { border-color: var(--site-accent); color: var(--site-ink); background: transparent; }
+    .site-button.glass, .site-nav-cta.glass { border-color: #ffffff44; color: var(--site-ink); background: #ffffff16; backdrop-filter: blur(8px); }
+    .shape-square { border-radius: 3px; }.shape-rounded { border-radius: 7px; }.shape-pill { border-radius: 99px; }
+    .site-hero { position: relative; display: flex; min-height: 650px; height: min(86svh,900px); align-items: center; overflow: hidden; isolation: isolate; padding: 90px max(8vw,24px) 74px; scroll-margin-top: 74px; }
+    .site-hero::after { position: absolute; inset: 0; z-index: -1; background: linear-gradient(90deg,#0b0e0be8 0%,#0b0e0b9c 46%,#0b0e0b20 100%),linear-gradient(0deg,var(--site-bg) 0%,transparent 34%); content: ''; }
+    .site-hero-image { position: absolute; inset: 0; z-index: -2; width: 100%; height: 100%; object-fit: cover; object-position: center 54%; animation: hero-arrive .8s ease-out both; }
+    .site-hero-copy { width: min(100%,760px); animation: rise .55s ease-out both; }
+    .site-status { display: inline-flex; align-items: center; gap: 9px; margin-bottom: 22px; color: #e8eee5; font-size: 10px; font-weight: 700; text-transform: uppercase; }
+    .site-status-dot { width: 8px; height: 8px; border-radius: 50%; background: #9ca597; }
+    .site-status.live .site-status-dot { background: #ff655f; box-shadow: 0 0 14px #ff655f99; }
+    .site-status.checking .site-status-dot { background: var(--site-accent); animation: status-pulse 1.2s ease-in-out infinite alternate; }
+    .site-status.unavailable { color: #b5beb1; }
+    @keyframes status-pulse { to { opacity: .35; } }
+    .site-eyebrow { margin: 0 0 12px; color: var(--site-accent); font-size: 11px; font-weight: 700; text-transform: uppercase; }
+    .site-hero h1 { max-width: 820px; margin: 0; font: 600 58px/1.04 'Space Grotesk',sans-serif; letter-spacing: 0; overflow-wrap: anywhere; }
+    .site-hero-title-image { display: block; width: min(100%,560px); max-height: 180px; object-fit: contain; object-position: left center; }
+    .site-hero-socials { position: absolute; top: 20px; right: max(10vw,40px); z-index: 2; display: flex; max-width: calc(100% - 48px); flex-wrap: wrap; justify-content: flex-end; gap: 9px; }
+    .site-hero-social-link { display: grid; width: 42px; height: 42px; flex: 0 0 42px; place-items: center; border: 1px solid #ffffff42; border-radius: 50%; color: var(--site-ink); background: #101510b8; backdrop-filter: blur(8px); text-decoration: none; transition: border-color .16s, color .16s, transform .16s; }
+    .site-hero-social-link:hover { transform: translateY(-2px); border-color: var(--site-accent); color: var(--site-accent); }
+    .site-hero-social-link:focus-visible { outline: 2px solid var(--site-accent); outline-offset: 3px; }
+    .site-hero-social-link svg { width: 19px; height: 19px; fill: currentColor; }
+    .site-hero-tagline { max-width: 560px; margin: 17px 0 26px; color: #d5dcd1; font-size: 16px; line-height: 1.65; }
+    .site-hero-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+    .site-hero-handle { margin-top: 22px; color: #c3cbc0; font-size: 11px; }
+    .site-scroll-cue { position: absolute; right: max(5vw,24px); bottom: 47px; display: flex; align-items: center; gap: 10px; color: #d5ddd1; font-size: 9px; text-transform: uppercase; writing-mode: vertical-rl; }
+    .site-scroll-cue::after { width: 1px; height: 42px; background: var(--site-accent); content: ''; }
+    .site-section { padding: 100px max(8vw,24px); scroll-margin-top: 74px; }
+    .site-section-head { max-width: 680px; margin-bottom: 35px; }
+    .site-kicker { margin: 0 0 11px; color: var(--site-accent); font-size: 10px; font-weight: 700; text-transform: uppercase; }
+    .site-section h2 { margin: 0; font: 600 38px/1.12 'Space Grotesk',sans-serif; letter-spacing: 0; }
+    .site-about { display: grid; grid-template-columns: minmax(0,1.1fr) minmax(260px,.75fr); gap: 12vw; align-items: start; background: linear-gradient(110deg,color-mix(in srgb,var(--site-accent) 5%,var(--site-bg)),var(--site-bg) 58%); }
+    .site-about-copy { max-width: 670px; color: var(--site-muted); font-size: 14px; line-height: 1.85; white-space: pre-wrap; }
+    .site-schedule { padding-top: 8px; border-top: 1px solid var(--site-line); }
+    .site-schedule h3 { margin: 0 0 12px; font: 600 14px 'Space Grotesk',sans-serif; }
+    .site-schedule-group + .site-schedule-group { margin-top: 27px; }
+    .site-schedule-group-title { margin: 0 0 4px; color: var(--site-accent); font-size: 9px; font-weight: 700; text-transform: uppercase; }
+    .site-schedule-list { display: grid; }
+    .site-schedule-row { display: flex; justify-content: space-between; gap: 18px; padding: 13px 0; border-bottom: 1px solid var(--site-line); color: var(--site-muted); font-size: 11px; white-space: pre-wrap; }
+    .site-schedule-row span:last-child { color: var(--site-ink); text-align: right; }
+    .site-featured { background: color-mix(in srgb, var(--site-ink) 4%, var(--site-bg)); }
+    .site-feature-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 17px; }
+    .site-feature { min-width: 0; color: inherit; text-decoration: none; }
+    .site-feature-image-wrap { position: relative; aspect-ratio: 16/10; overflow: hidden; background: #202620; }
+    .site-feature-image { width: 100%; height: 100%; object-fit: cover; transition: transform .3s ease; }
+    .site-feature:hover .site-feature-image { transform: scale(1.035); }
+    .site-feature-play { position: absolute; left: 50%; top: 50%; display: grid; width: 48px; height: 48px; place-items: center; transform: translate(-50%,-50%); border: 1px solid #ffffffaa; border-radius: 50%; color: #fff; background: #1119; font-size: 16px; }
+    .site-feature h3 { margin: 15px 0 6px; font: 600 16px 'Space Grotesk',sans-serif; }
+    .site-feature p { margin: 0; color: var(--site-muted); font-size: 11px; line-height: 1.6; }
+    .site-empty-feature { padding: 35px 0; color: var(--site-muted); font-size: 12px; }
+    .site-community { display: flex; align-items: end; justify-content: space-between; gap: 24px; padding-top: 75px; padding-bottom: 75px; border-top: 1px solid var(--site-line); scroll-margin-top: 74px; }
+    .site-community h2 { max-width: 630px; }
+    .site-community p { margin: 13px 0 0; color: var(--site-muted); font-size: 12px; line-height: 1.6; }
+    .site-socials { display: flex; flex-wrap: wrap; gap: 9px; padding: 24px max(8vw,24px); border-top: 1px solid var(--site-line); }
+    .site-social-link { display: inline-flex; min-height: 37px; align-items: center; gap: 8px; padding: 0 12px; border: 1px solid var(--site-line); color: var(--site-ink); font-size: 10px; text-decoration: none; }
+    .site-social-link:hover { border-color: var(--site-accent); }
+    .site-footer { display: flex; justify-content: space-between; gap: 20px; padding: 20px max(8vw,24px) 30px; color: #8f998d; font-size: 9px; }
+    .site-footer a { text-decoration: none; }
+    .site-nav { border-bottom-color: color-mix(in srgb,var(--site-accent) 20%,transparent); }
+    .site-mark { border-radius: 9px; }
+    .site-nav-cta, .site-button { min-height: 48px; }
+    .site-nav-cta { box-shadow: 0 8px 26px color-mix(in srgb,var(--site-accent) 18%,transparent); }
+    .site-hero { min-height: 690px; height: min(88svh,920px); padding-right: max(10vw,40px); padding-left: max(10vw,40px); }
+    .site-hero::after { background: linear-gradient(90deg,#0b0e0bf2 0%,#0b0e0bbd 38%,#0b0e0b30 78%,#0b0e0b14 100%),linear-gradient(0deg,var(--site-bg) 0%,transparent 28%); }
+    .site-hero-image { object-position: center 58%; }
+    .site-hero-copy { width: min(100%,680px); }
+    .site-status { padding: 9px 12px; border: 1px solid #ffffff26; border-radius: 99px; background: #101510a8; backdrop-filter: blur(8px); }
+    .site-eyebrow, .site-kicker { letter-spacing: .08em; }
+    .site-hero h1 { max-width: 680px; font-size: clamp(58px,7vw,88px); line-height: .98; }
+    .site-hero-tagline { max-width: 490px; font-size: 17px; }
+    .site-button { box-shadow: 0 10px 30px color-mix(in srgb,var(--site-accent) 17%,transparent); }
+    .site-button:focus-visible, .site-nav-cta:focus-visible, .site-nav-links a:focus-visible, .site-social-link:focus-visible, .site-feature:focus-visible { outline: 2px solid var(--site-accent); outline-offset: 4px; }
+    .site-broadcast { display: grid; grid-template-columns: minmax(0,1fr) auto auto; align-items: center; gap: 28px; padding: 24px max(10vw,40px); border-top: 1px solid var(--site-line); border-bottom: 1px solid var(--site-line); background: linear-gradient(100deg,color-mix(in srgb,var(--site-accent) 9%,var(--site-bg)),color-mix(in srgb,var(--site-ink) 3%,var(--site-bg)) 66%); }
+    .site-broadcast-label { display: flex; align-items: center; gap: 9px; margin: 0 0 7px; color: var(--site-accent); font-size: 9px; font-weight: 700; text-transform: uppercase; }
+    .site-broadcast-label .site-status-dot { width: 7px; height: 7px; background: #8b9488; }
+    .site-broadcast.is-live .site-broadcast-label .site-status-dot { background: #ff655f; box-shadow: 0 0 12px #ff655f99; }
+    .site-broadcast h2 { margin: 0; font: 600 19px/1.25 'Space Grotesk',sans-serif; overflow-wrap: anywhere; }
+    .site-broadcast-copy { margin: 5px 0 0; color: var(--site-muted); font-size: 11px; line-height: 1.5; }
+    .site-broadcast-stat { min-width: 90px; padding-left: 22px; border-left: 1px solid var(--site-line); }
+    .site-broadcast-stat span { display: block; color: var(--site-muted); font-size: 9px; text-transform: uppercase; }
+    .site-broadcast-stat strong { display: block; margin-top: 5px; font: 600 12px 'Space Grotesk',sans-serif; }
+    .site-broadcast-link { min-width: 150px; }
+    .site-about { gap: 9vw; padding-top: 92px; padding-bottom: 92px; }
+    .site-schedule { padding-top: 8px; border-top: 1px solid var(--site-line); }
+    .site-schedule h3 { margin: 0 0 12px; font: 600 14px 'Space Grotesk',sans-serif; }
+    .site-schedule-group + .site-schedule-group { margin-top: 27px; }
+    .site-schedule-group-title { margin: 0 0 4px; color: var(--site-accent); font-size: 9px; font-weight: 700; text-transform: uppercase; }
+    .site-schedule-list { display: grid; }
+    .site-schedule-row { display: flex; justify-content: space-between; gap: 18px; padding: 13px 0; border-bottom: 1px solid var(--site-line); color: var(--site-muted); font-size: 11px; white-space: pre-wrap; }
+    .site-schedule-row span:last-child { color: var(--site-ink); text-align: right; }
+    .site-featured { background: color-mix(in srgb,var(--site-accent) 3%,var(--site-bg)); }
+    .site-feature-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 17px; }
+    .site-feature { min-width: 0; color: inherit; text-decoration: none; }
+    .site-feature-image-wrap { position: relative; aspect-ratio: 16/10; overflow: hidden; background: #202620; }
+    .site-feature-image { width: 100%; height: 100%; object-fit: cover; transition: transform .3s ease; }
+    .site-feature:hover .site-feature-image { transform: scale(1.035); }
+    .site-feature-play { position: absolute; left: 50%; top: 50%; display: grid; width: 48px; height: 48px; place-items: center; transform: translate(-50%,-50%); border: 1px solid #ffffffaa; border-radius: 50%; color: #fff; background: #1119; font-size: 16px; }
+    .site-feature h3 { margin: 15px 0 6px; font: 600 16px 'Space Grotesk',sans-serif; }
+    .site-feature p { margin: 0; color: var(--site-muted); font-size: 11px; line-height: 1.6; }
+    .site-empty-feature { padding: 35px 0; color: var(--site-muted); font-size: 12px; }
+    .site-community { display: flex; align-items: end; justify-content: space-between; gap: 24px; padding-top: 75px; padding-bottom: 75px; border-top: 1px solid var(--site-line); scroll-margin-top: 74px; }
+    .site-community h2 { max-width: 630px; }
+    .site-community p { margin: 13px 0 0; color: var(--site-muted); font-size: 12px; line-height: 1.6; }
+    .site-socials { display: flex; flex-wrap: wrap; gap: 9px; padding: 24px max(8vw,24px); border-top: 1px solid var(--site-line); }
+    .site-social-link { display: inline-flex; min-height: 37px; align-items: center; gap: 8px; padding: 0 12px; border: 1px solid var(--site-line); color: var(--site-ink); font-size: 10px; text-decoration: none; }
+    .site-social-link:hover { border-color: var(--site-accent); }
+    .site-footer { display: flex; justify-content: space-between; gap: 20px; padding: 20px max(8vw,24px) 30px; color: #8f998d; font-size: 9px; }
+    .site-footer a { text-decoration: none; }
+    .site-nav { border-bottom-color: color-mix(in srgb,var(--site-accent) 20%,transparent); }
+    .site-mark { border-radius: 9px; }
+    .site-nav-cta, .site-button { min-height: 48px; }
+    .site-nav-cta { box-shadow: 0 8px 26px color-mix(in srgb,var(--site-accent) 18%,transparent); }
+    .site-hero { min-height: min(760px,calc(100svh - 66px)); height: auto; align-items: flex-start; padding: clamp(104px,18svh,170px) 24px 66px; }
+    .site-hero::after { background: linear-gradient(90deg,#0b0e0be8 0%,#0b0e0bb0 58%,#0b0e0b4c 100%),linear-gradient(0deg,var(--site-bg) 0%,transparent 52%); }
+    .site-hero-image { object-position: 62% center; }
+    .site-hero h1 { max-width: 560px; font-size: clamp(42px,10vw,64px); }
+    .site-hero-tagline { max-width: 430px; font-size: 15px; }
+    .site-broadcast { grid-template-columns: minmax(0,1fr) auto; gap: 14px; padding: 20px 24px; }
+    .site-broadcast-stat { display: none; }
+    .site-broadcast-link { min-width: 0; min-height: 42px; padding: 0 12px; }
+    .site-about { padding-top: 60px; padding-bottom: 60px; }
+    .site-schedule { padding: 17px; }
+    .site-feature-grid { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; }
+    .site-feature h3, .site-feature p { margin-right: 12px; margin-left: 12px; }
+    .site-feature h3 { font-size: 14px; }
+    .site-feature p { font-size: 10px; }
+    .site-empty-feature { grid-column: 1/-1; border-top: 1px solid var(--site-line); }
+    .site-community { padding-top: 82px; padding-bottom: 82px; background: radial-gradient(ellipse at 85% 50%,color-mix(in srgb,var(--site-accent) 8%,transparent),transparent 46%); }
+    .site-socials { gap: 10px; }
+    .site-social-link { min-height: 42px; border-radius: 5px; background: color-mix(in srgb,var(--site-ink) 3%,var(--site-bg)); }
+    .site-footer { padding-top: 25px; }
+    @media (max-width: 760px) {
+      .site-hero { min-height: min(760px,calc(100svh - 66px)); height: auto; align-items: flex-start; padding: clamp(104px,18svh,170px) 24px 66px; }
+      .site-hero::after { background: linear-gradient(90deg,#0b0e0bf0 0%,#0b0e0bc4 58%,#0b0e0b64 100%),linear-gradient(0deg,var(--site-bg) 0%,transparent 52%); }
+      .site-hero-image { object-position: 62% center; }
+      .site-hero h1 { max-width: 560px; font-size: clamp(42px,10vw,64px); }
+      .site-hero-tagline { max-width: 430px; font-size: 15px; }
+      .site-broadcast { grid-template-columns: minmax(0,1fr) auto; gap: 14px; padding: 20px 24px; }
+      .site-broadcast-stat { display: none; }
+      .site-broadcast-link { min-width: 0; min-height: 42px; padding: 0 12px; }
+      .site-about { padding-top: 60px; padding-bottom: 60px; }
+      .site-schedule { padding: 17px; }
+      .site-feature-grid { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; }
+      .site-feature h3, .site-feature p { margin-right: 12px; margin-left: 12px; }
+      .site-feature h3 { font-size: 14px; }
+      .site-feature p { font-size: 10px; }
+    }
+    @media (max-width: 480px) {
+      .site-nav { min-height: 96px; flex-wrap: wrap; justify-content: space-between; gap: 0 8px; padding: 8px 16px 5px; }
+      .site-wordmark, .site-nav-cta { align-self: center; }
+      .site-nav-links { order: 3; flex: 0 0 100%; justify-content: center; gap: 8px; overflow: visible; padding: 0; }
+      .site-nav-links a { padding: 8px 10px; font-size: 10px; }
+      .site-hero, .site-section, .site-community { scroll-margin-top: 96px; }
+      .site-hero { min-height: min(710px,calc(100svh - 96px)); padding-top: clamp(82px,11svh,104px); }
+      .site-hero h1 { font-size: 42px; }
+      .site-hero-actions { align-items: flex-start; flex-direction: row; max-width: none; }
+      .site-hero-actions .site-button { width: auto; min-width: min(100%,240px); }
+      .site-broadcast { grid-template-columns: 1fr; gap: 14px; }
+      .site-broadcast-link { justify-self: start; }
+      .site-feature-grid { grid-template-columns: 1fr; gap: 19px; }
+      .site-feature h3 { font-size: 15px; }
+      .site-feature p { font-size: 11px; }
+      .site-section h2 { font-size: 27px; }
+      .site-footer { flex-direction: column; }
+    }
+    .site-mark { overflow: hidden; border: 1px solid color-mix(in srgb,var(--site-accent) 70%,transparent); background: color-mix(in srgb,var(--site-accent) 12%,var(--site-bg)); }
+    .site-mark img { width: 100%; height: 100%; object-fit: cover; }
+    .site-wordmark { font-size: 15px; }
+    .site-hero { min-height: min(790px,calc(100svh - 74px)); }
+    .site-hero-copy { position: relative; }
+    .site-hero-copy::before { position: absolute; top: -34px; left: -24px; width: 3px; height: calc(100% + 68px); background: linear-gradient(var(--site-accent),transparent 88%); content: ''; opacity: .75; }
+    .site-hero-handle { display: none; }
+    .site-scroll-cue { color: var(--site-accent); font-weight: 700; text-decoration: none; }
+    .site-about { grid-template-columns: minmax(0,1.15fr) minmax(280px,.75fr); }
+    .site-about-copy { font-size: 15px; }
+    .site-schedule { align-self: stretch; }
+    .site-schedule h3 { font-size: 18px; }
+    .site-schedule-row { font-size: 12px; }
+    .site-feature-grid { grid-template-columns: 1fr; }
+    .site-feature:only-child { display: grid; grid-template-columns: minmax(0,1.15fr) minmax(240px,.85fr); align-items: center; max-width: 100%; }
+    .site-feature:only-child .site-feature-image-wrap { height: 100%; min-height: 250px; aspect-ratio: auto; }
+    .site-feature:only-child h3 { margin: 0 24px 9px; font-size: 22px; }
+    .site-feature:only-child p { margin: 0 24px 24px; font-size: 12px; }
+    .site-feature-content { align-self: center; }
+    .site-feature-meta { display: block; margin: 0 24px 12px; color: var(--site-accent); font-size: 9px; font-weight: 700; text-transform: uppercase; }
+    .site-community { position: relative; overflow: hidden; border-top: 0; background: linear-gradient(110deg,color-mix(in srgb,var(--site-accent) 13%,var(--site-bg)),var(--site-bg) 76%); }
+    .site-community::before { position: absolute; top: 0; left: max(8vw,24px); width: 72px; height: 3px; background: var(--site-accent); content: ''; }
+    .site-community > * { position: relative; }
+    .site-community .site-kicker { margin-bottom: 13px; }
+    .site-community h2 { max-width: 600px; font-size: 44px; }
+    .site-community p { max-width: 460px; font-size: 14px; }
+    .site-socials { padding-top: 30px; padding-bottom: 30px; }
+    .site-footer { align-items: center; border-top: 1px solid var(--site-line); font-size: 10px; }
+    .site-footer a:hover { color: var(--site-accent); }
+    .site-featured .site-feature-grid.site-feature-row, .site-featured .site-feature-grid.site-feature-slide { grid-template-columns: repeat(3,minmax(0,1fr)); gap: clamp(10px,1.8vw,22px); }
+    .site-featured .site-feature-image-wrap { aspect-ratio: 16/9; }
+    .site-featured .site-feature-content { min-width: 0; padding: 12px 13px 15px; border-bottom: 1px solid var(--site-line); background: color-mix(in srgb,var(--site-bg) 76%,var(--site-accent)); }
+    .site-featured .site-feature-meta { margin: 0 0 6px; font-size: 8px; }
+    .site-featured .site-feature h3 { margin: 0; font-size: 13px; line-height: 1.35; overflow-wrap: anywhere; }
+    .site-featured .site-feature p { margin: 5px 0 0; font-size: 10px; line-height: 1.45; }
+    .site-featured .site-feature:only-child { display: block; grid-template-columns: none; align-items: initial; max-width: none; }
+    .site-featured .site-feature:only-child .site-feature-image-wrap { height: auto; min-height: 0; aspect-ratio: 16/9; }
+    .site-featured .site-feature:only-child h3 { margin: 0; font-size: 13px; }
+    .site-featured .site-feature:only-child p { margin: 5px 0 0; font-size: 10px; }
+    .site-feature-carousel { margin-top: 20px; }
+    .site-feature-carousel[hidden], .site-feature-slide[hidden] { display: none !important; }
+    .site-feature-carousel-controls { display: flex; align-items: center; justify-content: flex-end; gap: 9px; margin-bottom: 10px; }
+    .site-feature-carousel-controls button { display: grid; width: 38px; height: 38px; place-items: center; border: 1px solid var(--site-line); border-radius: 50%; color: var(--site-ink); background: color-mix(in srgb,var(--site-ink) 5%,var(--site-bg)); font: 600 18px 'DM Sans',sans-serif; cursor: pointer; }
+    .site-feature-carousel-controls button:hover:not(:disabled) { border-color: var(--site-accent); color: var(--site-accent); }
+    .site-feature-carousel-controls button:disabled { opacity: .38; cursor: not-allowed; }
+    .site-feature-carousel-page { min-width: 48px; color: var(--site-muted); font-size: 10px; text-align: center; }
+    @media (max-width: 760px) { .site-featured .site-feature-grid.site-feature-row, .site-featured .site-feature-grid.site-feature-slide { grid-template-columns: repeat(3,minmax(0,1fr)); gap: 8px; }.site-featured .site-feature-content { padding: 8px 7px 10px; }.site-featured .site-feature-meta { margin-bottom: 4px; font-size: 7px; }.site-featured .site-feature h3 { font-size: 11px; }.site-featured .site-feature p { font-size: 9px; } }
+    @media (max-width: 760px) {
+      .site-hero { min-height: min(650px,calc(100svh - 96px)); height: auto; padding: 50px 24px 68px; }
+      .site-hero-copy { margin: auto 0; }
+      .site-hero-copy::before { left: -13px; }
+      .site-hero::after { background: linear-gradient(90deg,#0b0e0bf0 0%,#0b0e0bc0 58%,#0b0e0b64 100%),linear-gradient(0deg,var(--site-bg) 0%,transparent 48%); }
+      .site-scroll-cue { right: auto; bottom: 20px; left: 24px; flex-direction: row; gap: 9px; font-size: 9px; writing-mode: horizontal-tb; }
+      .site-scroll-cue::after { width: 30px; height: 1px; }
+      .site-feature:only-child { grid-template-columns: minmax(0,1.05fr) minmax(0,.95fr); }
+      .site-feature:only-child .site-feature-image-wrap { min-height: 220px; }
+      .site-feature:only-child h3 { margin-right: 16px; margin-left: 16px; font-size: 17px; }
+      .site-feature:only-child p, .site-feature-meta { margin-right: 16px; margin-left: 16px; }
+      .site-community h2 { font-size: 34px; }
+    }
+    @media (max-width: 480px) {
+      .site-nav { min-height: 96px; }
+      .site-nav-links { min-height: 32px; }
+      .site-hero { min-height: min(430px,calc(100svh - 96px)); height: auto; align-items: flex-start; padding: 42px 24px 48px; }
+      .site-hero-copy { margin: 0; }
+      .site-hero h1 { font-size: 43px; }
+      .site-hero-tagline { max-width: 310px; margin-top: 13px; font-size: 15px; }
+      .site-status { margin-bottom: 18px; }
+      .site-hero-copy::before { top: -22px; height: calc(100% + 44px); }
+      .site-hero-actions { flex-direction: row; }
+      .site-hero-actions .site-button { width: auto; min-width: min(100%,240px); }
+      .site-broadcast { grid-template-columns: 1fr; }
+      .site-feature:only-child { display: block; }
+      .site-feature:only-child .site-feature-image-wrap { min-height: 0; aspect-ratio: 16/9; }
+      .site-feature:only-child h3 { margin: 14px 14px 7px; font-size: 16px; }
+      .site-feature:only-child p, .site-feature-meta { margin-right: 14px; margin-left: 14px; }
+      .site-feature:only-child p { margin-bottom: 17px; }
+      .site-community h2 { font-size: 30px; }
+      .site-footer { align-items: flex-start; }
+    }
+      .site-identity { display: flex; align-items: center; gap: 25px; margin: 8px 0 23px; }
+      .site-hero-logo { display: grid; width: 176px; height: 176px; flex: 0 0 176px; place-items: center; overflow: hidden; border: 1px solid color-mix(in srgb,var(--site-accent) 72%,#fff 12%); border-radius: 22px; background: color-mix(in srgb,var(--site-bg) 68%,transparent); box-shadow: 0 18px 54px #0008,0 0 0 7px color-mix(in srgb,var(--site-accent) 9%,transparent); color: var(--site-accent); font: 700 42px 'Space Grotesk',sans-serif; }
+      .site-hero-logo img { display: block; width: 100%; height: 100%; padding: 9px; object-fit: contain; }
+      .site-identity-copy { min-width: 0; }
+      .site-identity-copy { flex: 1; }
+      .site-identity-copy .site-eyebrow { margin: 0 0 10px; }
+      .site-identity-copy h1 { max-width: 680px; font-size: clamp(52px,6.4vw,82px); }
+      .site-hero-copy { width: min(100%,1040px); }
+      .site-hero-title-image { width: min(100%,760px); max-height: 240px; margin-left: clamp(48px,7vw,96px); }
+      .site-hero-tagline { margin-top: 0; }
+      .site-hero::after { background: linear-gradient(90deg,#0b0e0be0 0%,#0b0e0b9e 37%,#0b0e0b22 78%,#0b0e0b08 100%),linear-gradient(0deg,var(--site-bg) 0%,transparent 30%); }
+      @media (max-width: 760px) {
+        .site-identity { gap: 18px; margin-top: 4px; }
+        .site-hero-title-image { margin-left: clamp(24px,6vw,48px); }
+          .site-hero-socials { top: 14px; right: 24px; gap: 7px; }
+          .site-hero-social-link { width: 38px; height: 38px; flex-basis: 38px; }
+        .site-hero-logo { width: 132px; height: 132px; flex-basis: 132px; border-radius: 18px; }
+        .site-identity-copy h1 { font-size: clamp(36px,7.5vw,54px); }
+        .site-identity-copy .site-eyebrow { font-size: 9px; overflow-wrap: anywhere; }
+        .site-hero-tagline { margin-top: 5px; }
+        .site-hero::after { background: linear-gradient(90deg,#0b0e0be8 0%,#0b0e0bb0 60%,#0b0e0b40 100%),linear-gradient(0deg,var(--site-bg) 0%,transparent 48%); }
+        .site-about { grid-template-columns: minmax(0,1fr); gap: 32px; }
+        .site-about .site-section-head { margin-bottom: 20px; }
+        .site-schedule { width: 100%; min-width: 0; }
+        .site-section { padding-top: 54px; padding-bottom: 54px; }
+        .site-about { padding-top: 54px; padding-bottom: 54px; }
+      }
+      @media (max-width: 480px) {
+        .site-identity { gap: 15px; margin: 4px 0 19px; }
+        .site-hero-logo { width: 104px; height: 104px; flex-basis: 104px; border-radius: 15px; box-shadow: 0 12px 32px #0008,0 0 0 5px color-mix(in srgb,var(--site-accent) 9%,transparent); }
+        .site-hero-logo img { padding: 5px; }
+        .site-identity-copy h1 { font-size: clamp(30px,8vw,38px); line-height: 1; }
+        .site-identity-copy .site-eyebrow { max-width: 205px; margin-bottom: 7px; font-size: 9px; }
+        .site-hero-tagline { margin-top: 0; }
+      }
+    .site-shop { position: relative; background: color-mix(in srgb,var(--site-ink) 2%,var(--site-bg)); }
+    .site-shop-heading { display: flex; align-items: end; justify-content: space-between; gap: 24px; margin-bottom: 26px; }
+    .site-shop-heading .site-section-head { margin: 0; }
+    .site-shop-heading .site-section-head h2 { margin-bottom: 0; }
+    .site-shop-intro { max-width: 490px; margin: 10px 0 0; color: var(--site-muted); font-size: 13px; line-height: 1.6; }
+    .site-shop-count { flex: 0 0 auto; padding-bottom: 4px; color: var(--site-muted); font-size: 10px; }
+    .site-shop-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(0,220px)); justify-content: start; gap: 16px; }
+    .site-product { display: flex; min-width: 0; flex-direction: column; overflow: hidden; border: 1px solid var(--site-line); border-radius: 7px; background: color-mix(in srgb,var(--site-ink) 4%,var(--site-bg)); transition: border-color .2s ease,transform .2s ease; }
+    .site-product:hover { border-color: color-mix(in srgb,var(--site-accent) 45%,var(--site-line)); transform: translateY(-2px); }
+    .site-product-image-wrap { display: grid; aspect-ratio: 1; place-items: center; overflow: hidden; padding: 12px; background: color-mix(in srgb,var(--site-ink) 7%,var(--site-bg)); }
+    .site-product-image { display: block; width: 100%; height: 100%; object-fit: contain; transition: transform .25s ease; }
+    .site-product:hover .site-product-image { transform: scale(1.025); }
+    .site-product-image-placeholder { display: grid; width: 100%; height: 100%; place-items: center; color: color-mix(in srgb,var(--site-accent) 70%,var(--site-ink)); font: 600 28px 'Space Grotesk',sans-serif; }
+    .site-product-info { display: flex; min-height: 150px; flex: 1; flex-direction: column; align-items: flex-start; padding: 13px; }
+    .site-product-title-row { display: flex; width: 100%; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 10px; }
+    .site-product h3 { margin: 0; font: 600 14px/1.3 'Space Grotesk',sans-serif; overflow-wrap: anywhere; }
+    .site-product-price { flex: 0 0 auto; color: var(--site-accent); font: 600 13px 'Space Grotesk',sans-serif; }
+    .site-product p { display: -webkit-box; overflow: hidden; margin: 9px 0 16px; color: var(--site-muted); font-size: 11px; line-height: 1.6; line-clamp: 3; -webkit-box-orient: vertical; -webkit-line-clamp: 3; }
+    .site-product-variant { width: 100%; min-height: 38px; margin: 2px 0 12px; padding: 0 10px; border: 1px solid var(--site-line); border-radius: 5px; color: var(--site-ink); background: var(--site-bg); font: inherit; font-size: 10px; }
+    .site-product-buy { min-height: 40px; margin-top: auto; padding: 0 14px; font-size: 10px; }
+    .site-product-coming-soon { display: inline-flex; align-items: center; color: var(--site-muted); font-size: 10px; }
+    .site-shop-empty { display: grid; min-height: 180px; align-content: center; justify-items: center; gap: 10px; padding: 28px; border: 1px dashed var(--site-line); border-radius: 8px; color: var(--site-muted); text-align: center; }
+    .site-shop-empty strong { color: var(--site-ink); font: 600 17px 'Space Grotesk',sans-serif; }
+    .site-shop-empty span { max-width: 420px; font-size: 12px; line-height: 1.6; }
+    @media (max-width: 560px) { .site-shop-heading { align-items: flex-start; flex-direction: column; gap: 9px; margin-bottom: 18px; }.site-shop-grid { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 11px; }.site-product-image-wrap { padding: 7px; }.site-product-info { min-height: 150px; padding: 10px; }.site-product-title-row { align-items: flex-start; flex-direction: column; gap: 5px; }.site-product h3 { font-size: 13px; }.site-product p { font-size: 10px; }.site-product-buy { width: 100%; padding: 0 8px; font-size: 9px; } }
+
+    .site-product-link { display: flex; flex: 1; flex-direction: column; color: inherit; text-decoration: none; }
+    .site-product-link:focus-visible { outline: 3px solid var(--site-accent); outline-offset: -3px; }
+    .site-product-link .site-product-info { min-height: 90px; gap: 16px; }
+    .site-product-view { margin-top: auto; color: var(--site-accent); font-size: 11px; }
+    .product-page { max-width: 1200px; margin: auto; padding: 40px 24px 80px; }
+    .product-back { display: inline-block; margin-bottom: 28px; color: var(--site-muted); font-size: 13px; }
+    .product-layout { display: grid; grid-template-columns: minmax(0,1.15fr) minmax(0,1fr); gap: clamp(24px,5vw,64px); align-items: start; }
+    .product-photo { display: grid; place-items: center; aspect-ratio: 1; padding: 24px; border: 1px solid var(--site-line); border-radius: 12px; background: color-mix(in srgb,var(--site-ink) 5%,var(--site-bg)); overflow: hidden; }
+    .product-photo img { display: block; width: 100%; height: 100%; min-height: 0; object-fit: contain; }
+    .product-details h1 { margin: 12px 0 18px; font: 600 clamp(28px,4vw,44px)/1.12 'Space Grotesk',sans-serif; overflow-wrap: anywhere; }
+    .product-detail-price { color: var(--site-accent); font-size: 24px; margin: 0 0 12px; }
+    .product-stock { color: var(--site-muted); font-size: 12px; }
+    .product-options { display: grid; gap: 10px; margin: 28px 0; }
+    .product-options label { font-size: 13px; }
+    .product-options select { min-height: 46px; font-size: 13px; margin: 0; }
+    .product-purchase { width: 100%; min-height: 48px; justify-content: center; }
+    .product-description { margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--site-line); }
+    .product-description h2 { font: 600 18px 'Space Grotesk',sans-serif; }
+    .product-description p { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 14px; line-height: 1.8; color: var(--site-muted); }
+    @media (max-width: 700px) { .product-layout { grid-template-columns: minmax(0,1fr); }.product-page { padding: 24px 18px 56px; }.product-photo { max-width: 480px; width: 100%; margin: auto; } }
+  </style>
+  <link rel="stylesheet" href="./storefront.css">
+</head>
+<body>
+  <main class="profile-shell" id="profile-root" aria-live="polite"></main>
+  <script src="./storefront.js"></script>
+  <script>
+    (async () => {
+      const twitchStatusEndpoint = 'https://asqszzgunsrdclunbxfq.supabase.co/functions/v1/twitch-status';
+      const twitchStatusIntervalMs = 60_000;
+      const icons = { play: '▶', stream: '◉', camera: '◎', chat: '✦', music: '♫', link: '↗', mail: '@', shop: '◇', community: '✳' };
+      const escapeHtml = value => String(value || '').replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]);
+      const validColor = (value, fallback) => /^#[\da-f]{6}$/i.test(value || '') ? value : fallback;
+      const safeLink = value => {
+        const input = String(value || '').trim();
+        try {
+          const url = new URL(input);
+          if (['https:', 'http:'].includes(url.protocol)) return url.href;
+        } catch {}
+        return /^mailto:[^\s@]+@[^\s@]+$/i.test(input) ? input : '';
+      };
+      const safeImage = value => {
+        try {
+          const url = new URL(String(value || ''));
+          return url.protocol === 'https:' ? url.href : '';
+        } catch { return ''; }
+      };
+      const root = document.getElementById('profile-root');
+      let profile;
+      let publicProfileConfig;
+      let publicProfileError = '';
+      if (new URLSearchParams(location.search).has('preview')) try {
+        const params = new URLSearchParams(location.hash.slice(1));
+        profile = JSON.parse(params.get('p') || 'null');
+      } catch {}
+      if (!profile || typeof profile !== 'object') {
+        try {
+          const response = await fetch(new URL('public-profile.json', location.href), { cache: 'no-store' });
+          if (response.ok) {
+            publicProfileConfig = await response.json();
+            const publication = publicProfileConfig.publication;
+            if (publication?.supabaseUrl && publication.anonKey && publication.userId) {
+              const response = await fetch(`${publication.supabaseUrl.replace(/\/$/, '')}/rest/v1/rpc/get_creator_public_profile`, {
+                method: 'POST',
+                headers: { apikey: publication.anonKey, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ profile_owner: publication.userId }),
+                cache: 'no-store'
+              });
+              if (!response.ok) throw new Error(`Database request failed (${response.status}).`);
+              const liveProfile = await response.json();
+              if (liveProfile && typeof liveProfile === 'object') {
+                const identity = liveProfile.website?.website ? liveProfile.website : liveProfile;
+                const website = identity.website && typeof identity.website === 'object' ? identity.website : identity;
+                profile = {
+                  name: identity.name || website.name || publicProfileConfig.name || 'Creator',
+                  handle: identity.handle || website.handle || publicProfileConfig.handle || '',
+                  bio: identity.bio || website.bio || '',
+                  avatarUrl: identity.avatarUrl || website.avatarUrl || publicProfileConfig.avatarUrl || '',
+                  backgroundColor: identity.backgroundColor || website.backgroundColor || '#121712',
+                  textColor: identity.textColor || website.textColor || '#f0f3ed',
+                  buttonColor: identity.buttonColor || website.buttonColor || '#c6f36b',
+                  buttonTextColor: identity.buttonTextColor || website.buttonTextColor || '#17200f',
+                  buttonStyle: identity.buttonStyle || website.buttonStyle || 'solid',
+                  linkShape: identity.linkShape || website.linkShape || 'rounded',
+                  links: identity.links || website.links || [],
+                  website
+                };
+              } else {
+                publicProfileError = 'No public creator profile is published in the connected database.';
+              }
+            } else {
+              publicProfileError = 'The public profile database connection is not configured.';
+            }
+          } else {
+            publicProfileError = 'The public profile configuration could not be loaded.';
+          }
+        } catch (error) { publicProfileError = error.message || 'The public profile database could not be reached.'; }
+      }
+      if (!profile || typeof profile !== 'object') {
+        root.innerHTML = `<section class="empty"><h1>Creator website unavailable</h1><p>${escapeHtml(publicProfileError || 'Open the published website link from Creator HQ to view this profile.')}</p></section>`;
+        return;
+      }
+      const name = String(profile.name || 'Creator').slice(0, 60);
+      const handle = String(profile.handle || '').slice(0, 60);
+      const bio = String(profile.bio || '').slice(0, 320);
+      const avatar = safeImage(profile.avatarUrl);
+      const backgroundColor = validColor(profile.backgroundColor, '#121712');
+      const textColor = validColor(profile.textColor, '#f0f3ed');
+      const buttonColor = validColor(profile.buttonColor, '#c6f36b');
+      const buttonTextColor = validColor(profile.buttonTextColor, '#17200f');
+      const style = ['solid', 'outline', 'glass'].includes(profile.buttonStyle) ? profile.buttonStyle : 'solid';
+      const shape = ['rounded', 'square', 'pill'].includes(profile.linkShape) ? profile.linkShape : 'rounded';
+      const links = Array.isArray(profile.links) ? profile.links.slice(0, 20) : [];
+      const website = profile.website && typeof profile.website === 'object' ? profile.website : {};
+      const tagline = website.tagline === 'Test Gehkjhdckjhxckdh' ? '' : String(website.tagline || bio || 'A place for games, good company, and the occasional questionable decision.').slice(0, 120);
+      const twitchUrl = safeLink(website.twitchUrl) || (handle ? `https://www.twitch.tv/${encodeURIComponent(handle.replace(/^@/, ''))}` : '');
+      const twitchLogin = (() => {
+        try {
+          const channelUrl = new URL(twitchUrl);
+          if (!['twitch.tv', 'www.twitch.tv'].includes(channelUrl.hostname.toLowerCase())) return '';
+          const pathLogin = channelUrl.pathname.split('/').filter(Boolean)[0] || '';
+          return /^[a-z0-9_]{1,25}$/i.test(pathLogin) ? pathLogin.toLowerCase() : '';
+        } catch { return ''; }
+      })() || (handle.replace(/^@/, '').toLowerCase().match(/^[a-z0-9_]{1,25}$/) || [''])[0];
+      let live = false;
+      let liveStatusLabel = twitchLogin ? 'Checking Twitch…' : 'Add a Twitch channel URL';
+      let liveStatusClass = twitchLogin ? 'checking' : 'unavailable';
+      let liveStatusResolved = false;
+      let liveStatusRequestPending = false;
+      const aboutHeading = String(website.aboutHeading || 'Pull up a chair.').slice(0, 80);
+      const about = String(website.about || bio || '').slice(0, 1200);
+      const schedule = website.schedule && typeof website.schedule === 'object' ? website.schedule : String(website.schedule || '').slice(0, 600);
+      const primaryCta = String(website.primaryCta || 'Watch on Twitch').slice(0, 40);
+      const heroImage = safeImage(website.heroImage) || 'https://images.unsplash.com/photo-1593305841991-05c297ba4575?auto=format&fit=crop&w=2200&q=90';
+      const heroTitleImage = safeImage(website.heroTitleImage);
+      const featured = Array.isArray(website.featured) ? website.featured.slice(0, 30).filter(item => item && item.title).map(item => ({
+        title: String(item.title || '').slice(0, 80),
+        description: String(item.description || '').slice(0, 240),
+        url: safeLink(item.url),
+        imageUrl: safeImage(item.imageUrl) || heroImage
+      })) : [];
+      const products = Array.isArray(website.products) ? website.products.slice(0, 100).filter(item => item && item.name && (item.provider !== 'fourthwall' || (item.access === 'PUBLIC' && item.available !== false))).map(item => ({
+        id: String(item.id || item.fourthwallId || '').slice(0, 120),
+        provider: item.provider === 'fourthwall' ? 'fourthwall' : 'external',
+        slug: String(item.slug || '').slice(0, 120),
+        name: String(item.name || '').slice(0, 80),
+        price: String(item.price || '').slice(0, 24),
+        currency: String(item.currency || 'USD').slice(0, 8),
+        description: String(item.description || '').slice(0, 12000),
+        imageUrl: safeImage(item.imageUrl),
+        fullImageUrl: safeImage(item.fullImageUrl) || safeImage(item.imageUrl),
+        checkoutUrl: safeLink(item.checkoutUrl),
+        access: String(item.access || ''),
+        available: item.available !== false,
+        variants: Array.isArray(item.variants) ? item.variants.slice(0, 100).map(variant => ({ id: String(variant.id || '').slice(0, 120), name: String(variant.name || '').slice(0, 100), price: String(variant.price || '').slice(0, 24), currency: String(variant.currency || item.currency || 'USD').slice(0, 8), inStock: variant.inStock !== false })) : []
+      })) : [];
+      const fourthwallDomain = (() => {
+        try { const url = new URL(String(website.fourthwallDomain || '')); return url.protocol === 'https:' ? url.origin : ''; }
+        catch { return ''; }
+      })();
+      const initials = name.split(/\s+/).slice(0, 2).map(part => part[0] || '').join('').toUpperCase();
+      const ctaClass = `site-button ${style} shape-${shape}`;
+      const watchButton = twitchUrl ? `<a class="${ctaClass}" data-live-cta style="--site-accent:${escapeHtml(buttonColor)};--site-button-text:${escapeHtml(buttonTextColor)}" href="${escapeHtml(twitchUrl)}" target="_blank" rel="noopener noreferrer">${escapeHtml(live ? 'Join the live stream' : primaryCta)} <span aria-hidden="true">↗</span></a>` : '';
+      const scheduleRows = Array.isArray(schedule.weekly) || Array.isArray(schedule.sessions)
+        ? `${(schedule.weekly || []).length ? `<div class="site-schedule-group"><p class="site-schedule-group-title">Weekly rhythm</p>${schedule.weekly.slice(0, 7).map(item => `<div class="site-schedule-row"><span>${escapeHtml(item.day || '')}</span><span>${escapeHtml(item.time || '')}${item.duration ? ` · ${escapeHtml(item.duration)}h` : ''}</span></div>`).join('')}</div>` : ''}${(schedule.sessions || []).length ? `<div class="site-schedule-group"><p class="site-schedule-group-title">Upcoming streams</p>${schedule.sessions.slice(0, 6).map(item => `<div class="site-schedule-row"><span>${escapeHtml(item.date || '')}<small>${item.title ? `<br>${escapeHtml(item.title)}` : ''}</small></span><span>${escapeHtml(item.time || '')}${item.category ? `<br>${escapeHtml(item.category)}` : ''}</span></div>`).join('')}</div>` : ''}` || '<p class="site-about-copy">No upcoming streams scheduled.</p>'
+        : String(schedule || '').split(/\r?\n/).map(line => line.trim()).filter(Boolean).slice(0, 7).map(line => {
+          const parts = line.split(/\s*[|·]\s*/, 2);
+          return `<div class="site-schedule-row"><span>${escapeHtml(parts[0])}</span>${parts[1] ? `<span>${escapeHtml(parts[1])}</span>` : ''}</div>`;
+        }).join('') || '<p class="site-about-copy">Schedule details coming soon.</p>';
+      const featuredMarkup = featured.length ? featured.map(item => {
+        const content = `<div class="site-feature-image-wrap"><img class="site-feature-image" src="${escapeHtml(item.imageUrl)}" alt="${escapeHtml(item.title)} thumbnail" loading="lazy"><span class="site-feature-play" aria-hidden="true">▶</span></div><div class="site-feature-content"><span class="site-feature-meta">From the stream</span><h3>${escapeHtml(item.title)}</h3>${item.description ? `<p>${escapeHtml(item.description)}</p>` : ''}</div>`;
+        return item.url ? `<a class="site-feature" href="${escapeHtml(item.url)}" target="_blank" rel="noopener noreferrer">${content}</a>` : `<article class="site-feature">${content}</article>`;
+      }).join('') : '<p class="site-empty-feature">New videos and stream highlights will land here.</p>';
+      const linkMarkup = links.map(link => {
+        const href = safeLink(link.url);
+        const label = String(link.label || '').slice(0, 80);
+        if (!href || !label) return '';
+        const icon = icons[link.icon] || icons.link;
+        const external = href.startsWith('mailto:') ? '' : ' target="_blank" rel="noopener noreferrer"';
+        return `<a class="site-social-link shape-${shape}" href="${escapeHtml(href)}"${external}><span aria-hidden="true">${escapeHtml(icon)}</span>${escapeHtml(label)}</a>`;
+      }).join('');
+      const socialIconPaths = {
+        twitch: '<path d="M4 3 2 6v14h5v3h3l3-3h4l5-5V3H4Zm16 11-3 3h-5l-3 3v-3H5V5h15v9ZM10 8v5h2V8h-2Zm5 0v5h2V8h-2Z"/>',
+        youtube: '<path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.6 12 3.6 12 3.6s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12a31 31 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-5.8ZM9.6 15.6V8.4l6.3 3.6-6.3 3.6Z"/>',
+        instagram: '<path d="M7 2h10a5 5 0 0 1 5 5v10a5 5 0 0 1-5 5H7a5 5 0 0 1-5-5V7a5 5 0 0 1 5-5Zm0 2.2A2.8 2.8 0 0 0 4.2 7v10A2.8 2.8 0 0 0 7 19.8h10a2.8 2.8 0 0 0 2.8-2.8V7A2.8 2.8 0 0 0 17 4.2H7Zm5 2.2a5.6 5.6 0 1 1 0 11.2 5.6 5.6 0 0 1 0-11.2Zm0 2.2a3.4 3.4 0 1 0 0 6.8 3.4 3.4 0 0 0 0-6.8Zm5.9-3.1a1.3 1.3 0 1 1 0 2.6 1.3 1.3 0 0 1 0-2.6Z"/>',
+        tiktok: '<path d="M19.6 5.2a5.5 5.5 0 0 1-3.4-3.4V1h-4.3v14.8a2.8 2.8 0 1 1-2.8-2.8c.5 0 1 .1 1.4.4V9a7 7 0 1 0 5.7 6.8V8.2a9.7 9.7 0 0 0 5.7 1.8V5.7c-.8 0-1.6-.2-2.3-.5Z"/>',
+        facebook: '<path d="M13.5 22v-8h2.7l.4-3.1h-3.1v-2c0-.9.3-1.5 1.6-1.5h1.7V4.6c-.3 0-1.3-.1-2.5-.1-2.5 0-4.2 1.5-4.2 4.3v2.1H7.3V14h2.8v8h3.4Z"/>',
+        x: '<path d="M18.9 2H22l-6.8 7.8L23.2 22h-6.3L12 14.9 5.8 22H2.6l7.3-8.4L1.8 2h6.5l4.5 6.7L18.9 2Zm-1.1 17.8h1.7L7.3 4H5.5l12.3 15.8Z"/>',
+        discord: '<path d="M19.7 5.3A18 18 0 0 0 15.3 4l-.5 1a16 16 0 0 0-5.6 0l-.5-1a18 18 0 0 0-4.4 1.3C1.5 9.4.7 13.4 1.1 17.3a18 18 0 0 0 5.4 2.7l1.2-2a11 11 0 0 1-1.9-.9l.5-.4a13 13 0 0 0 11.4 0l.5.4a11 11 0 0 1-1.9.9l1.2 2a18 18 0 0 0 5.4-2.7c.5-4.5-.8-8.5-3.2-12Zm-11.1 9.6c-1 0-1.8-.9-1.8-2s.8-2 1.8-2 1.8.9 1.8 2-.8 2-1.8 2Zm6.8 0c-1 0-1.8-.9-1.8-2s.8-2 1.8-2 1.8.9 1.8 2-.8 2-1.8 2Z"/>',
+        other: '<path d="M14 3h7v7h-2V6.4l-9.3 9.3-1.4-1.4L17.6 5H14V3ZM5 5h6v2H7v10h10v-4h2v6H5V5Z"/>'
+      };
+      const socialIconMarkup = links.filter(link => link.label && link.url).map(link => {
+        const href = safeLink(link.url);
+        if (!href) return '';
+        const platform = String(link.platform || '').toLowerCase();
+        const icon = socialIconPaths[platform] || socialIconPaths.other;
+        const external = href.startsWith('mailto:') ? '' : ' target="_blank" rel="noopener noreferrer"';
+        return `<a class="site-hero-social-link" href="${escapeHtml(href)}" aria-label="${escapeHtml(link.label)}" title="${escapeHtml(link.label)}"${external}><svg viewBox="0 0 24 24" aria-hidden="true">${icon}</svg></a>`;
+      }).join('');
+      document.title = `${name} · Twitch Creator`;
+      document.querySelector('meta[name="theme-color"]').content = backgroundColor;
+      document.querySelector('meta[name="description"]').content = `${tagline || 'Live updates, stream times, highlights, and community links.'} Visit the ${name} Twitch creator site.`;
+      document.querySelector('meta[property="og:title"]').content = `${name} · Twitch Creator`;
+      document.querySelector('meta[property="og:description"]').content = tagline || `Visit ${name} for live updates, stream times, highlights, and community links.`;
+      document.querySelector('meta[property="og:image"]').content = heroImage;
+      document.documentElement.style.setProperty('--site-bg', backgroundColor);
+      document.documentElement.style.setProperty('--site-ink', textColor);
+      document.documentElement.style.setProperty('--site-accent', buttonColor);
+      document.documentElement.style.setProperty('--site-button-text', buttonTextColor);
+      root.className = 'creator-site';
+      const storefront = window.CreatorStorefront.create({ profile });
+      if (['product.html', 'shop.html', 'cart.html'].some(page => location.pathname.endsWith('/' + page))) {
+        await storefront.renderPage(root);
+        return;
+      }
+      root.innerHTML = `<header class="site-nav"><a class="site-wordmark" href="#top"><span class="site-mark">${avatar ? `<img src="${escapeHtml(avatar)}" alt="">` : escapeHtml(initials || 'C')}</span>${escapeHtml(name)}</a><nav class="site-nav-links" aria-label="Website navigation"><a href="#about">About</a><a href="#highlights">Highlights</a><a href="#shop">Shop</a><a href="#community">Community</a></nav>${twitchUrl ? `<a class="site-nav-cta ${style} shape-${shape}" data-nav-live-cta style="--site-accent:${escapeHtml(buttonColor)};--site-button-text:${escapeHtml(buttonTextColor)}" href="${escapeHtml(twitchUrl)}" target="_blank" rel="noopener noreferrer">${live ? 'Live now' : 'Twitch'} <span aria-hidden="true">↗</span></a>` : ''}</header><section class="site-hero" id="top"><img class="site-hero-image" src="${escapeHtml(heroImage)}" alt="Gaming setup" fetchpriority="high"><div class="site-hero-copy"><span class="site-status ${liveStatusClass}" data-live-status aria-live="polite"><span class="site-status-dot"></span>${escapeHtml(liveStatusLabel)}</span><p class="site-eyebrow">${handle ? escapeHtml(handle.startsWith('@') ? handle : `@${handle}`) : 'Twitch creator'}</p><h1>${escapeHtml(name)}</h1><p class="site-hero-tagline">${escapeHtml(tagline)}</p><div class="site-hero-actions">${watchButton}</div></div><a class="site-scroll-cue" href="#about">Scroll to explore</a></section><section class="site-section site-about" id="about"><div><div class="site-section-head"><p class="site-kicker">The person behind the stream</p><h2>${escapeHtml(aboutHeading)}</h2></div><div class="site-about-copy">${escapeHtml(about || 'A little more about the stream is on the way.')}</div></div><aside class="site-schedule"><p class="site-kicker">Stream schedule</p><h3>Catch the next one</h3><div class="site-schedule-list">${scheduleRows}</div></aside></section><section class="site-section site-featured" id="highlights"><div class="site-section-head"><p class="site-kicker">From the channel</p><h2>Recent highlights</h2></div><div class="site-feature-grid">${featuredMarkup}</div></section><section class="site-section site-community" id="community"><div><p class="site-kicker">The community</p><h2>Make yourself at home.</h2><p>Come by the stream, say hello, and be part of what we build next.</p></div>${watchButton}</section>${linkMarkup ? `<nav class="site-socials" aria-label="More ways to follow">${linkMarkup}</nav>` : ''}<footer class="site-footer"><span>${escapeHtml(name)} · Twitch creator</span><a href="#top">Back to top ↑</a></footer>`;
+      {
+        const shop = document.createElement('section');
+        shop.className = 'site-section site-shop';
+        shop.id = 'shop';
+        document.querySelector('.site-featured').insertAdjacentElement('afterend', shop);
+        storefront.mountCollection(shop);
+        storefront.attachNav();
+      }
+      if (!tagline) document.querySelector('.site-hero-tagline')?.remove();
+      const heroCopy = document.querySelector('.site-hero-copy');
+      const statusBadge = heroCopy.querySelector('[data-live-status]');
+      const handleLabel = heroCopy.querySelector('.site-eyebrow');
+      const creatorName = heroCopy.querySelector('h1');
+      if (heroTitleImage) {
+        const titleImage = document.createElement('img');
+        titleImage.className = 'site-hero-title-image';
+        titleImage.src = heroTitleImage;
+        titleImage.alt = name;
+        titleImage.loading = 'eager';
+        creatorName.replaceChildren(titleImage);
+      }
+      const identity = document.createElement('div');
+      const identityCopy = document.createElement('div');
+      const logo = document.createElement('div');
+      identity.className = 'site-identity';
+      identityCopy.className = 'site-identity-copy';
+      logo.className = 'site-hero-logo';
+      if (avatar) {
+        const logoImage = document.createElement('img');
+        logoImage.src = avatar;
+        logoImage.alt = `${name} logo`;
+        logoImage.loading = 'eager';
+        logo.append(logoImage);
+      } else {
+        logo.textContent = initials || 'C';
+        logo.setAttribute('aria-hidden', 'true');
+      }
+      identityCopy.append(handleLabel, creatorName);
+      identity.append(logo, identityCopy);
+      statusBadge.after(identity);
+      if (socialIconMarkup) {
+        const socialNav = document.createElement('nav');
+        socialNav.className = 'site-hero-socials';
+        socialNav.setAttribute('aria-label', 'Social media links');
+        socialNav.innerHTML = socialIconMarkup;
+        document.querySelector('.site-hero')?.prepend(socialNav);
+      }
+      const featureGrid = document.querySelector('.site-featured .site-feature-grid');
+      const featureCards = featureGrid ? [...featureGrid.children].filter(card => card.matches('.site-feature')) : [];
+      if (featureGrid && featureCards.length) {
+        featureGrid.classList.add('site-feature-row');
+        featureGrid.replaceChildren(...featureCards.slice(0, 3));
+        const remainingCards = featureCards.slice(3);
+        if (remainingCards.length) {
+          const carousel = document.createElement('div');
+          carousel.className = 'site-feature-carousel';
+          carousel.setAttribute('aria-label', 'More recent highlights');
+          const controls = document.createElement('div');
+          controls.className = 'site-feature-carousel-controls';
+          const previous = document.createElement('button');
+          previous.type = 'button';
+          previous.setAttribute('aria-label', 'Previous highlights');
+          previous.textContent = '‹';
+          const pageLabel = document.createElement('span');
+          pageLabel.className = 'site-feature-carousel-page';
+          pageLabel.setAttribute('aria-live', 'polite');
+          const next = document.createElement('button');
+          next.type = 'button';
+          next.setAttribute('aria-label', 'Next highlights');
+          next.textContent = '›';
+          controls.append(previous, pageLabel, next);
+          const slides = [];
+          for (let offset = 0; offset < remainingCards.length; offset += 3) {
+            const slide = document.createElement('div');
+            slide.className = 'site-feature-grid site-feature-slide';
+            slide.append(...remainingCards.slice(offset, offset + 3));
+            slide.hidden = slides.length > 0;
+            slides.push(slide);
+          }
+          let currentPage = 0;
+          const showPage = page => {
+            currentPage = Math.max(0, Math.min(slides.length - 1, page));
+            slides.forEach((slide, index) => { slide.hidden = index !== currentPage; });
+            previous.disabled = currentPage === 0;
+            next.disabled = currentPage === slides.length - 1;
+            pageLabel.textContent = `${currentPage + 1} / ${slides.length}`;
+          };
+          previous.addEventListener('click', () => showPage(currentPage - 1));
+          next.addEventListener('click', () => showPage(currentPage + 1));
+          showPage(0);
+          carousel.append(controls, ...slides);
+          featureGrid.insertAdjacentElement('afterend', carousel);
+        }
+      }
+      const broadcast = document.createElement('section');
+      broadcast.className = 'site-broadcast';
+      broadcast.setAttribute('aria-label', 'Twitch broadcast status');
+      broadcast.innerHTML = `<div><p class="site-broadcast-label"><span class="site-status-dot"></span><span data-broadcast-label>Checking channel</span></p><h2 data-broadcast-title>Finding the next stream</h2><p class="site-broadcast-copy" data-broadcast-copy>Live updates from Twitch</p></div><div class="site-broadcast-stat"><span data-broadcast-stat-label>Channel</span><strong data-broadcast-stat>On Twitch</strong></div>${twitchUrl ? `<a class="site-button site-broadcast-link ${style} shape-${shape}" data-broadcast-link href="${escapeHtml(twitchUrl)}" target="_blank" rel="noopener noreferrer">Visit channel <span aria-hidden="true">↗</span></a>` : ''}`;
+      document.querySelector('.site-hero').insertAdjacentElement('afterend', broadcast);
+      const updateCreatorImages = imageUrl => {
+        const validImageUrl = safeImage(avatar || imageUrl);
+        if (!validImageUrl) return;
+        document.querySelectorAll('.site-hero-logo, .site-mark').forEach(container => {
+          let image = container.querySelector('img');
+          if (!image) {
+            container.textContent = '';
+            image = document.createElement('img');
+            image.alt = container.classList.contains('site-hero-logo') ? `${name} logo` : '';
+            container.append(image);
+          }
+          image.src = validImageUrl;
+        });
+      };
+      const setLiveState = stream => {
+        live = Boolean(stream.live);
+        updateCreatorImages(stream.profileImageUrl);
+        liveStatusResolved = true;
+        liveStatusLabel = live ? 'Live now on Twitch' : 'Currently offline';
+        liveStatusClass = live ? 'live' : '';
+        const status = document.querySelector('[data-live-status]');
+        if (status) {
+          status.className = `site-status ${liveStatusClass}`;
+          status.innerHTML = `<span class="site-status-dot"></span>${liveStatusLabel}`;
+          if (live && stream.game) status.setAttribute('aria-label', `Live now on Twitch, playing ${stream.game}`);
+        }
+        document.querySelectorAll('[data-live-cta]').forEach(link => { link.firstChild.textContent = live ? 'Join the live stream ' : `${primaryCta} `; });
+        const navCta = document.querySelector('[data-nav-live-cta]');
+        if (navCta) navCta.firstChild.textContent = live ? 'Live now ' : 'Twitch ';
+        const broadcastPanel = document.querySelector('.site-broadcast');
+        const broadcastLabel = document.querySelector('[data-broadcast-label]');
+        const broadcastTitle = document.querySelector('[data-broadcast-title]');
+        const broadcastCopy = document.querySelector('[data-broadcast-copy]');
+        const broadcastStatLabel = document.querySelector('[data-broadcast-stat-label]');
+        const broadcastStat = document.querySelector('[data-broadcast-stat]');
+        const broadcastLink = document.querySelector('[data-broadcast-link]');
+        broadcastPanel?.classList.toggle('is-live', live);
+        if (broadcastLabel) broadcastLabel.textContent = live ? 'On air now' : 'Off air';
+        if (broadcastTitle) broadcastTitle.textContent = live ? (stream.title || 'Live on Twitch') : 'No stream right now';
+        if (broadcastCopy) broadcastCopy.textContent = live ? (stream.game || `Join ${name} on Twitch`) : 'Check the schedule above for the next stream.';
+        if (broadcastStatLabel) broadcastStatLabel.textContent = live && Number.isFinite(stream.viewerCount) ? 'Viewers' : 'Channel';
+        if (broadcastStat) broadcastStat.textContent = live && Number.isFinite(stream.viewerCount) ? stream.viewerCount.toLocaleString() : (live ? 'Live' : 'Twitch');
+        if (broadcastLink) broadcastLink.innerHTML = `${live ? 'Join live' : 'Visit channel'} <span aria-hidden="true">↗</span>`;
+      };
+      const setLiveStatusUnavailable = () => {
+        if (liveStatusResolved) return;
+        const status = document.querySelector('[data-live-status]');
+        if (!status) return;
+        liveStatusLabel = 'Live status unavailable';
+        liveStatusClass = 'unavailable';
+        status.className = `site-status ${liveStatusClass}`;
+        status.innerHTML = `<span class="site-status-dot"></span>${liveStatusLabel}`;
+        const broadcastLabel = document.querySelector('[data-broadcast-label]');
+        const broadcastTitle = document.querySelector('[data-broadcast-title]');
+        const broadcastCopy = document.querySelector('[data-broadcast-copy]');
+        if (broadcastLabel) broadcastLabel.textContent = 'Status unavailable';
+        if (broadcastTitle) broadcastTitle.textContent = 'Visit the Twitch channel';
+        if (broadcastCopy) broadcastCopy.textContent = 'Live status could not be checked right now.';
+      };
+      const refreshLiveState = async () => {
+        if (!twitchLogin || liveStatusRequestPending) return;
+        liveStatusRequestPending = true;
+        try {
+          const endpoint = new URL(twitchStatusEndpoint);
+          endpoint.searchParams.set('login', twitchLogin);
+          const response = await fetch(endpoint, { headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(8000) });
+          if (!response.ok) { setLiveStatusUnavailable(); return; }
+          const status = await response.json();
+          if (typeof status.live === 'boolean') setLiveState(status);
+          else setLiveStatusUnavailable();
+        } catch { setLiveStatusUnavailable(); } finally { liveStatusRequestPending = false; }
+      };
+      if (twitchLogin) {
+        refreshLiveState();
+        window.setInterval(() => { if (document.visibilityState === 'visible') refreshLiveState(); }, twitchStatusIntervalMs);
+        document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') refreshLiveState(); });
+      }
+      const sectionLinks = [...document.querySelectorAll('.site-nav-links a')];
+      let activeSectionId = '';
+      const updateActiveSection = () => {
+        const marker = window.scrollY + document.querySelector('.site-nav').offsetHeight + 110;
+        let activeId = '';
+        for (const id of ['about', 'highlights', 'shop', 'community']) {
+          if (!document.getElementById(id)) continue;
+          if (document.getElementById(id).offsetTop <= marker) activeId = id;
+        }
+        if (window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 2) activeId = 'community';
+        sectionLinks.forEach(link => link.classList.toggle('is-active', link.hash === `#${activeId}`));
+        if (activeId && activeId !== activeSectionId) {
+          activeSectionId = activeId;
+          document.querySelector(`.site-nav-links a[href="#${activeId}"]`)?.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' });
+        }
+      };
+      window.addEventListener('scroll', updateActiveSection, { passive: true });
+      window.addEventListener('resize', updateActiveSection);
+      updateActiveSection();
+    })();
+  </script>
+</body>
+</html>
