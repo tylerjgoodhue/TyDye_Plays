@@ -195,7 +195,16 @@ Deno.serve(async request => {
     // Everything below needs a connected account.
     const { data: connection, error: connectionError } = await admin.from("dropbox_connections")
       .select("refresh_token, account_name, account_email").eq("user_id", user.id).maybeSingle();
-    if (connectionError) throw connectionError;
+    if (connectionError) {
+      const detail = `${connectionError.code || ""} ${connectionError.message || ""}`.toLowerCase();
+      if (detail.includes("schema cache") || detail.includes("does not exist") || detail.includes("42p01") || detail.includes("pgrst205")) {
+        return json({
+          error: "The dropbox_connections table does not exist in the database yet. Open the Supabase SQL editor and run the SQL from supabase/migrations/20261030000000_dropbox_connections.sql, then reload Creator HQ.",
+          needsMigration: true
+        }, 400, origin);
+      }
+      throw connectionError;
+    }
     if (action === "status") {
       return json({
         connected: Boolean(connection),
