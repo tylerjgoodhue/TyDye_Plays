@@ -216,3 +216,9 @@ The storefront reports loading failures with a retry control and disables unavai
 Build with `node scripts/build-site.mjs` and publish the generated `dist/` folder through the existing GitHub Pages workflow. The build includes all shop/cart/product pages, shared assets, and public configuration. Test locally by serving `dist/` over HTTP; opening HTML files directly cannot load configuration or call the APIs correctly.
 
 Official references: [Storefront getting started](https://docs.fourthwall.com/storefront/getting-started), [Cart and checkout](https://docs.fourthwall.com/storefront/cart-checkout-tutorial), [Checkout setup](https://docs.fourthwall.com/storefront/checkout).
+
+## Custom domain: tydyeplays.com
+
+The root `CNAME` keeps `tydyeplays.com` in the deployment output and makes the custom-domain public base `/`. Creator HQ also computes its public base from the actual `/CreatorHQ/` URL, so links work under both the custom domain and the previous GitHub project path. A fresh browser origin initializes the existing Supabase project from `public-profile.json`; signing in again is still required because browser sessions cannot be transferred between domains.
+
+The deployed API allowlist includes `https://tydyeplays.com` and `https://www.tydyeplays.com`, while preserving the previous GitHub origin and local development origin. Keep these entries when updating `ALLOWED_APP_ORIGINS`. The `www` DNS entry must be a CNAME to `tylerjgoodhue.github.io`, and GitHub Pages must finish issuing the domain certificate before HTTPS can be enforced. Supabase sign-in/password-reset return addresses must include the new `/CreatorHQ/` address. Do not publish private credentials or transfer login tokens in URLs to migrate a browser session.

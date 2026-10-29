@@ -7,7 +7,9 @@ const output = path.join(root, 'dist');
 const creatorHq = path.join(output, 'CreatorHQ');
 const [repositoryOwner, repositoryName] = process.env.GITHUB_REPOSITORY?.split('/') || [];
 const configuredBasePath = process.env.PAGES_BASE_PATH?.trim();
-const publicBasePath = configuredBasePath
+const domainFile = await readFile(path.join(root, 'CNAME'), 'utf8').catch(() => '');
+const customDomain = (process.env.PAGES_CUSTOM_DOMAIN || domainFile).trim().toLowerCase();
+const publicBasePath = customDomain ? '/' : configuredBasePath
 	? `/${configuredBasePath.split('/').filter(Boolean).join('/')}${configuredBasePath.endsWith('/') ? '' : '/'}`
 	: repositoryName && repositoryName !== `${repositoryOwner}.github.io` ? `/${repositoryName}/` : '/';
 
@@ -24,7 +26,6 @@ for (const asset of ['storefront.js', 'storefront.css', 'storefront-config.json'
 }
 await cp(path.join(root, 'linktree.html'), path.join(output, 'linktree.html'));
 await cp(path.join(root, 'public-profile.json'), path.join(output, 'public-profile.json'));
-const customDomain = process.env.PAGES_CUSTOM_DOMAIN?.trim().toLowerCase();
 if (customDomain) {
 	if (!/^(?=.{1,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/.test(customDomain)) {
 		throw new Error('PAGES_CUSTOM_DOMAIN must be a hostname such as creator.example.com.');
@@ -34,7 +35,7 @@ if (customDomain) {
 const appHtml = await readFile(path.join(root, 'index.html'), 'utf8');
 const configuredAppHtml = appHtml.replace(
 	'<script type="module" src="./cloud-sync.js',
-	`<script>window.CREATOR_HQ_PUBLIC_BASE=${JSON.stringify(publicBasePath)};</script>\n  <script type="module" src="./cloud-sync.js`
+	`<script>window.CREATOR_HQ_PUBLIC_BASE=new URL('../',window.location.href).pathname;</script>\n  <script type="module" src="./cloud-sync.js`
 );
 await writeFile(path.join(creatorHq, 'index.html'), configuredAppHtml);
 await cp(path.join(root, 'cloud-sync.js'), path.join(creatorHq, 'cloud-sync.js'));

@@ -1282,10 +1282,14 @@ document.getElementById('cloud-disable').addEventListener('click', () => {
 
 try {
   const config = readConfig();
-  if (config.url && config.anonKey) {
-    document.getElementById('cloud-url').value = config.url;
-    document.getElementById('cloud-anon-key').value = config.anonKey;
-    await connectProject(config.url, config.anonKey);
+  // A new domain has fresh browser storage. Bootstrap the same public project connection.
+  const publication = config.url && config.anonKey ? null : await getPublicProfileConfig();
+  const projectUrl = config.url && config.anonKey ? config.url : publication?.supabaseUrl;
+  const projectKey = config.url && config.anonKey ? config.anonKey : publication?.anonKey;
+  if (projectUrl && projectKey) {
+    document.getElementById('cloud-url').value = projectUrl;
+    document.getElementById('cloud-anon-key').value = projectKey;
+    await connectProject(projectUrl, projectKey);
     storage()?.refreshSocialLinks?.();
     if (config.syncEnabled && session?.user) queueSync();
   }
