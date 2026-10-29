@@ -13,7 +13,7 @@
   <title>Creator profile</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=Orbitron:wght@500;600;700;800;900&family=Press+Start+2P&display=swap" rel="stylesheet">
   <style>
     :root { color-scheme: dark; font-family: 'DM Sans',sans-serif; background: #121712; color: #f0f3ed; font-synthesis: none; }
     * { box-sizing: border-box; }
@@ -384,6 +384,57 @@
     .product-description h2 { font: 600 18px 'Space Grotesk',sans-serif; }
     .product-description p { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 14px; line-height: 1.8; color: var(--site-muted); }
     @media (max-width: 700px) { .product-layout { grid-template-columns: minmax(0,1fr); }.product-page { padding: 24px 18px 56px; }.product-photo { max-width: 480px; width: 100%; margin: auto; } }
+
+    /* ---- Vibe themes (set from Creator HQ website settings) ---- */
+    body.vibe-gamer, body.vibe-brat, body.vibe-cyber, body.vibe-arcade { --site-vibe-alt: #ff2bd6; }
+    body.vibe-gamer::before, body.vibe-brat::before, body.vibe-cyber::before, body.vibe-arcade::before { position: fixed; inset: 0; z-index: 0; pointer-events: none; content: ''; }
+    body.vibe-gamer .creator-site, body.vibe-brat .creator-site, body.vibe-cyber .creator-site, body.vibe-arcade .creator-site { position: relative; z-index: 1; }
+
+    /* Gamer glow: neon halo, energy blobs, glowing headings + buttons */
+    body.vibe-gamer::before { background: radial-gradient(38rem 30rem at 12% -8%, color-mix(in srgb,var(--site-accent) 22%,transparent), transparent 70%), radial-gradient(34rem 28rem at 92% 12%, color-mix(in srgb,var(--site-vibe-alt) 15%,transparent), transparent 70%), radial-gradient(46rem 34rem at 50% 108%, color-mix(in srgb,var(--site-accent) 13%,transparent), transparent 72%); animation: vibe-drift 16s ease-in-out infinite alternate; }
+    body.vibe-gamer .site-hero h1, body.vibe-gamer .site-section h2, body.vibe-gamer .site-community h2 { font-family: 'Orbitron','Space Grotesk',sans-serif; text-shadow: 0 0 26px color-mix(in srgb,var(--site-accent) 55%,transparent), 0 0 70px color-mix(in srgb,var(--site-accent) 24%,transparent); }
+    body.vibe-gamer .site-eyebrow, body.vibe-gamer .site-kicker, body.vibe-gamer .site-broadcast-label { font-family: 'Orbitron',sans-serif; letter-spacing: .22em; text-shadow: 0 0 14px color-mix(in srgb,var(--site-accent) 65%,transparent); }
+    body.vibe-gamer .site-button, body.vibe-gamer .site-nav-cta { box-shadow: 0 0 22px color-mix(in srgb,var(--site-accent) 48%,transparent), 0 0 60px color-mix(in srgb,var(--site-accent) 22%,transparent); animation: vibe-pulse 2.6s ease-in-out infinite; }
+    body.vibe-gamer .site-status.live .site-status-dot, body.vibe-gamer .site-broadcast.is-live .site-status-dot { animation: vibe-live-blink 1.1s ease-in-out infinite; }
+    body.vibe-gamer .site-product, body.vibe-gamer .site-feature { border-color: color-mix(in srgb,var(--site-accent) 34%,var(--site-line)); box-shadow: 0 0 0 1px color-mix(in srgb,var(--site-accent) 10%,transparent), 0 12px 40px #0007; }
+    body.vibe-gamer .site-nav { border-bottom-color: color-mix(in srgb,var(--site-accent) 38%,transparent); box-shadow: 0 8px 40px color-mix(in srgb,var(--site-accent) 12%,transparent); }
+
+    /* Brat mode: acid blur-glow, oversized lowercase energy */
+    body.vibe-brat::before { background: radial-gradient(30rem 24rem at 80% 6%, color-mix(in srgb,var(--site-accent) 30%,transparent), transparent 68%), radial-gradient(26rem 22rem at 8% 96%, color-mix(in srgb,var(--site-vibe-alt) 16%,transparent), transparent 70%); animation: vibe-drift 12s ease-in-out infinite alternate; }
+    body.vibe-brat .site-hero h1 { font-weight: 700; letter-spacing: -.03em; text-transform: lowercase; filter: blur(.35px); text-shadow: 0 0 34px color-mix(in srgb,var(--site-accent) 75%,transparent), 0 0 90px color-mix(in srgb,var(--site-accent) 40%,transparent); }
+    body.vibe-brat .site-hero-copy::before { width: 6px; background: linear-gradient(var(--site-accent),var(--site-vibe-alt),transparent); }
+    body.vibe-brat .site-eyebrow, body.vibe-brat .site-kicker { text-transform: lowercase; letter-spacing: .16em; font-size: 12px; }
+    body.vibe-brat .site-button, body.vibe-brat .site-nav-cta { border-radius: 99px; box-shadow: 0 0 0 2px color-mix(in srgb,var(--site-accent) 30%,transparent), 0 0 42px color-mix(in srgb,var(--site-accent) 38%,transparent); }
+    body.vibe-brat .site-community::before { width: 110px; height: 5px; background: linear-gradient(90deg,var(--site-accent),var(--site-vibe-alt)); }
+    body.vibe-brat .site-mark { border-radius: 14px; }
+
+    /* Cyber neon: scanlines, duotone kickers, terminal glow */
+    body.vibe-cyber::after { position: fixed; inset: 0; z-index: 2; pointer-events: none; background: repeating-linear-gradient(0deg, #0000 0 2px, #00000030 2px 4px); mix-blend-mode: overlay; content: ''; }
+    body.vibe-cyber::before { background: linear-gradient(115deg, color-mix(in srgb,var(--site-accent) 12%,transparent), transparent 44%), radial-gradient(40rem 26rem at 88% 100%, color-mix(in srgb,var(--site-vibe-alt) 17%,transparent), transparent 70%); }
+    body.vibe-cyber .site-hero h1, body.vibe-cyber .site-section h2 { font-family: 'Orbitron',sans-serif; letter-spacing: .04em; text-shadow: 2px 0 color-mix(in srgb,var(--site-vibe-alt) 55%,transparent), -2px 0 color-mix(in srgb,var(--site-accent) 55%,transparent), 0 0 32px color-mix(in srgb,var(--site-accent) 30%,transparent); }
+    body.vibe-cyber .site-eyebrow, body.vibe-cyber .site-kicker, body.vibe-cyber .site-schedule-group-title { color: var(--site-vibe-alt); font-family: 'Orbitron',sans-serif; letter-spacing: .28em; animation: vibe-flicker 4s steps(12) infinite; }
+    body.vibe-cyber .site-nav, body.vibe-cyber .site-broadcast { border-color: color-mix(in srgb,var(--site-accent) 45%,transparent); }
+    body.vibe-cyber .site-button, body.vibe-cyber .site-nav-cta { clip-path: polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px); }
+    body.vibe-cyber .site-product:hover, body.vibe-cyber .site-feature:hover { box-shadow: 0 0 30px color-mix(in srgb,var(--site-accent) 30%,transparent); }
+
+    /* Retro arcade: pixel type, chunky borders, CRT scanlines */
+    body.vibe-arcade::after { position: fixed; inset: 0; z-index: 2; pointer-events: none; background: repeating-linear-gradient(0deg, #0000 0 3px, #00000026 3px 6px); content: ''; }
+    body.vibe-arcade::before { background: radial-gradient(44rem 30rem at 50% -12%, color-mix(in srgb,var(--site-accent) 16%,transparent), transparent 70%); }
+    body.vibe-arcade .site-hero h1, body.vibe-arcade .site-section h2, body.vibe-arcade .site-community h2, body.vibe-arcade .site-broadcast h2 { font-family: 'Press Start 2P',monospace; font-weight: 400; line-height: 1.35; letter-spacing: 0; text-transform: uppercase; text-shadow: 4px 4px 0 color-mix(in srgb,var(--site-vibe-alt) 65%,transparent); }
+    body.vibe-arcade .site-hero h1 { font-size: clamp(28px,5.4vw,54px); }
+    body.vibe-arcade .site-section h2 { font-size: clamp(20px,3vw,30px); }
+    body.vibe-arcade .site-eyebrow, body.vibe-arcade .site-kicker, body.vibe-arcade .site-schedule-group-title, body.vibe-arcade .site-feature-meta { font-family: 'Press Start 2P',monospace; font-size: 8px; letter-spacing: .1em; }
+    body.vibe-arcade .site-nav-links a, body.vibe-arcade .site-wordmark { font-family: 'Press Start 2P',monospace; font-size: 9px; }
+    body.vibe-arcade .site-button, body.vibe-arcade .site-nav-cta { border-radius: 0; border-width: 3px; box-shadow: 5px 5px 0 color-mix(in srgb,var(--site-vibe-alt) 60%,transparent); }
+    body.vibe-arcade .site-button:hover, body.vibe-arcade .site-nav-cta:hover { transform: translate(-2px,-2px); box-shadow: 8px 8px 0 color-mix(in srgb,var(--site-vibe-alt) 60%,transparent); }
+    body.vibe-arcade .site-product, body.vibe-arcade .site-feature, body.vibe-arcade .site-social-link { border-radius: 0; border-width: 2px; }
+    body.vibe-arcade .site-hero-copy::before { width: 8px; background: repeating-linear-gradient(0deg,var(--site-accent) 0 10px,transparent 10px 16px); }
+
+    @keyframes vibe-drift { from { transform: translate3d(0,-2%,0) scale(1); } to { transform: translate3d(0,3%,0) scale(1.08); } }
+    @keyframes vibe-pulse { 0%,100% { box-shadow: 0 0 18px color-mix(in srgb,var(--site-accent) 40%,transparent), 0 0 50px color-mix(in srgb,var(--site-accent) 16%,transparent); } 50% { box-shadow: 0 0 30px color-mix(in srgb,var(--site-accent) 62%,transparent), 0 0 80px color-mix(in srgb,var(--site-accent) 28%,transparent); } }
+    @keyframes vibe-live-blink { 0%,100% { box-shadow: 0 0 14px #ff655f99; } 50% { box-shadow: 0 0 26px #ff655f; } }
+    @keyframes vibe-flicker { 0%,92%,100% { opacity: 1; } 94% { opacity: .5; } 96% { opacity: .9; } 98% { opacity: .4; } }
+    @media (prefers-reduced-motion: reduce) { body[class*="vibe-"]::before, body[class*="vibe-"] .site-button, body[class*="vibe-"] .site-nav-cta, body[class*="vibe-"] .site-status-dot { animation: none !important; } }
   </style>
   <link rel="stylesheet" href="./storefront.css">
 </head>
@@ -478,6 +529,7 @@
       const shape = ['rounded', 'square', 'pill'].includes(profile.linkShape) ? profile.linkShape : 'rounded';
       const links = Array.isArray(profile.links) ? profile.links.slice(0, 20) : [];
       const website = profile.website && typeof profile.website === 'object' ? profile.website : {};
+      const vibe = ['clean', 'gamer', 'brat', 'cyber', 'arcade'].includes(website.vibe) ? website.vibe : 'gamer';
       const tagline = website.tagline === 'Test Gehkjhdckjhxckdh' ? '' : String(website.tagline || bio || 'A place for games, good company, and the occasional questionable decision.').slice(0, 120);
       const twitchUrl = safeLink(website.twitchUrl) || (handle ? `https://www.twitch.tv/${encodeURIComponent(handle.replace(/^@/, ''))}` : '');
       const twitchLogin = (() => {
@@ -573,6 +625,7 @@
       document.documentElement.style.setProperty('--site-ink', textColor);
       document.documentElement.style.setProperty('--site-accent', buttonColor);
       document.documentElement.style.setProperty('--site-button-text', buttonTextColor);
+      document.body.className = vibe === 'clean' ? '' : `vibe-${vibe}`;
       root.className = 'creator-site';
       const storefront = window.CreatorStorefront.create({ profile });
       if (['product.html', 'shop.html', 'cart.html'].some(page => location.pathname.endsWith('/' + page))) {
