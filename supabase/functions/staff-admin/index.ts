@@ -3,6 +3,16 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/i;
 const MAX_BODY_BYTES = 20_000;
+const PERMISSIONS = [
+  "dashboard", "tasks", "schedule", "content", "assets", "analytics",
+  "community", "shop", "website", "linktree", "social", "settings"
+];
+const ROLES = ["owner", "admin", "staff", "viewer"];
+
+function cleanPermissions(input: unknown): string[] | null {
+  if (!Array.isArray(input)) return null;
+  return [...new Set(input.map(value => String(value)).filter(value => PERMISSIONS.includes(value)))].sort();
+}
 
 function json(body: unknown, status = 200, origin = "") {
   return new Response(JSON.stringify(body), {
@@ -95,7 +105,9 @@ Deno.serve(async request => {
         lastSignInAt: user.last_sign_in_at || "",
         emailConfirmed: Boolean(user.email_confirmed_at),
         banned: Boolean((user as { banned_until?: string }).banned_until && new Date((user as { banned_until?: string }).banned_until || "").getTime() > Date.now()),
-        isOwner: caller.id === user.id
+        isOwner: caller.id === user.id,
+        role: (user.user_metadata as { role?: string } | null)?.role || "",
+        permissions: cleanPermissions((user.user_metadata as { permissions?: unknown } | null)?.permissions) || []
       }));
       return json({ users, page, hasMore: Boolean((data as { nextPage?: number | null })?.nextPage) }, 200, origin);
     }
@@ -105,11 +117,13 @@ Deno.serve(async request => {
       const password = String(body.password || "");
       if (!EMAIL.test(email)) return json({ error: "Enter a valid email address for the new staff account." }, 400, origin);
       if (password.length < 8) return json({ error: "Use a password with at least 8 characters." }, 400, origin);
+      const role = ROLES.includes(String(body.role || "")) ? String(body.role) : "staff";
+      const permissions = cleanPermissions(body.permissions) ?? PERMISSIONS.filter(item => item !== "settings");
       const { data, error } = await admin.auth.admin.createUser({
         email,
         password,
         email_confirm: true,
-        user_metadata: { role: "staff", workspace: "Creator HQ" }
+        user_metadata: { role: "staff", workspace: "Creator HQ", assignedRole: role, permissions }
       });
       if (error) throw error;
       return json({ user: data.user ? { id: data.user.id, email: data.user.email || email } : null }, 200, origin);
@@ -129,8 +143,18 @@ Deno.serve(async request => {
         if (body.password.length < 8) return json({ error: "Use a password with at least 8 characters." }, 400, origin);
         changes.password = body.password;
       }
-      if (body.banned === true) changes.ban_duration = "876000h";
-      if (body.banned === false) changes.ban_duration = "none";
+      if (!selfEdit && body.banned === true) changes.ban_duration = "876000h";
+      if (!selfEdit && body.banned === false) changes.ban_duration = "none";
+      const selfEdit = id.toLowerCase() === caller.id.toLowerCase();
+      const metadata: Record<string, unknown> = {};
+      if (!selfEdit && typeof body.role === "string" && ROLES.includes(body.role)) metadata.assignedRole = body.role;
+      const permissions = selfEdit ? null : cleanPermissions(body.permissions);
+      if (permissions) metadata.permissions = permissions;
+      if (Object.keys(metadata).length) {
+        const { data: existing, error: fetchError } = await admin.auth.admin.getUserById(id);
+        if (fetchError || !existing?.user) throw fetchError || new Error("Staff account not found.");
+        changes.user_metadata = { ...(existing.user.user_metadata || {}), ...metadata };
+      }
       if (!Object.keys(changes).length) return json({ error: "Nothing to update." }, 400, origin);
       const { data, error } = await admin.auth.admin.updateUserById(id, changes);
       if (error) throw error;

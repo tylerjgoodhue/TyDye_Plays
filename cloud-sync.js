@@ -324,7 +324,14 @@ async function ensureProject() {
 
 function gateUser(sessionValue) {
   const user = sessionValue?.user;
-  return user ? { id: user.id, email: user.email || '' } : null;
+  if (!user) return null;
+  const metadata = user.user_metadata || {};
+  return {
+    id: user.id,
+    email: user.email || '',
+    role: typeof metadata.assignedRole === 'string' ? metadata.assignedRole : '',
+    permissions: Array.isArray(metadata.permissions) ? metadata.permissions.filter(item => typeof item === 'string') : []
+  };
 }
 
 async function staffAdminRequest(payload) {

@@ -43,6 +43,7 @@ To test the production layout locally, run `node scripts/build-site.mjs` and ser
 - JSON backup export and import
 - Buffer publishing desk for connected channels, queue viewing, and scheduled posts (requires a deployed Supabase Edge Function and Buffer API key)
 - Staff account management: create staff accounts, change email/password, suspend, or delete them (requires the `staff-admin` Edge Function and `STAFF_ADMIN_ALLOWED_USER_IDS` secret)
+- Per-account roles and permissions: pick a role preset (Owner / Admin / Staff / Viewer) or tick individual permissions for each account; Creator HQ hides every area the signed-in account doesn't have
 
 ## Manage staff accounts
 
@@ -56,8 +57,9 @@ Creator HQ has a **Staff** view for the workspace owner. Only the owner can mana
 	supabase functions deploy staff-admin
 	```
 
-2. Open Creator HQ → **Staff**. **Create user** makes a confirmed account (share the email and temporary password privately); **Edit user** changes a member's email, sets a new password, or suspends the account; the delete action removes it. Your own signed-in account cannot be deleted from here.
-3. For defense in depth, disable self-signup under Supabase **Authentication → Providers → Email → Allow new users to sign up**, and add future staff in **Authentication → Users** or from the Staff view.
+2. Open Creator HQ → **Staff**. **Create user** makes a confirmed account (share the email and temporary password privately); **Edit user** changes a member's email, sets a new password, or suspends the account; the delete action removes it. Your own signed-in account cannot be deleted or have its own role/permissions changed from here.
+3. **Roles & permissions.** Each account has a role (Owner, Admin, Staff, Viewer — each a preset permission set) and an individual permission checklist: dashboard, tasks, stream schedule, content pipeline, asset library, analytics, community, shop, Edit Website, Linktree, social posting, and settings/cloud sync. Choosing a role applies its preset; switch to **Custom** and untick boxes for finer control. When an account signs in, nav items for areas it lacks are hidden and direct navigation is blocked. Staff management is always owner-only.
+4. For defense in depth, disable self-signup under Supabase **Authentication → Providers → Email → Allow new users to sign up**, and add future staff in **Authentication → Users** or from the Staff view.
 
 All records are local to the current browser profile. Clearing browser data removes them. Export a JSON backup before changing devices or browser profiles. Imported files are user-controlled input; only import backups you trust.
 

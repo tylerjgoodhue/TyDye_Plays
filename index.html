@@ -841,7 +841,7 @@
         <section class="view" id="view-staff" hidden>
           <div class="page-heading"><div><div class="eyebrow">Workspace access</div><h1>Staff accounts</h1><p class="subtitle">Create and manage the accounts allowed to sign in to Creator HQ.</p></div><button class="button primary" id="staff-refresh"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-2.6-6.4M21 3v6h-6"/></svg>Refresh list</button></div>
           <div class="settings-grid">
-            <article class="panel"><div class="panel-head"><div class="panel-title"><h2>Create user</h2></div></div><div class="panel-body"><p class="settings-hint">Creates a Supabase Auth account immediately confirmed, so the new staff member can sign in right away. Share the email and password with them privately.</p><form id="staff-create-form"><div class="form-grid"><div class="form-field full"><label for="staff-create-email">Email</label><input id="staff-create-email" type="email" autocomplete="off" placeholder="staff@example.com" required></div><div class="form-field full"><label for="staff-create-password">Temporary password</label><input id="staff-create-password" type="password" autocomplete="new-password" minlength="8" placeholder="At least 8 characters" required></div></div><button class="button primary" style="margin-top:12px" type="submit">Create staff account</button><p id="staff-create-status" class="settings-hint" style="margin:10px 0 0" role="status"></p></form></div></article>
+            <article class="panel"><div class="panel-head"><div class="panel-title"><h2>Create user</h2></div></div><div class="panel-body"><p class="settings-hint">Creates a Supabase Auth account immediately confirmed, so the new staff member can sign in right away. Pick a role and tick the exact permissions this account should have — share the email and password privately.</p><div class="form-grid"><div class="form-field full"><label for="staff-create-email">Email</label><input id="staff-create-email" type="email" autocomplete="off" placeholder="staff@example.com" required></div><div class="form-field full"><label for="staff-create-password">Temporary password</label><input id="staff-create-password" type="password" autocomplete="new-password" minlength="8" placeholder="At least 8 characters" required></div></div><form id="staff-create-form"><div class="form-field"><label for="staff-create-role">Role</label><select id="staff-create-role" data-staff-role-select><option value="owner">Owner — everything</option><option value="admin">Admin — everything except settings &amp; staff</option><option value="staff" selected>Staff — day-to-day creator work</option><option value="viewer">Viewer — dashboard &amp; analytics only</option><option value="">Custom — individual permissions</option></select></div><fieldset style="border:1px solid #2c342c;border-radius:9px;padding:12px;margin:12px 0 0;display:grid;gap:7px"><legend style="padding:0 6px;font-size:11px;font-weight:700;text-transform:uppercase;color:#a8b0a5">Permissions</legend><label style="display:flex;align-items:center;gap:9px;font-size:12px"><input type="checkbox" data-staff-permission="dashboard" style="width:auto"> Creator HQ dashboard</label><label style="display:flex;align-items:center;gap:9px;font-size:12px"><input type="checkbox" data-staff-permission="tasks" style="width:auto"> Task board</label><label style="display:flex;align-items:center;gap:9px;font-size:12px"><input type="checkbox" data-staff-permission="schedule" style="width:auto"> Stream schedule</label><label style="display:flex;align-items:center;gap:9px;font-size:12px"><input type="checkbox" data-staff-permission="content" style="width:auto"> Content pipeline, ideas, goals &amp; routines</label><label style="display:flex;align-items:center;gap:9px;font-size:12px"><input type="checkbox" data-staff-permission="assets" style="width:auto"> Asset library</label><label style="display:flex;align-items:center;gap:9px;font-size:12px"><input type="checkbox" data-staff-permission="analytics" style="width:auto"> Analytics</label><label style="display:flex;align-items:center;gap:9px;font-size:12px"><input type="checkbox" data-staff-permission="community" style="width:auto"> Community, reminders &amp; collaborations</label><label style="display:flex;align-items:center;gap:9px;font-size:12px"><input type="checkbox" data-staff-permission="shop" style="width:auto"> Shop management</label><label style="display:flex;align-items:center;gap:9px;font-size:12px"><input type="checkbox" data-staff-permission="website" style="width:auto"> Edit Website</label><label style="display:flex;align-items:center;gap:9px;font-size:12px"><input type="checkbox" data-staff-permission="linktree" style="width:auto"> Linktree</label><label style="display:flex;align-items:center;gap:9px;font-size:12px"><input type="checkbox" data-staff-permission="social" style="width:auto"> Social posting &amp; accounts</label><label style="display:flex;align-items:center;gap:9px;font-size:12px"><input type="checkbox" data-staff-permission="settings" style="width:auto"> Settings &amp; cloud sync</label></fieldset><button class="button primary" style="margin-top:12px" type="submit">Create staff account</button><p id="staff-create-status" class="settings-hint" style="margin:10px 0 0" role="status"></p></form></div></article>
             <article class="panel"><div class="panel-head"><div class="panel-title"><h2>Accounts</h2></div></div><div class="panel-body"><div id="staff-list" class="settings-hint">Loading staff accounts…</div></div></article>
           </div>
           <article class="panel" style="margin-top:15px"><div class="panel-head"><div class="panel-title"><h2>How staff access works</h2></div></div><div class="panel-body"><p class="settings-hint">Staff accounts sign in on the same login screen as you. Only accounts listed here can open the workspace; sign-up is disabled. You can change a staff member's email or password, suspend (ban) an account, or delete it entirely. Your own account cannot be deleted from here.</p></div></article>
@@ -1840,6 +1840,48 @@
         renderLinktreePreview();
       }
       let staffUsers = [];
+      let currentUserAccess = null;
+      const STAFF_PERMISSIONS = [
+        { key: 'dashboard', label: 'Creator HQ dashboard' },
+        { key: 'tasks', label: 'Task board' },
+        { key: 'schedule', label: 'Stream schedule' },
+        { key: 'content', label: 'Content pipeline, ideas, goals & routines' },
+        { key: 'assets', label: 'Asset library' },
+        { key: 'analytics', label: 'Analytics' },
+        { key: 'community', label: 'Community, reminders & collaborations' },
+        { key: 'shop', label: 'Shop management' },
+        { key: 'website', label: 'Edit Website' },
+        { key: 'linktree', label: 'Linktree' },
+        { key: 'social', label: 'Social posting & accounts' },
+        { key: 'settings', label: 'Settings & cloud sync' }
+      ];
+      const STAFF_ROLE_PRESETS = {
+        owner: { label: 'Owner — everything', permissions: STAFF_PERMISSIONS.map(item => item.key), locked: true },
+        admin: { label: 'Admin — everything except settings & staff', permissions: STAFF_PERMISSIONS.filter(item => item.key !== 'settings').map(item => item.key) },
+        staff: { label: 'Staff — day-to-day creator work', permissions: ['dashboard', 'tasks', 'schedule', 'content', 'assets', 'community'] },
+        viewer: { label: 'Viewer — dashboard & analytics only', permissions: ['dashboard', 'analytics'] }
+      };
+      const VIEW_PERMISSIONS = { dashboard: 'dashboard', tasks: 'tasks', schedule: 'schedule', content: 'content', ideas: 'content', goals: 'content', routines: 'content', assets: 'assets', analytics: 'analytics', community: 'community', notifications: 'community', crm: 'community', shop: 'shop', website: 'website', linktree: 'linktree', 'buffer-compose': 'social', 'buffer-scheduled': 'social', cloud: 'settings', settings: 'settings' };
+      const staffRoleSelectMarkup = () => `<div class="form-field"><label for="staff-role-select">Role</label><select id="staff-role-select" data-staff-role-select>${Object.entries(STAFF_ROLE_PRESETS).map(([key, preset]) => `<option value="${key}">${escapeHtml(preset.label)}</option>`).join('')}<option value="">Custom — individual permissions</option></select></div>`;
+      const staffPermissionMarkup = () => `<fieldset style="border:1px solid #2c342c;border-radius:9px;padding:12px;margin:12px 0 0;display:grid;gap:7px"><legend style="padding:0 6px;font-size:11px;font-weight:700;text-transform:uppercase;color:#a8b0a5">Permissions</legend>${STAFF_PERMISSIONS.map(item => `<label style="display:flex;align-items:center;gap:9px;font-size:12px"><input type="checkbox" data-staff-permission="${item.key}" style="width:auto"> ${escapeHtml(item.label)}</label>`).join('')}</fieldset>`;
+      const readStaffPermissionChecks = scope => [...(scope || document).querySelectorAll('[data-staff-permission]')].filter(input => input.checked).map(input => input.dataset.staffPermission);
+      function applyStaffRolePreset(select) {
+        const roleSelect = select || document.querySelector('[data-staff-role-select]');
+        const role = roleSelect?.value || 'staff';
+        const preset = STAFF_ROLE_PRESETS[role] || STAFF_ROLE_PRESETS.staff;
+        (roleSelect ? roleSelect.closest('form') : document).querySelectorAll('[data-staff-permission]').forEach(input => { input.checked = preset.permissions.includes(input.dataset.staffPermission); input.disabled = Boolean(preset.locked); });
+      }
+      function userHasAccess(viewName) {
+        if (!currentUserAccess) return true;
+        if (currentUserAccess.full) return true;
+        if (viewName === 'staff') return currentUserAccess.role === 'owner';
+        const needed = VIEW_PERMISSIONS[viewName];
+        if (!needed) return true;
+        return currentUserAccess.permissions.includes(needed);
+      }
+      function applyPermissions() {
+        document.querySelectorAll('.nav-button[data-view]').forEach(button => { button.hidden = !userHasAccess(button.dataset.view); });
+      }
       async function refreshStaffList() {
         const listNode = document.getElementById('staff-list');
         const gate = window.CreatorHQCloud?.authGate;
@@ -1852,7 +1894,7 @@
           const data = await window.CreatorHQCloud.staffAdmin.list(1);
           staffUsers = Array.isArray(data.users) ? data.users : [];
           if (!staffUsers.length) { listNode.innerHTML = '<p class="settings-hint" style="margin:0">No accounts yet. Create the first staff account on the left.</p>'; return; }
-          listNode.innerHTML = `<div style="display:grid;gap:9px">${staffUsers.map(person => `<div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:11px 13px;border:1px solid var(--line,#2c342c);border-radius:9px"><div style="flex:1;min-width:160px"><div style="font-weight:600;font-size:13px">${escapeHtml(person.email || '(no email)')}</div><div class="settings-hint" style="margin:3px 0 0">${person.isOwner ? 'You (owner) · ' : ''}${person.banned ? 'Suspended' : person.emailConfirmed ? 'Confirmed' : 'Not confirmed'}${person.lastSignInAt ? ` · Last sign-in ${escapeHtml(String(person.lastSignInAt).slice(0, 10))}` : ' · Never signed in'}</div></div><button class="button" data-edit-staff="${escapeHtml(person.id)}" ${person.isOwner ? '' : ''}>Edit user</button>${person.isOwner ? '' : `<button class="mini-button delete" data-delete-staff="${escapeHtml(person.id)}" aria-label="Delete ${escapeHtml(person.email)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M10 11v6m4-6v6M5 7l1 14h12l1-14M9 7V4h6v3"/></svg></button>`}</div>`).join('')}</div>`;
+          listNode.innerHTML = `<div style="display:grid;gap:9px">${staffUsers.map(person => `<div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:11px 13px;border:1px solid var(--line,#2c342c);border-radius:9px"><div style="flex:1;min-width:160px"><div style="font-weight:600;font-size:13px">${escapeHtml(person.email || '(no email)')}</div><div class="settings-hint" style="margin:3px 0 0">${person.isOwner ? 'You (owner) · ' : ''}${STAFF_ROLE_PRESETS[person.role] ? escapeHtml(person.role) : Array.isArray(person.permissions) && person.permissions.length ? `Custom (${person.permissions.length} permissions)` : 'Full access'} · ${person.banned ? 'Suspended' : person.emailConfirmed ? 'Confirmed' : 'Not confirmed'}${person.lastSignInAt ? ` · Last sign-in ${escapeHtml(String(person.lastSignInAt).slice(0, 10))}` : ' · Never signed in'}</div></div><button class="button" data-edit-staff="${escapeHtml(person.id)}" ${person.isOwner ? '' : ''}>Edit user</button>${person.isOwner ? '' : `<button class="mini-button delete" data-delete-staff="${escapeHtml(person.id)}" aria-label="Delete ${escapeHtml(person.email)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M10 11v6m4-6v6M5 7l1 14h12l1-14M9 7V4h6v3"/></svg></button>`}</div>`).join('')}</div>`;
           listNode.querySelectorAll('[data-edit-staff]').forEach(button => button.addEventListener('click', () => editStaffModal(button.dataset.editStaff)));
           listNode.querySelectorAll('[data-delete-staff]').forEach(button => button.addEventListener('click', async () => {
             const person = staffUsers.find(item => item.id === button.dataset.deleteStaff);
@@ -1869,7 +1911,16 @@
       function editStaffModal(id) {
         const person = staffUsers.find(item => item.id === id);
         if (!person) return;
-        document.getElementById('modal-root').innerHTML = `<div class="modal-backdrop" data-backdrop><form class="modal" id="staff-edit-form"><div class="modal-head"><h2>Edit user</h2><button type="button" class="mini-button" data-close-modal aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div><div class="modal-body"><div class="form-field"><label for="staff-edit-email">Email</label><input id="staff-edit-email" type="email" autocomplete="off" value="${escapeHtml(person.email || '')}" required></div><div class="form-field"><label for="staff-edit-password">New password <span style="color:#758072;font-weight:400">(leave blank to keep the current one)</span></label><input id="staff-edit-password" type="password" autocomplete="new-password" placeholder="At least 8 characters"></div><div class="form-field"><label style="display:flex;align-items:center;gap:9px"><input type="checkbox" id="staff-edit-banned" ${person.banned ? 'checked' : ''} style="width:auto"> Suspended (blocks sign-in)</label></div><p id="staff-edit-status" class="settings-hint" style="margin:0" role="status"></p></div><div class="modal-actions"><button type="button" class="button" data-close-modal>Cancel</button><button class="button primary" type="submit">Save changes</button></div></form></div>`;
+        const savedRole = STAFF_ROLE_PRESETS[person.role] ? person.role : '';
+        const savedPermissions = Array.isArray(person.permissions) ? person.permissions : [];
+        document.getElementById('modal-root').innerHTML = `<div class="modal-backdrop" data-backdrop><form class="modal" id="staff-edit-form"><div class="modal-head"><h2>Edit user</h2><button type="button" class="mini-button" data-close-modal aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div><div class="modal-body"><div class="form-field"><label for="staff-edit-email">Email</label><input id="staff-edit-email" type="email" autocomplete="off" value="${escapeHtml(person.email || '')}" required></div><div class="form-field"><label for="staff-edit-password">New password <span style="color:#758072;font-weight:400">(leave blank to keep the current one)</span></label><input id="staff-edit-password" type="password" autocomplete="new-password" placeholder="At least 8 characters"></div>${staffRoleSelectMarkup()}${staffPermissionMarkup()}<div class="form-field"><label style="display:flex;align-items:center;gap:9px"><input type="checkbox" id="staff-edit-banned" ${person.banned ? 'checked' : ''} style="width:auto"> Suspended (blocks sign-in)</label></div><p id="staff-edit-status" class="settings-hint" style="margin:0" role="status"></p></div><div class="modal-actions"><button type="button" class="button" data-close-modal>Cancel</button><button class="button primary" type="submit">Save changes</button></div></form></div>`;
+        const roleSelect = document.getElementById('staff-role-select');
+        roleSelect.value = savedRole;
+        const matchesPreset = savedRole && savedPermissions.length && savedPermissions.length === STAFF_ROLE_PRESETS[savedRole].permissions.length && STAFF_ROLE_PRESETS[savedRole].permissions.every(key => savedPermissions.includes(key));
+        if (!matchesPreset) roleSelect.value = '';
+        if (matchesPreset) applyStaffRolePreset(roleSelect);
+        else document.querySelectorAll('[data-staff-permission]').forEach(input => { input.checked = savedPermissions.includes(input.dataset.staffPermission); });
+        roleSelect.addEventListener('change', () => { if (roleSelect.value) applyStaffRolePreset(roleSelect); });
         document.getElementById('staff-edit-form').addEventListener('submit', async event => {
           event.preventDefault();
           const email = document.getElementById('staff-edit-email').value.trim();
@@ -1878,11 +1929,11 @@
           const status = document.getElementById('staff-edit-status');
           status.textContent = 'Saving changes…';
           try {
-            const changes = {};
+            const changes = { permissions: readStaffPermissionChecks(document.getElementById('staff-edit-form')) };
             if (email && email !== person.email) changes.email = email;
             if (password) changes.password = password;
             if (banned !== person.banned) changes.banned = banned;
-            if (!Object.keys(changes).length) { status.textContent = 'Nothing to change yet.'; return; }
+            if (roleSelect.value) changes.role = roleSelect.value;
             await window.CreatorHQCloud.staffAdmin.update(id, changes);
             closeModal();
             toast('Staff account updated');
@@ -1893,6 +1944,7 @@
         });
       }
       function renderStaff() { void refreshStaffList(); }
+      applyStaffRolePreset(document.getElementById('staff-create-role'));
       document.getElementById('staff-refresh').addEventListener('click', () => { void refreshStaffList(); });
       document.getElementById('staff-create-form').addEventListener('submit', async event => {
         event.preventDefault();
@@ -1901,10 +1953,13 @@
         const status = document.getElementById('staff-create-status');
         if (!email || password.length < 8) { status.textContent = 'Enter an email and a password with at least 8 characters.'; return; }
         status.textContent = 'Creating account…';
+        const roleSelect = document.getElementById('staff-create-role');
         try {
-          await window.CreatorHQCloud.staffAdmin.create(email, password);
+          await window.CreatorHQCloud.staffAdmin.create(email, password, roleSelect.value, readStaffPermissionChecks(document.getElementById('staff-create-form')));
           document.getElementById('staff-create-email').value = '';
           document.getElementById('staff-create-password').value = '';
+          roleSelect.value = 'staff';
+          applyStaffRolePreset(roleSelect);
           status.textContent = `Account created for ${email}. Share the email and temporary password privately.`;
           await refreshStaffList();
         } catch (error) {
@@ -2025,6 +2080,7 @@
         if (name === 'inventory' && !fourthwallInventory.size) loadFourthwallInventory();
       }
       function setView(name) {
+        if (!userHasAccess(name)) { toast("Your account doesn't have access to that area."); return; }
         activeView = name;
         document.querySelectorAll('.view').forEach(view => { view.hidden = view.id !== `view-${name}`; });
         document.querySelectorAll('.nav-button[data-view]').forEach(button => button.classList.toggle('active', button.dataset.view === name && (!button.dataset.shopTab || button.dataset.shopTab === activeShopTab)));
@@ -2090,6 +2146,8 @@
         const gate = window.CreatorHQCloud?.authGate;
         const user = gate ? await gate.user() : null;
         if (!user) { showAuth('Sign in to open your workspace.'); return; }
+        currentUserAccess = { role: user.role || '', permissions: Array.isArray(user.permissions) ? user.permissions : [], full: user.role === 'owner' || (!user.role && !(user.permissions || []).length) };
+        applyPermissions();
         if (!state.profile?.name) {
           state.profile = { name: personalNameFromEmail(user.email), email: user.email, createdAt: state.profile?.createdAt || new Date().toISOString() };
           state.settings.name = state.profile.name;
