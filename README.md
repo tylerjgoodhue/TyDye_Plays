@@ -1,6 +1,10 @@
 # Creator HQ
 
-A local-first creator workspace built as a single-page HTML application, with optional Supabase Auth and cloud snapshot sync. No build step or package install is required.
+A local-first creator workspace built as a single-page HTML application, with Supabase Auth required to open the workspace and optional cloud snapshot sync. No build step or package install is required.
+
+## Sign in
+
+Creator HQ is locked behind Supabase Auth. Opening the app shows a secure sign-in screen that requires an account email and password (verified by Supabase Auth; sessions persist until sign-out). **Create account** registers a new Supabase Auth user, **Forgot password?** emails a reset link, and the Cloud sync settings still support GitHub sign-in and confirmation-email resend. The app only renders after an authenticated session exists, and signing out locks it again.
 
 ## Run locally
 

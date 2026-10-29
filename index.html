@@ -1958,21 +1958,81 @@
         if (name === 'analytics' || name === 'settings') window.CreatorHQCloud?.refreshAnalyticsData?.();
         if (name === 'buffer-compose' || name === 'buffer-scheduled') window.CreatorHQCloud?.refreshBufferData?.();
       }
-      function showAuth() {
-        if (state.profile?.name) return;
-        document.getElementById('auth-root').innerHTML = `<div class="auth-screen"><form class="auth-box" id="profile-form"><div class="brand"><div class="brand-mark">C</div><div class="brand-copy"><div class="brand-name">Creator HQ</div><div class="brand-sub">Your creator command center</div></div></div><h1>Make this space yours.</h1><p>Set up your local creator workspace. Your tasks and schedule stay in this browser.</p><div class="form-field" style="margin-bottom:12px"><label for="onboard-name">Your name</label><input id="onboard-name" name="name" maxlength="50" placeholder="What should we call you?" required></div><div class="form-field"><label for="onboard-handle">Creator / channel name <span style="color:#758072;font-weight:400">(optional)</span></label><input id="onboard-handle" name="handle" maxlength="50" placeholder="Your channel name"></div><button class="button primary" style="width:100%;margin-top:17px" type="submit">Open my workspace <span aria-hidden="true">→</span></button><div class="auth-note">Local workspace only. This is not an account sign-in; data is saved on this device and isn't encrypted or synced.</div></form></div>`;
-        document.getElementById('profile-form').addEventListener('submit', event => {
-          event.preventDefault();
-          const form = new FormData(event.currentTarget);
-          const name = String(form.get('name') || '').trim();
-          if (!name) return;
-          state.profile = { name, createdAt: new Date().toISOString() };
-          state.settings.name = name;
-          state.settings.handle = String(form.get('handle') || '').trim();
+      function lockWorkspace() {
+        document.getElementById('app').hidden = true;
+        document.body.classList.add('auth-locked');
+      }
+      function unlockWorkspace() {
+        document.getElementById('app').hidden = false;
+        document.body.classList.remove('auth-locked');
+        document.getElementById('auth-root').innerHTML = '';
+        renderAll();
+      }
+      function personalNameFromEmail(email) {
+        const local = String(email || '').split('@')[0].replace(/[._-]+/g, ' ').trim();
+        return local ? local.replace(/\b\w/g, c => c.toUpperCase()).slice(0, 50) : 'Creator';
+      }
+      function showAuth(notice = '') {
+        lockWorkspace();
+        document.getElementById('auth-root').innerHTML = `<div class="auth-screen"><form class="auth-box" id="login-form"><div class="brand"><div class="brand-mark">C</div><div class="brand-copy"><div class="brand-name">Creator HQ</div><div class="brand-sub">Your creator command center</div></div></div><h1>Sign in to continue</h1><p>This workspace is protected. Sign in with your creator account email and password.</p><div class="form-field" style="margin-bottom:12px"><label for="login-email">Email</label><input id="login-email" name="email" type="email" autocomplete="email" placeholder="you@example.com" required></div><div class="form-field"><label for="login-password">Password</label><input id="login-password" name="password" type="password" autocomplete="current-password" placeholder="Your password" required></div><button class="button primary" style="width:100%;margin-top:17px" type="submit" id="login-submit">Sign in <span aria-hidden="true">→</span></button><div class="button-row" style="margin-top:10px"><button class="button" type="button" id="login-create">Create account</button><button class="button ghost" type="button" id="login-forgot">Forgot password?</button></div><p id="login-status" class="settings-hint" style="margin:12px 0 0" role="status">${escapeHtml(notice || 'Passwords are verified by Supabase Auth. Sessions stay signed in on this device until you sign out.')}</p></form></div>`;
+        const status = document.getElementById('login-status');
+        const setNotice = text => { status.textContent = text; };
+        const submit = async action => {
+          const form = new FormData(document.getElementById('login-form'));
+          const email = String(form.get('email') || '').trim();
+          const password = String(form.get('password') || '');
+          if (!email || !password) { setNotice('Enter your email and password.'); return; }
+          const submitButton = document.getElementById('login-submit');
+          submitButton.disabled = true;
+          setNotice(action === 'signIn' ? 'Signing in…' : action === 'signUp' ? 'Creating your account…' : 'Sending reset email…');
+          try {
+            const gate = window.CreatorHQCloud?.authGate;
+            if (!gate) throw new Error('Authentication is still loading. Try again in a moment.');
+            if (action === 'signUp') {
+              const result = await gate.signUp(email, password);
+              if (result.needsConfirmation) { setNotice('Account created. Check your email for a confirmation link, then sign in here.'); submitButton.disabled = false; return; }
+            } else if (action === 'forgot') {
+              await gate.requestPasswordReset(email);
+              setNotice('If that email has an account, a password reset link is on its way.');
+              submitButton.disabled = false;
+              return;
+            } else {
+              await gate.signIn(email, password);
+            }
+            await enterWorkspace();
+          } catch (error) {
+            setNotice(error?.message || 'Sign-in failed. Please try again.');
+            submitButton.disabled = false;
+          }
+        };
+        document.getElementById('login-form').addEventListener('submit', event => { event.preventDefault(); submit('signIn'); });
+        document.getElementById('login-create').addEventListener('click', () => submit('signUp'));
+        document.getElementById('login-forgot').addEventListener('click', () => submit('forgot'));
+      }
+      async function enterWorkspace() {
+        const gate = window.CreatorHQCloud?.authGate;
+        const user = gate ? await gate.user() : null;
+        if (!user) { showAuth('Sign in to open your workspace.'); return; }
+        if (!state.profile?.name) {
+          state.profile = { name: personalNameFromEmail(user.email), email: user.email, createdAt: state.profile?.createdAt || new Date().toISOString() };
+          state.settings.name = state.profile.name;
           saveState();
-          document.getElementById('auth-root').innerHTML = '';
-          renderAll();
+        }
+        unlockWorkspace();
+        toast(`Signed in as ${user.email}`);
+      }
+      async function secureGate() {
+        lockWorkspace();
+        const started = Date.now();
+        while (!window.CreatorHQCloud?.authGate && Date.now() - started < 15000) await new Promise(resolve => setTimeout(resolve, 120));
+        const gate = window.CreatorHQCloud?.authGate;
+        if (!gate) { showAuth('Authentication could not load. Check your connection and reload.'); return; }
+        gate.onChange((event, user) => {
+          if (!user) showAuth('You have been signed out.');
         });
+        const user = await gate.user();
+        if (user) await enterWorkspace();
+        else showAuth();
       }
       function taskModal(task = null) {
         const edit = Boolean(task);
@@ -2160,7 +2220,7 @@
             state.notificationPreferences = { ...defaults.notificationPreferences, ...(state.notificationPreferences || {}) };
             state.announcementDrafts = { ...ANNOUNCEMENT_TEMPLATES, ...(state.announcementDrafts || {}) };
             state.analyticsRevenue = Boolean(state.analyticsRevenue);
-            saveState(); renderAll(); showAuth(); toast('Backup imported');
+            saveState(); renderAll(); showAuth('Backup imported. Sign in again to continue.'); toast('Backup imported');
           } catch (error) { toast('That file is not a valid Creator HQ backup'); }
         };
         reader.readAsText(file);
@@ -2516,7 +2576,7 @@
       document.getElementById('import-file').addEventListener('change', event => { const file = event.target.files?.[0]; if (file) importBackup(file); event.target.value = ''; });
       document.getElementById('reset-profile').addEventListener('click', () => {
         if (!window.confirm('Reset this local profile? Your tasks, stream sessions, and settings will be removed from this browser. Export a backup first if you want to keep them.')) return;
-        state = structuredClone(defaults); saveState(); renderAll(); showAuth();
+        state = structuredClone(defaults); saveState(); renderAll(); showAuth('Workspace reset. Sign in again to continue.');
       });
       document.getElementById('kanban').addEventListener('dragstart', event => {
         const card = event.target.closest('[data-task-card]'); if (!card) return;
@@ -2560,7 +2620,7 @@
       });
       const cloudInstructions = document.getElementById('view-cloud');
       cloudInstructions.innerHTML = cloudInstructions.innerHTML.replace('https://zgqcufmsykxvxajrupgi.supabase.co/auth/v1/callback', 'https://asqszzgunsrdclunbxfq.supabase.co/auth/v1/callback');
-      renderAll(); showAuth();
+      renderAll(); secureGate();
     })();
   </script>
   <script type="module" src="./cloud-sync.js?v=20261026-profile-preview-v2"></script>

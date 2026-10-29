@@ -36,6 +36,7 @@ let publicProfileCheckedForUser = null;
 let publicProfileCheckPromise = null;
 let bufferCalendarMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
 let bufferQueueView = 'list';
+let authListeners = [];
 
 const ui = () => window.CreatorHQCloudUI;
 const storage = () => window.CreatorHQStorage;
@@ -310,6 +311,56 @@ function publicTrackingConfig() {
   return { endpoint: `${config.url.replace(/\/$/, '')}/functions/v1/social-analytics`, anonKey: config.anonKey };
 }
 
+async function ensureProject() {
+  if (client) return true;
+  const config = readConfig();
+  const publication = config.url && config.anonKey ? null : await getPublicProfileConfig();
+  const url = config.url || publication?.supabaseUrl;
+  const key = config.anonKey || publication?.anonKey;
+  if (!url || !key) return false;
+  await connectProject(url, key);
+  return true;
+}
+
+function gateUser(sessionValue) {
+  const user = sessionValue?.user;
+  return user ? { id: user.id, email: user.email || '' } : null;
+}
+
+const authGate = {
+  async user() {
+    if (!(await ensureProject())) return null;
+    const { data, error } = await client.auth.getSession();
+    if (error) return null;
+    session = data.session;
+    return gateUser(session);
+  },
+  async signIn(email, password) {
+    if (!(await ensureProject())) throw new Error('Connect the Supabase project to sign in.');
+    const { data, error } = await client.auth.signInWithPassword({ email: String(email || '').trim(), password: String(password || '') });
+    if (error) throw error;
+    session = data.session;
+    return gateUser(session);
+  },
+  async signUp(email, password) {
+    if (!(await ensureProject())) throw new Error('Connect the Supabase project to create an account.');
+    const { data, error } = await client.auth.signUp({ email: String(email || '').trim(), password: String(password || '') });
+    if (error) throw error;
+    session = data.session;
+    return { user: gateUser(session), needsConfirmation: !session && !error };
+  },
+  async requestPasswordReset(email) {
+    if (!(await ensureProject())) throw new Error('Connect the Supabase project first.');
+    const { error } = await client.auth.resetPasswordForEmail(String(email || '').trim(), { redirectTo: appRedirectUrl() });
+    if (error) throw error;
+  },
+  async signOut() {
+    if (client) await client.auth.signOut();
+    session = null;
+  },
+  onChange(listener) { if (typeof listener === 'function') authListeners.push(listener); }
+};
+
 window.CreatorHQCloud = {
   queueSync,
   queuePublicProfileSync,
@@ -327,7 +378,8 @@ window.CreatorHQCloud = {
   getPlatformAccounts: () => structuredClone(platformAccounts),
   getPlatformMetric: provider => structuredClone(platformMetrics.find(item => item.provider === provider) || null),
   getPlatformMetrics: provider => structuredClone(platformMetrics.filter(item => item.provider === provider)),
-  getPlatformNotice: provider => platformCallbackNotices[provider] || ''
+  getPlatformNotice: provider => platformCallbackNotices[provider] || '',
+  authGate
 };
 
 function setSocialAnalyticsStatus(text, connected = false) {
@@ -575,6 +627,8 @@ async function connectProject(urlValue, keyValue) {
     session = nextSession;
     if (event === 'PASSWORD_RECOVERY') recoveryMode = true;
     setAccountState();
+    const user = nextSession?.user ? { id: nextSession.user.id, email: nextSession.user.email || '' } : null;
+    authListeners.forEach(listener => { try { listener(event, user); } catch {} });
   });
 }
 
