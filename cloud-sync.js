@@ -28,6 +28,7 @@ let lastSocialAnalyticsRefresh = 0;
 let lastPlatformMetricsRefresh = 0;
 let analyticsRefreshPromise = null;
 let publicProfileConfigPromise = null;
+let publicProfileHydrated = false;
 let publicProfileSyncTimer = null;
 let publicProfileSyncPromise = null;
 let pendingPublicProfile = null;
@@ -237,8 +238,11 @@ async function initializePublicProfile() {
       setPublicProfileStatus('Connected. Edit public website content to publish the first live version.');
     }
     publicProfileCheckedForUser = userId;
+    publicProfileHydrated = true;
   })().catch(error => {
     setPublicProfileStatus(error.message || 'Could not check the live profile.');
+    // Do not block publishing forever if the database is unreachable; unlock shortly after.
+    setTimeout(() => { publicProfileHydrated = true; }, 10000);
   }).finally(() => { publicProfileCheckPromise = null; });
   return publicProfileCheckPromise;
 }
@@ -247,6 +251,13 @@ function queuePublicProfileSync(profile = storage()?.getPublicCreatorProfiles?.(
   if (!profile) return;
   pendingPublicProfile = structuredClone(profile);
   clearTimeout(publicProfileSyncTimer);
+  if (!publicProfileHydrated) {
+    // The initial database profile may still be loading. Never publish before it
+    // completes, or a local gap (like empty Linktree links) could wipe cloud data.
+    setPublicProfileStatus('Waiting for the saved profile to finish loading before publishing…');
+    publicProfileSyncTimer = setTimeout(() => { queuePublicProfileSync(pendingPublicProfile || profile); }, 500);
+    return;
+  }
   if (!client || !session?.user) {
     setPublicProfileStatus('Saved in this browser. Sign in to Supabase here to update the live site automatically.');
     return;
@@ -257,13 +268,25 @@ function queuePublicProfileSync(profile = storage()?.getPublicCreatorProfiles?.(
 
 async function publishPendingPublicProfile() {
   if (publicProfileSyncPromise || !pendingPublicProfile) return publicProfileSyncPromise;
-  const profile = pendingPublicProfile;
+  let profile = pendingPublicProfile;
   pendingPublicProfile = null;
   publicProfileSyncPromise = (async () => {
     if (!client || !session?.user) throw new Error('Connect and sign in to Supabase to publish website changes.');
     const config = await getPublicProfileConfig();
     if (!config?.userId || !config.supabaseUrl || !config.anonKey) throw new Error('The public profile config is missing its Supabase publication settings. Download and deploy a fresh public-profile.json.');
     if (session.user.id !== config.userId) throw new Error('Sign in with the Supabase account that owns this public site.');
+    // Safety net: if the local Linktree links are empty but the database still has
+    // links, keep the database links instead of publishing an empty wipe.
+    const localLinks = Array.isArray(profile.linktree?.links) ? profile.linktree.links : [];
+    if (!localLinks.length) {
+      const { data: existingProfile } = await client.from('creator_public_profiles').select('profile').eq('user_id', session.user.id).maybeSingle();
+      const dbLinks = existingProfile?.profile?.linktree?.links || (Array.isArray(existingProfile?.profile?.links) ? existingProfile.profile.links : []);
+      if (Array.isArray(dbLinks) && dbLinks.length) {
+        profile = structuredClone(profile);
+        profile.linktree = { ...profile.linktree, links: dbLinks };
+        setPublicProfileStatus('Local Linktree links were empty, so the saved cloud links were kept.');
+      }
+    }
     const profileText = JSON.stringify(profile);
     if (new TextEncoder().encode(profileText).byteLength > 500_000) throw new Error('The public profile is too large to publish. Reduce its text or product details.');
     if (profileText === lastPublishedPublicProfile) return;
