@@ -838,6 +838,15 @@
       broadcast.setAttribute('aria-label', 'Twitch broadcast status');
       broadcast.innerHTML = `<div><p class="site-broadcast-label"><span class="site-status-dot"></span><span data-broadcast-label>Checking channel</span></p><h2 data-broadcast-title>Finding the next stream</h2><p class="site-broadcast-copy" data-broadcast-copy>Live updates from Twitch</p></div><div class="site-broadcast-stat"><span data-broadcast-stat-label>Channel</span><strong data-broadcast-stat>On Twitch</strong></div>${twitchUrl ? `<a class="site-button site-broadcast-link ${style} shape-${shape}" data-broadcast-link href="${escapeHtml(twitchUrl)}" target="_blank" rel="noopener noreferrer">Visit channel <span aria-hidden="true">↗</span></a>` : ''}`;
       document.querySelector('.site-hero').insertAdjacentElement('afterend', broadcast);
+      const WEBSITE_MODULE_SELECTORS = { hero: '.site-hero', broadcast: '.site-broadcast', about: '.site-about', featured: '.site-featured', shop: '.site-shop', contact: '.site-contact', community: '.site-community', socials: '.site-socials' };
+      const WEBSITE_MODULE_ORDER = ['hero', 'broadcast', 'about', 'featured', 'shop', 'contact', 'community', 'socials'];
+      const savedLayoutOrder = Array.isArray(website.layout) ? website.layout.map(value => String(value)).filter(id => WEBSITE_MODULE_SELECTORS[id]) : [];
+      const layoutOrder = [...new Set([...savedLayoutOrder, ...WEBSITE_MODULE_ORDER])];
+      const moduleElements = {};
+      for (const [id, selector] of Object.entries(WEBSITE_MODULE_SELECTORS)) moduleElements[id] = root.querySelector(selector);
+      const siteFooter = root.querySelector('.site-footer');
+      for (const id of layoutOrder) if (moduleElements[id]) root.appendChild(moduleElements[id]);
+      if (siteFooter) root.appendChild(siteFooter);
       const updateCreatorImages = imageUrl => {
         const validImageUrl = safeImage(avatar || imageUrl);
         if (!validImageUrl) return;

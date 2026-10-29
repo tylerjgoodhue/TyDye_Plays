@@ -33,6 +33,7 @@ To test the production layout locally, run `node scripts/build-site.mjs` and ser
 
 - Creator profile, responsive dashboard, customizable accent and widgets
 - Public website "vibe" themes (Gamer glow, Brat mode, Cyber neon, Retro arcade, Clean studio) selectable in Creator HQ → Edit Website → Website appearance
+- Drag-and-drop website layout builder: reorder the site's modules (hero, broadcast bar, about, highlights, shop, contact, community, social links) in Creator HQ; the order saves, publishes, and drives the public page
 - Separate editable Twitch creator website and Linktree pages, each with independent settings, preview, and public URL (`profile.html` and `linktree.html`)
 - Task board with search, filters, recurring work, and drag-and-drop
 - Weekly stream rhythm, individual sessions, completion history, and ICS export

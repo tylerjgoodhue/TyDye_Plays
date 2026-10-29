@@ -479,6 +479,14 @@
     .website-schedule-preview-row { display: flex; justify-content: space-between; gap: 12px; padding: 7px 0; border-bottom: 1px solid #2b322b; color: #aab4a6; font-size: 10px; }
     .website-schedule-preview-row:last-child { border-bottom: 0; }
     .website-schedule-preview-row strong { color: #e0e6dc; font-weight: 600; }
+    .website-layout-list { display: grid; gap: 8px; }
+    .website-layout-item { display: flex; align-items: center; gap: 10px; padding: 11px 13px; border: 1px solid var(--line); border-radius: 9px; background: #151a15; cursor: grab; user-select: none; transition: border-color .15s ease, background .15s ease; }
+    .website-layout-item:hover { border-color: #3a4535; }
+    .website-layout-item.dragging { opacity: .45; border-style: dashed; cursor: grabbing; }
+    .website-layout-item.drop-target { border-color: var(--accent); background: #20291f; }
+    .website-layout-grip { color: #758072; font-size: 13px; letter-spacing: -2px; }
+    .website-layout-label { flex: 1; font-size: 13px; font-weight: 600; color: var(--text); }
+    .website-layout-actions { display: flex; gap: 4px; }
     .buffer-target-list { display: grid; gap: 8px; max-height: 220px; overflow: auto; padding: 8px; border: 1px solid var(--line); border-radius: 7px; background: #151a15; }
     .buffer-target-choice { display: flex; align-items: center; gap: 8px; padding: 7px; border-radius: 5px; color: #d8e0d4; background: #1d231d; font-size: 10px; }
     .buffer-target-choice input { accent-color: var(--accent); }
@@ -798,7 +806,7 @@
               <article class="panel"><div class="panel-head"><div class="panel-title"><h2>Site identity and hero</h2></div></div><div class="panel-body"><div class="form-grid"><div class="form-field"><label for="creator-profile-name">Display name</label><input id="creator-profile-name" data-website-profile-field="name" maxlength="60" placeholder="Your creator name"></div><div class="form-field"><label for="creator-profile-handle">Twitch handle</label><input id="creator-profile-handle" data-website-profile-field="handle" maxlength="60" placeholder="@yourhandle"></div><div class="form-field full"><label for="creator-profile-tagline">Hero headline</label><input id="creator-profile-tagline" data-website-field="tagline" maxlength="100" placeholder="The stream starts here."></div><div class="form-field full"><label for="creator-profile-hero-image">Hero image URL</label><input id="creator-profile-hero-image" data-website-field="heroImage" type="url" maxlength="500" placeholder="https://..." inputmode="url"></div><div class="form-field"><label for="creator-profile-twitch-url">Twitch channel URL</label><input id="creator-profile-twitch-url" data-website-field="twitchUrl" type="url" maxlength="500" placeholder="https://twitch.tv/yourchannel"></div><div class="form-field"><label for="creator-profile-live-status">Stream status</label><select id="creator-profile-live-status" data-website-field="liveStatus"><option value="offline">Offline</option><option value="live">Live now</option></select></div><div class="form-field"><label for="creator-profile-cta">Main button label</label><input id="creator-profile-cta" data-website-field="primaryCta" maxlength="40" placeholder="Watch on Twitch"></div><div class="form-field full"><label for="creator-profile-bio">Short bio</label><textarea id="creator-profile-bio" data-website-profile-field="bio" maxlength="320" placeholder="A short intro for your community"></textarea></div><div class="form-field"><label for="creator-profile-avatar">Profile image URL</label><input id="creator-profile-avatar" data-website-profile-field="avatarUrl" type="url" maxlength="500" placeholder="https://..." inputmode="url"></div></div></div></article>
               <article class="panel"><div class="panel-head"><div class="panel-title"><h2>About and schedule</h2></div></div><div class="panel-body"><div class="form-grid"><div class="form-field full"><label for="creator-profile-about-heading">About section heading</label><input id="creator-profile-about-heading" data-website-field="aboutHeading" maxlength="80" placeholder="Pull up a chair"></div><div class="form-field full"><label for="creator-profile-about">About the stream</label><textarea id="creator-profile-about" data-website-field="about" maxlength="1200" placeholder="What do you stream? What should a new viewer expect?"></textarea></div><div class="form-field full"><label>Website stream schedule</label><div id="website-schedule-preview" class="website-schedule-preview"></div><p class="settings-hint" style="margin:0">This list updates automatically from Stream Schedule and your weekly rhythm in Settings.</p></div></div></div></article>
               <article class="panel"><div class="panel-head"><div class="panel-title"><h2>Featured videos and links</h2></div><button class="mini-button" id="profile-add-featured" aria-label="Add featured video" title="Add featured video"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 5v14M5 12h14"/></svg></button></div><div class="panel-body"><div class="profile-link-list" id="creator-profile-featured"></div></div></article>
-              <article class="panel"><div class="panel-head"><div class="panel-title"><h2>Website appearance</h2></div></div><div class="panel-body"><div class="form-grid"><div class="form-field"><label for="creator-profile-background">Page color</label><input class="profile-color-input" id="creator-profile-background" data-website-profile-field="backgroundColor" type="color"></div><div class="form-field"><label for="creator-profile-text-color">Text color</label><input class="profile-color-input" id="creator-profile-text-color" data-website-profile-field="textColor" type="color"></div><div class="form-field"><label for="creator-profile-button-color">Accent color</label><input class="profile-color-input" id="creator-profile-button-color" data-website-profile-field="buttonColor" type="color"></div><div class="form-field"><label for="creator-profile-button-text">Button text color</label><input class="profile-color-input" id="creator-profile-button-text" data-website-profile-field="buttonTextColor" type="color"></div><div class="form-field"><label for="creator-profile-button-style">Button treatment</label><select id="creator-profile-button-style" data-website-profile-field="buttonStyle"><option value="solid">Solid</option><option value="outline">Outline</option><option value="glass">Glass</option></select></div><div class="form-field"><label for="creator-profile-vibe">Website vibe</label><select id="creator-profile-vibe" data-website-profile-field="vibe"><option value="clean">Clean studio (default)</option><option value="gamer">Gamer glow</option><option value="brat">Brat mode</option><option value="cyber">Cyber neon</option><option value="arcade">Retro arcade</option></select></div><div class="form-field"><label for="creator-profile-link-shape">Button shape</label><select id="creator-profile-link-shape" data-website-profile-field="linkShape"><option value="rounded">Rounded</option><option value="square">Square</option><option value="pill">Pill</option></select></div></div></div></article>
+              <article class="panel"><div class="panel-head"><div class="panel-title"><h2>Website appearance</h2></div></div><div class="panel-body"><div class="form-grid"><div class="form-field"><label for="creator-profile-background">Page color</label><input class="profile-color-input" id="creator-profile-background" data-website-profile-field="backgroundColor" type="color"></div><div class="form-field"><label for="creator-profile-text-color">Text color</label><input class="profile-color-input" id="creator-profile-text-color" data-website-profile-field="textColor" type="color"></div><div class="form-field"><label for="creator-profile-button-color">Accent color</label><input class="profile-color-input" id="creator-profile-button-color" data-website-profile-field="buttonColor" type="color"></div><div class="form-field"><label for="creator-profile-button-text">Button text color</label><input class="profile-color-input" id="creator-profile-button-text" data-website-profile-field="buttonTextColor" type="color"></div><div class="form-field"><label for="creator-profile-button-style">Button treatment</label><select id="creator-profile-button-style" data-website-profile-field="buttonStyle"><option value="solid">Solid</option><option value="outline">Outline</option><option value="glass">Glass</option></select></div><div class="form-field"><label for="creator-profile-vibe">Website vibe</label><select id="creator-profile-vibe" data-website-profile-field="vibe"><option value="clean">Clean studio (default)</option><option value="gamer">Gamer glow</option><option value="brat">Brat mode</option><option value="cyber">Cyber neon</option><option value="arcade">Retro arcade</option></select></div><div class="form-field"><label for="creator-profile-link-shape">Button shape</label><select id="creator-profile-link-shape" data-website-profile-field="linkShape"><option value="rounded">Rounded</option><option value="square">Square</option><option value="pill">Pill</option></select></div></div></div></article><article class="panel"><div class="panel-head"><div class="panel-title"><h2>Website layout</h2></div></div><div class="panel-body"><p class="settings-hint">Drag the modules to design your page order, or use the arrows. The website preview and the live site follow this layout automatically.</p><div id="website-layout-list" class="website-layout-list" aria-label="Website module order"></div></div></article>
               <article class="panel"><div class="panel-body"><p class="settings-hint">This website has its own public URL and settings, separate from your Linktree page.</p><p class="settings-hint" id="creator-profile-publish-status" role="status" aria-live="polite">Connect and sign in to Supabase to publish changes automatically.</p><input class="field-control profile-share-url" id="creator-profile-share-url" readonly aria-label="Creator website URL"><div class="button-row" style="margin-top:10px"><button class="button" id="profile-copy-link-bottom">Copy website link</button><button class="button" id="profile-open-link-bottom">Open website</button></div></div></article>
             </div>
             <article class="panel"><div class="panel-head"><div class="panel-title"><h2>Website preview</h2></div><span class="nav-count">PUBLIC WEBSITE</span></div><div class="panel-body"><div class="profile-preview-stage"><iframe class="profile-preview-frame" id="creator-profile-preview" title="Live creator website preview"></iframe></div></div></article>
@@ -902,9 +910,12 @@
         ['quick-actions', 'Quick actions'], ['weekly-progress', 'Weekly task progress']
       ];
       const PROFILE_LINK_ICONS = { play: '▶', stream: '◉', camera: '◎', chat: '✦', music: '♫', link: '↗', mail: '@', shop: '◇', community: '✳' };
-      const defaults = {
+      const WEBSITE_MODULE_LABELS = { hero: 'Hero — name, logo, live badge, call to action', broadcast: 'Live broadcast status bar', about: 'About + stream schedule', featured: 'Video highlights', shop: 'Shop products', contact: 'Contact form', community: 'Community banner', socials: 'Social link buttons' };
+const DEFAULT_WEBSITE_LAYOUT = ['hero', 'broadcast', 'about', 'featured', 'shop', 'contact', 'community', 'socials'];
+const VALID_WEBSITE_MODULES = new Set(Object.keys(WEBSITE_MODULE_LABELS));
+const defaults = {
         profile: null,
-        creatorProfile: { name: '', handle: '', bio: '', avatarUrl: '', backgroundColor: '#121712', textColor: '#f0f3ed', buttonColor: '#c6f36b', buttonTextColor: '#17200f', buttonStyle: 'solid', linkShape: 'rounded', links: [], website: { separate: true, name: '', handle: '', bio: '', avatarUrl: '', backgroundColor: '#121712', textColor: '#f0f3ed', buttonColor: '#c6f36b', buttonTextColor: '#17200f', buttonStyle: 'solid', linkShape: 'rounded', tagline: '', heroImage: '', twitchUrl: '', liveStatus: 'offline', aboutHeading: '', about: '', schedule: '', primaryCta: 'Watch on Twitch', featured: [], products: [], fourthwallDomain: '', vibe: 'clean' } },
+        creatorProfile: { name: '', handle: '', bio: '', avatarUrl: '', backgroundColor: '#121712', textColor: '#f0f3ed', buttonColor: '#c6f36b', buttonTextColor: '#17200f', buttonStyle: 'solid', linkShape: 'rounded', links: [], website: { separate: true, name: '', handle: '', bio: '', avatarUrl: '', backgroundColor: '#121712', textColor: '#f0f3ed', buttonColor: '#c6f36b', buttonTextColor: '#17200f', buttonStyle: 'solid', linkShape: 'rounded', tagline: '', heroImage: '', twitchUrl: '', liveStatus: 'offline', aboutHeading: '', about: '', schedule: '', primaryCta: 'Watch on Twitch', featured: [], products: [], fourthwallDomain: '', vibe: 'clean', layout: [] } },
         settings: { name: '', handle: '', timezone: 'local', accent: 'lime', days: [2, 4, 6], start: '20:00', duration: 3, hiddenWidgets: [] },
         tasks: [], streams: [], content: [], ideas: [], goals: [], assets: [], routineChecks: {}, reflections: {},
         metrics: [], communityLinks: [], communityEvents: [], communityFeedback: [],
@@ -1001,7 +1012,8 @@
           buttonTextColor: migrateLegacyFields ? (website.buttonTextColor || source.buttonTextColor || '#17200f') : (website.buttonTextColor || '#17200f'),
           buttonStyle: migrateLegacyFields ? (website.buttonStyle || source.buttonStyle || 'solid') : (website.buttonStyle || 'solid'),
           linkShape: migrateLegacyFields ? (website.linkShape || source.linkShape || 'rounded') : (website.linkShape || 'rounded'),
-          vibe: ['clean', 'gamer', 'brat', 'cyber', 'arcade'].includes((migrateLegacyFields ? website.vibe || source.vibe : website.vibe) || '') ? (migrateLegacyFields ? website.vibe || source.vibe : website.vibe) : 'clean'
+          vibe: ['clean', 'gamer', 'brat', 'cyber', 'arcade'].includes((migrateLegacyFields ? website.vibe || source.vibe : website.vibe) || '') ? (migrateLegacyFields ? website.vibe || source.vibe : website.vibe) : 'clean',
+          layout: Array.isArray(website.layout) ? [...new Set(website.layout.map(value => String(value)).filter(id => VALID_WEBSITE_MODULES.has(id)))] : []
         };
         return { ...defaults.creatorProfile, ...source, links, website: migratedWebsite };
       }
@@ -1409,6 +1421,7 @@
           })).filter(link => link.url),
           website: {
             vibe: ['clean', 'gamer', 'brat', 'cyber', 'arcade'].includes(profile.vibe) ? profile.vibe : 'clean',
+            layout: websiteLayout(),
             heroTitleImage: profileImageUrl(website.heroTitleImage),
             tagline: String(website.tagline || '').slice(0, 100), heroImage: profileImageUrl(website.heroImage), twitchUrl: profileImageUrl(website.twitchUrl),
             aboutHeading: String(website.aboutHeading || '').slice(0, 80),
@@ -1817,6 +1830,49 @@
         if (frame && frame.getAttribute('src') !== previewUrl.href) frame.src = previewUrl.href;
         document.getElementById('linktree-share-url').value = linktreeShareUrl();
       }
+      function websiteLayout() {
+        const saved = Array.isArray(state.creatorProfile.website.layout) ? state.creatorProfile.website.layout.filter(id => VALID_WEBSITE_MODULES.has(id)) : [];
+        return [...new Set([...saved, ...DEFAULT_WEBSITE_LAYOUT])];
+      }
+      function commitWebsiteLayout() {
+        state.creatorProfile.website.layout = [...document.querySelectorAll('#website-layout-list .website-layout-item')].map(item => item.dataset.layoutId);
+        saveState();
+        renderCreatorProfilePreview();
+      }
+      function moveLayoutItem(id, direction) {
+        const order = websiteLayout();
+        const from = order.indexOf(id);
+        const to = from + direction;
+        if (from < 0 || to < 0 || to >= order.length) return;
+        order.splice(to, 0, order.splice(from, 1)[0]);
+        state.creatorProfile.website.layout = order;
+        saveState();
+        renderWebsiteLayout();
+        renderCreatorProfilePreview();
+      }
+      function renderWebsiteLayout() {
+        const host = document.getElementById('website-layout-list');
+        if (!host) return;
+        const layout = websiteLayout();
+        host.innerHTML = layout.map(id => `<div class="website-layout-item" draggable="true" data-layout-id="${id}"><span class="website-layout-grip" aria-hidden="true">⋮⋮</span><span class="website-layout-label">${escapeHtml(WEBSITE_MODULE_LABELS[id])}</span><span class="website-layout-actions"><button type="button" class="mini-button" data-layout-move="${id}|-1" aria-label="Move up">↑</button><button type="button" class="mini-button" data-layout-move="${id}|1" aria-label="Move down">↓</button></span></div>`).join('');
+        let draggedId = null;
+        host.querySelectorAll('.website-layout-item').forEach(item => {
+          item.addEventListener('dragstart', () => { draggedId = item.dataset.layoutId; item.classList.add('dragging'); });
+          item.addEventListener('dragend', () => { item.classList.remove('dragging'); host.querySelectorAll('.drop-target').forEach(node => node.classList.remove('drop-target')); if (draggedId) { commitWebsiteLayout(); draggedId = null; } });
+          item.addEventListener('dragover', event => {
+            event.preventDefault();
+            if (!draggedId || draggedId === item.dataset.layoutId) return;
+            const dragged = host.querySelector(`[data-layout-id="${draggedId}"]`);
+            if (dragged && dragged.nextElementSibling !== item) host.insertBefore(dragged, item);
+            item.classList.add('drop-target');
+          });
+          item.addEventListener('dragleave', () => item.classList.remove('drop-target'));
+        });
+        host.querySelectorAll('[data-layout-move]').forEach(button => button.addEventListener('click', () => {
+          const [id, direction] = button.dataset.layoutMove.split('|');
+          moveLayoutItem(id, Number(direction));
+        }));
+      }
       function renderCreatorProfile() {
         const profile = state.creatorProfile.website;
         for (const field of ['name', 'handle', 'bio', 'avatarUrl', 'backgroundColor', 'textColor', 'buttonColor', 'buttonTextColor', 'buttonStyle', 'linkShape', 'vibe']) {
@@ -1831,6 +1887,7 @@
         renderCreatorProfileFeatured();
         renderCreatorProfileProducts();
         renderWebsiteSchedulePreview();
+        renderWebsiteLayout();
         renderCreatorProfilePreview();
       }
       function renderLinktree() {
@@ -2004,6 +2061,10 @@
           mergedWebsite.handle = adopt(mergedWebsite.handle, savedWebsite.handle || '', '');
           mergedWebsite.bio = adopt(mergedWebsite.bio, savedWebsite.bio || '', '');
           mergedWebsite.avatarUrl = adopt(mergedWebsite.avatarUrl, savedWebsite.avatarUrl || '', '');
+          if (!Array.isArray(current.website.layout) || !current.website.layout.length) {
+            const savedLayout = Array.isArray(websiteDetails.layout) && websiteDetails.layout.length ? websiteDetails.layout : (Array.isArray(savedWebsite.layout) ? savedWebsite.layout : null);
+            if (savedLayout) mergedWebsite.layout = savedLayout.filter(id => VALID_WEBSITE_MODULES.has(id));
+          }
           if (!Array.isArray(current.website.featured) || !current.website.featured.length) {
             const savedFeatured = websiteDetails.featured || savedWebsite.featured;
             if (Array.isArray(savedFeatured) && savedFeatured.length) mergedWebsite.featured = savedFeatured;
