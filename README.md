@@ -4,7 +4,7 @@ A local-first creator workspace built as a single-page HTML application, with Su
 
 ## Sign in
 
-Creator HQ is locked behind Supabase Auth. Opening the app shows a secure sign-in screen that requires an account email and password (verified by Supabase Auth; sessions persist until sign-out). **Create account** registers a new Supabase Auth user, **Forgot password?** emails a reset link, and the Cloud sync settings still support GitHub sign-in and confirmation-email resend. The app only renders after an authenticated session exists, and signing out locks it again.
+Creator HQ is locked behind Supabase Auth. Opening the app shows a secure sign-in screen that requires an account email and password (verified by Supabase Auth; sessions persist until sign-out). There is no self-signup: only the owner and staff have accounts. Create each account in Supabase under **Authentication → Users → Add user** (or invite users by email), and in **Authentication → Providers → Email** turn off **Allow new users to sign up** so no one can register themselves. **Forgot password?** emails a reset link, and the Cloud sync settings still support GitHub sign-in and confirmation-email resend. The app only renders after an authenticated session exists, and signing out locks it again.
 
 ## Run locally
 
@@ -42,6 +42,22 @@ To test the production layout locally, run `node scripts/build-site.mjs` and ser
 - Linktree click analytics for links managed on the Linktree page (requires the `social-analytics` Edge Function and migration)
 - JSON backup export and import
 - Buffer publishing desk for connected channels, queue viewing, and scheduled posts (requires a deployed Supabase Edge Function and Buffer API key)
+- Staff account management: create staff accounts, change email/password, suspend, or delete them (requires the `staff-admin` Edge Function and `STAFF_ADMIN_ALLOWED_USER_IDS` secret)
+
+## Manage staff accounts
+
+Creator HQ has a **Staff** view for the workspace owner. Only the owner can manage accounts; the browser never holds a service-role key — requests go through the `staff-admin` Edge Function.
+
+1. In the project folder, deploy the function and set the owner allowlist (repeat the owner UUID from `public-profile.json`):
+
+	```sh
+	supabase secrets set --env-file .env.local
+	supabase secrets set STAFF_ADMIN_ALLOWED_USER_IDS=your_supabase_auth_user_uuid
+	supabase functions deploy staff-admin
+	```
+
+2. Open Creator HQ → **Staff**. **Create user** makes a confirmed account (share the email and temporary password privately); **Edit user** changes a member's email, sets a new password, or suspends the account; the delete action removes it. Your own signed-in account cannot be deleted from here.
+3. For defense in depth, disable self-signup under Supabase **Authentication → Providers → Email → Allow new users to sign up**, and add future staff in **Authentication → Users** or from the Staff view.
 
 All records are local to the current browser profile. Clearing browser data removes them. Export a JSON backup before changing devices or browser profiles. Imported files are user-controlled input; only import backups you trust.
 

@@ -327,6 +327,20 @@ function gateUser(sessionValue) {
   return user ? { id: user.id, email: user.email || '' } : null;
 }
 
+async function staffAdminRequest(payload) {
+  const config = readConfig();
+  if (!client || !config.url || !config.anonKey) throw new Error('Connect a Supabase project to manage staff accounts.');
+  if (!session?.access_token) throw new Error('Sign in to Creator HQ to manage staff accounts.');
+  const response = await fetch(`${config.url.replace(/\/$/, '')}/functions/v1/staff-admin`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', apikey: config.anonKey, Authorization: `Bearer ${session.access_token}` },
+    body: JSON.stringify(payload)
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data?.error || `Staff request failed (${response.status}).`);
+  return data;
+}
+
 const authGate = {
   async user() {
     if (!(await ensureProject())) return null;
@@ -379,7 +393,13 @@ window.CreatorHQCloud = {
   getPlatformMetric: provider => structuredClone(platformMetrics.find(item => item.provider === provider) || null),
   getPlatformMetrics: provider => structuredClone(platformMetrics.filter(item => item.provider === provider)),
   getPlatformNotice: provider => platformCallbackNotices[provider] || '',
-  authGate
+  authGate,
+  staffAdmin: {
+    list: page => staffAdminRequest({ action: 'list', page }),
+    create: (email, password) => staffAdminRequest({ action: 'create', email, password }),
+    update: (id, changes) => staffAdminRequest({ action: 'update', id, ...changes }),
+    remove: id => staffAdminRequest({ action: 'delete', id })
+  }
 };
 
 function setSocialAnalyticsStatus(text, connected = false) {
@@ -1271,24 +1291,6 @@ document.getElementById('cloud-github-sign-in').addEventListener('click', async 
       options: { redirectTo: appRedirectUrl() }
     });
     if (error) throw error;
-  } catch (error) { reportError(error); }
-});
-
-document.getElementById('cloud-sign-up').addEventListener('click', async () => {
-  try {
-    if (!client) throw new Error('Connect a Supabase project first.');
-    const email = document.getElementById('cloud-email').value.trim();
-    const password = document.getElementById('cloud-password').value;
-    if (password.length < 8) throw new Error('Use a password with at least 8 characters.');
-    const { data, error } = await client.auth.signUp({
-      email,
-      password,
-      options: { emailRedirectTo: appRedirectUrl() }
-    });
-    if (error) throw error;
-    session = data.session;
-    setAccountState();
-    if (!session) ui()?.setAccount('', 'Check your email to confirm the new account, then sign in.');
   } catch (error) { reportError(error); }
 });
 
