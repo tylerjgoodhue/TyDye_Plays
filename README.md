@@ -44,7 +44,31 @@ To test the production layout locally, run `node scripts/build-site.mjs` and ser
 - JSON backup export and import
 - Buffer publishing desk for connected channels, queue viewing, and scheduled posts (requires a deployed Supabase Edge Function and Buffer API key)
 - Staff account management: create staff accounts, change email/password, suspend, or delete them (requires the `staff-admin` Edge Function and `STAFF_ADMIN_ALLOWED_USER_IDS` secret)
+- Dropbox integration: connect your account and browse, upload, move, create folders, and download files from Creator HQ (requires the `dropbox` Edge Function, its migration, and `DROPBOX_APP_KEY`/`DROPBOX_APP_SECRET` secrets)
+- Content items can link Dropbox files, with who added each file and when; an automatic activity log records every change across the workspace with the person who made it
 - Per-account roles and permissions: pick a role preset (Owner / Admin / Staff / Viewer) or tick individual permissions for each account; Creator HQ hides every area the signed-in account doesn't have
+
+## Connect Dropbox (command center files)
+
+The **Dropbox** view in Creator HQ is a small file manager: connect your Dropbox account with OAuth, then browse folders, upload files, create folders, move items, and download through secure temporary links. The browser never sees Dropbox credentials.
+
+1. Create a Dropbox app at [dropbox.com/developers/apps](https://www.dropbox.com/developers/apps) with **Scoped access** and permissions `files.metadata.read`, `files.content.read`, and `files.content.write`.
+2. In the app's settings, add this redirect URI exactly:
+
+	`https://asqszzgunsrdclunbxfq.supabase.co/functions/v1/dropbox`
+
+3. Deploy the function and set the app credentials (keep `ALLOWED_APP_ORIGINS` in `.env.local` so it is set together):
+
+	```sh
+	supabase secrets set --env-file .env.local
+	supabase secrets set DROPBOX_APP_KEY=your_app_key
+	supabase secrets set DROPBOX_APP_SECRET=your_app_secret
+	supabase functions deploy dropbox
+	```
+
+4. Apply `20261030000000_dropbox_connections.sql` (the connection table). Then open Creator HQ → **Dropbox → Connect Dropbox**, approve the Dropbox prompt, and browse. To disconnect, use **Disconnect**; the stored token is deleted.
+
+The OAuth callback redirects back to the app with a status hash; the refresh token is stored in an owner-only table (`dropbox_connections`) and exchanged server-side for short-lived access tokens. Only the account owner can use the stored connection.
 
 ## Manage staff accounts
 

@@ -371,6 +371,44 @@ async function staffAdminRequest(payload) {
   return data;
 }
 
+async function dropboxRequest(action, payload, options = {}) {
+  const config = readConfig();
+  if (!client || !config.url || !config.anonKey) throw new Error('Connect a Supabase project to use Dropbox.');
+  if (!session?.access_token) throw new Error('Sign in to Creator HQ to use Dropbox.');
+  const headers = { 'Content-Type': 'application/json', apikey: config.anonKey, Authorization: `Bearer ${session.access_token}` };
+  const init = { method: 'POST', headers, body: payload === undefined ? '{}' : (options.raw ? payload : JSON.stringify(payload || {})) };
+  const response = await fetch(`${config.url.replace(/\/$/, '')}/functions/v1/dropbox?action=${encodeURIComponent(action)}`, init);
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data?.error || `Dropbox request failed (${response.status}).`);
+  return data;
+}
+
+const dropboxApi = {
+  status: () => dropboxRequest('status'),
+  disconnect: () => dropboxRequest('disconnect'),
+  connectUrl: async () => (await dropboxRequest('start')).authorizeUrl,
+  list: (path, cursor) => dropboxRequest('list', { path, cursor }),
+  move: (fromPath, toPath) => dropboxRequest('move', { fromPath, toPath }),
+  batchMove: (entries, toFolder) => dropboxRequest('batch-move', { entries, toFolder }),
+  createFolder: path => dropboxRequest('create-folder', { path }),
+  remove: path => dropboxRequest('delete', { path }),
+  downloadLink: path => dropboxRequest('download-link', { path }),
+  upload: async (path, file) => {
+    const config = readConfig();
+    if (!client || !config.url || !config.anonKey) throw new Error('Connect a Supabase project to use Dropbox.');
+    if (!session?.access_token) throw new Error('Sign in to Creator HQ to use Dropbox.');
+    const dropboxArg = JSON.stringify({ path, mode: 'overwrite', mute: false });
+    const response = await fetch(`${config.url.replace(/\/$/, '')}/functions/v1/dropbox?action=upload`, {
+      method: 'POST',
+      headers: { 'Dropbox-API-Arg': dropboxArg, 'Content-Type': 'application/octet-stream', apikey: config.anonKey, Authorization: `Bearer ${session.access_token}` },
+      body: file
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data?.error || 'Upload failed.');
+    return data;
+  }
+};
+
 const authGate = {
   async user() {
     if (!(await ensureProject())) return null;
@@ -424,6 +462,7 @@ window.CreatorHQCloud = {
   getPlatformMetrics: provider => structuredClone(platformMetrics.filter(item => item.provider === provider)),
   getPlatformNotice: provider => platformCallbackNotices[provider] || '',
   authGate,
+  dropbox: dropboxApi,
   staffAdmin: {
     list: page => staffAdminRequest({ action: 'list', page }),
     create: (email, password) => staffAdminRequest({ action: 'create', email, password }),

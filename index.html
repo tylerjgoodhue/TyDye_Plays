@@ -487,6 +487,13 @@
     .website-layout-grip { color: #758072; font-size: 13px; letter-spacing: -2px; }
     .website-layout-label { flex: 1; font-size: 13px; font-weight: 600; color: var(--text); }
     .website-layout-actions { display: flex; gap: 4px; }
+    .dropbox-list { display: grid; gap: 7px; }
+    .dropbox-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 10px 13px; border: 1px solid var(--line); border-radius: 9px; background: #151a15; }
+    .dropbox-row:hover { border-color: #3a4535; }
+    .dropbox-row input[type="checkbox"] { width: auto; }
+    .dropbox-name { flex: 1; min-width: 140px; overflow-wrap: anywhere; font-weight: 600; font-size: 13px; color: var(--text); background: none; border: 0; color: var(--text); text-align: left; cursor: pointer; padding: 0; font: inherit; }
+    .dropbox-row button, .dropbox-row .mini-button { white-space: nowrap; }
+    .dropbox-meta { color: #758072; font-size: 10px; }
     .buffer-target-list { display: grid; gap: 8px; max-height: 220px; overflow: auto; padding: 8px; border: 1px solid var(--line); border-radius: 7px; background: #151a15; }
     .buffer-target-choice { display: flex; align-items: center; gap: 8px; padding: 7px; border-radius: 5px; color: #d8e0d4; background: #1d231d; font-size: 10px; }
     .buffer-target-choice input { accent-color: var(--accent); }
@@ -662,7 +669,7 @@
         <button class="nav-button" data-view="tasks"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="m8 6 2 2 4-4M8 12l2 2 4-4M8 18l2 2 4-4M4 6h.01M4 12h.01M4 18h.01M17 6h3M17 12h3M17 18h3"/></svg><span>Tasks</span><span class="nav-count" id="nav-task-count">0</span></button>
         <button class="nav-button" data-view="schedule"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg><span>Stream schedule</span></button>
         <button class="nav-button" data-view="cloud"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M20 16.2A4.5 4.5 0 0 0 18 7.5 6 6 0 0 0 6.5 9 4 4 0 0 0 7 17h13"/><path d="m12 11-3 3 3 3"/></svg><span>Cloud sync</span></button>
-        <button class="nav-button" data-view="staff"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M17 8.5h5M19.5 6v5"/><path d="M17.5 20a5.5 5.5 0 0 0-3-4.7"/></svg><span>Staff</span></button>
+        <button class="nav-button" data-view="staff"><button class="nav-button" data-view="dropbox"><button class="nav-button" data-view="activity"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg><span>Activity log</span></button><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M6 2 1 5.5 6 9l5-3.5L6 2Zm12 0-5 3.5L18 9l5-3.5L18 2ZM1 12.5 6 16l5-3.5L6 9l-5 3.5Zm22 0L18 9l-5 3.5L18 16l5-3.5ZM6 17.5V21l5-3.4L6 17.5Zm12 0-5-.0L18 21v-3.5Z"/></svg><span>Dropbox</span></button><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M17 8.5h5M19.5 6v5"/><path d="M17.5 20a5.5 5.5 0 0 0-3-4.7"/></svg><span>Staff</span></button>
         <button class="nav-button" data-view="settings"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="3"/><path d="M19.4 15 .1.1 1.3 1-1.4 2.4-1.6-.7a8 8 0 0 1-1.7 1l-.2 1.8h-2.8l-.3-1.8a8 8 0 0 1-1.7-1l-1.6.7-1.4-2.4 1.4-1.1a7 7 0 0 1 0-2l-1.4-1.1 1.4-2.4 1.6.7a8 8 0 0 1 1.7-1l.3-1.8h2.8l.2 1.8a8 8 0 0 1 1.7 1l1.6-.7 1.4 2.4-1.4 1.1a7 7 0 0 1 0 2Z" transform="translate(-1 -1)"/></svg><span>Settings</span></button>
       </nav></details>
       <details class="nav-group"><summary class="nav-label">Social Media Management<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m7 10 5 5 5-5"/></svg></summary><nav class="nav" aria-label="Social Media Management">
@@ -846,6 +853,15 @@
           </div><article class="panel"><div class="panel-head"><div class="panel-title"><h2>Linktree preview</h2></div><span class="nav-count">LINKTREE</span></div><div class="panel-body"><div class="profile-preview-stage"><iframe class="profile-preview-frame" id="linktree-preview" title="Linktree preview"></iframe></div></div></article></div>
         </section>
 
+        <section class="view" id="view-activity" hidden>
+          <div class="page-heading"><div><div class="eyebrow">Audit trail</div><h1>Activity log</h1><p class="subtitle">Every change in Creator HQ is recorded automatically with who made it and when.</p></div><div class="form-field" style="min-width:220px"><label for="activity-filter">Filter by person</label><select id="activity-filter"><option value="all">Everyone</option></select></div></div>
+          <article class="panel"><div class="panel-head"><div class="panel-title"><h2>Recent activity</h2></div></div><div class="panel-body"><div id="activity-list" class="settings-hint">Loading activity…</div></div></article>
+        </section>
+        <section class="view" id="view-dropbox" hidden>
+          <div class="page-heading"><div><div class="eyebrow">Command center files</div><h1>Dropbox</h1><p class="subtitle">Browse, upload, move, and download your Dropbox documents without leaving Creator HQ.</p></div><button class="button primary" id="dropbox-connect" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M21 3l-9 9M10 5H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5"/></svg>Connect Dropbox</button></div>
+          <article class="panel" style="margin-bottom:15px"><div class="panel-head"><div class="panel-title"><h2>Connection</h2></div></div><div class="panel-body" style="display:flex;flex-wrap:wrap;gap:12px;align-items:center"><span id="dropbox-status" class="settings-hint" style="margin:0" role="status">Checking connection…</span><span style="flex:1"></span><button class="button" id="dropbox-disconnect" hidden>Disconnect</button></div></article>
+          <article class="panel" id="dropbox-files-panel" hidden><div class="panel-head"><div class="panel-title"><h2>Files</h2></div><div class="button-row"><button class="button" id="dropbox-new-folder">New folder</button><label class="button primary" for="dropbox-upload-input" style="cursor:pointer">Upload files<input id="dropbox-upload-input" type="file" multiple hidden></label><button class="button ghost" id="dropbox-refresh" aria-label="Refresh">⟳</button></div></div><div class="panel-body"><p class="settings-hint" id="dropbox-breadcrumb" style="margin:0 0 10px">/</p><div id="dropbox-list"></div><p id="dropbox-file-status" class="settings-hint" style="margin:10px 0 0" role="status"></p></div></article>
+        </section>
         <section class="view" id="view-staff" hidden>
           <div class="page-heading"><div><div class="eyebrow">Workspace access</div><h1>Staff accounts</h1><p class="subtitle">Create and manage the accounts allowed to sign in to Creator HQ.</p></div><button class="button primary" id="staff-refresh"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-2.6-6.4M21 3v6h-6"/></svg>Refresh list</button></div>
           <div class="settings-grid">
@@ -914,6 +930,7 @@
 const DEFAULT_WEBSITE_LAYOUT = ['hero', 'broadcast', 'about', 'featured', 'shop', 'contact', 'community', 'socials'];
 const VALID_WEBSITE_MODULES = new Set(Object.keys(WEBSITE_MODULE_LABELS));
 const defaults = {
+        activityLog: [],
         profile: null,
         creatorProfile: { name: '', handle: '', bio: '', avatarUrl: '', backgroundColor: '#121712', textColor: '#f0f3ed', buttonColor: '#c6f36b', buttonTextColor: '#17200f', buttonStyle: 'solid', linkShape: 'rounded', links: [], website: { separate: true, name: '', handle: '', bio: '', avatarUrl: '', backgroundColor: '#121712', textColor: '#f0f3ed', buttonColor: '#c6f36b', buttonTextColor: '#17200f', buttonStyle: 'solid', linkShape: 'rounded', tagline: '', heroImage: '', twitchUrl: '', liveStatus: 'offline', aboutHeading: '', about: '', schedule: '', primaryCta: 'Watch on Twitch', featured: [], products: [], fourthwallDomain: '', vibe: 'clean', layout: [] } },
         settings: { name: '', handle: '', timezone: 'local', accent: 'lime', days: [2, 4, 6], start: '20:00', duration: 3, hiddenWidgets: [] },
@@ -964,6 +981,7 @@ const defaults = {
             routineChecks: saved.routineChecks && typeof saved.routineChecks === 'object' ? saved.routineChecks : {},
             reflections: saved.reflections && typeof saved.reflections === 'object' ? saved.reflections : {},
             metrics: Array.isArray(saved.metrics) ? saved.metrics : [],
+            activityLog: Array.isArray(saved.activityLog) ? saved.activityLog : [],
             communityLinks: Array.isArray(saved.communityLinks) ? saved.communityLinks : [],
             communityEvents: Array.isArray(saved.communityEvents) ? saved.communityEvents : [],
             communityFeedback: Array.isArray(saved.communityFeedback) ? saved.communityFeedback : [],
@@ -1153,7 +1171,7 @@ const defaults = {
         const board = document.getElementById('content-board');
         board.innerHTML = CONTENT_STAGES.map(status => {
           const items = state.content.filter(item => item.status === status && (!search || `${item.title} ${item.description} ${item.tags || ''} ${item.category || ''}`.toLowerCase().includes(search)) && (platform === 'all' || item.platform === platform));
-          return `<section class="workflow-column" data-content-status="${escapeHtml(status)}"><div class="column-head"><div class="column-title"><span class="column-dot"></span>${escapeHtml(status)}</div><span class="column-count">${items.length}</span></div><div class="column-cards" data-content-drop="${escapeHtml(status)}">${items.length ? items.map(item => `<article class="workflow-card" draggable="true" data-content-card="${escapeHtml(item.id)}"><h3>${escapeHtml(item.title)}</h3>${item.description ? `<p>${escapeHtml(item.description)}</p>` : ''}<div class="workflow-meta"><span>${item.platform || 'No platform'}</span><span class="priority priority-${escapeHtml((item.priority || 'Medium').toLowerCase())}">${escapeHtml(item.priority || 'Medium')}</span></div>${item.dueDate ? `<div class="workflow-meta" style="justify-content:flex-start;margin-top:7px">Due ${escapeHtml(formatDate(parseLocalDate(item.dueDate), { month: 'short', day: 'numeric' }))}</div>` : ''}${item.tags ? `<div class="workflow-meta" style="justify-content:flex-start;margin-top:7px">${escapeHtml(item.tags.split(',').map(tag => `#${tag.trim()}`).join('  '))}</div>` : ''}<div class="card-actions"><button class="mini-button" data-edit-content="${escapeHtml(item.id)}" aria-label="Edit ${escapeHtml(item.title)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m14 5 5 5M4 20l4-.8L19 8a2.1 2.1 0 0 0-3-3L5 16l-1 4Z"/></svg></button><button class="mini-button delete" data-delete-content="${escapeHtml(item.id)}" aria-label="Delete ${escapeHtml(item.title)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M10 11v6m4-6v6M5 7l1 14h12l1-14M9 7V4h6v3"/></svg></button></div></article>`).join('') : '<div class="column-empty">Drop content here</div>'}</div></section>`;
+          return `<section class="workflow-column" data-content-status="${escapeHtml(status)}"><div class="column-head"><div class="column-title"><span class="column-dot"></span>${escapeHtml(status)}</div><span class="column-count">${items.length}</span></div><div class="column-cards" data-content-drop="${escapeHtml(status)}">${items.length ? items.map(item => `<article class="workflow-card" draggable="true" data-content-card="${escapeHtml(item.id)}"><h3>${escapeHtml(item.title)}</h3>${item.description ? `<p>${escapeHtml(item.description)}</p>` : ''}<div class="workflow-meta"><span>${item.platform || 'No platform'}</span><span class="priority priority-${escapeHtml((item.priority || 'Medium').toLowerCase())}">${escapeHtml(item.priority || 'Medium')}</span></div>${item.dueDate ? `<div class="workflow-meta" style="justify-content:flex-start;margin-top:7px">Due ${escapeHtml(formatDate(parseLocalDate(item.dueDate), { month: 'short', day: 'numeric' }))}</div>` : ''}${item.tags ? `<div class="workflow-meta" style="justify-content:flex-start;margin-top:7px">${escapeHtml(item.tags.split(',').map(tag => `#${tag.trim()}`).join('  '))}</div>` : ''}${Array.isArray(item.dropboxFiles) && item.dropboxFiles.length ? `<div class="workflow-meta" style="justify-content:flex-start;margin-top:7px">📎 ${item.dropboxFiles.length} Dropbox file${item.dropboxFiles.length > 1 ? 's' : ''}</div>` : ''}<div class="card-actions"><button class="mini-button" data-edit-content="${escapeHtml(item.id)}" aria-label="Edit ${escapeHtml(item.title)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m14 5 5 5M4 20l4-.8L19 8a2.1 2.1 0 0 0-3-3L5 16l-1 4Z"/></svg></button><button class="mini-button delete" data-delete-content="${escapeHtml(item.id)}" aria-label="Delete ${escapeHtml(item.title)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M10 11v6m4-6v6M5 7l1 14h12l1-14M9 7V4h6v3"/></svg></button></div></article>`).join('') : '<div class="column-empty">Drop content here</div>'}</div></section>`;
         }).join('');
       }
       function renderIdeas() {
@@ -1830,12 +1848,34 @@ const defaults = {
         if (frame && frame.getAttribute('src') !== previewUrl.href) frame.src = previewUrl.href;
         document.getElementById('linktree-share-url').value = linktreeShareUrl();
       }
+      let signedInEmail = '';
+      function logActivity(section, action, detail = '') {
+        state.activityLog.unshift({ id: crypto.randomUUID(), at: new Date().toISOString(), who: signedInEmail || 'Unknown', section, action, detail: String(detail).slice(0, 240) });
+        if (state.activityLog.length > 500) state.activityLog.length = 500;
+        saveState({ skipPublicProfile: true });
+        if (activeView === 'activity') renderActivity();
+      }
+      function renderActivity() {
+        const host = document.getElementById('activity-list');
+        const filter = document.getElementById('activity-filter')?.value || 'all';
+        if (!host) return;
+        const entries = state.activityLog.filter(entry => filter === 'all' || entry.who === filter);
+        const people = [...new Set(state.activityLog.map(entry => entry.who))];
+        const filterNode = document.getElementById('activity-filter');
+        if (filterNode && filterNode.options.length - 1 !== people.length) {
+          filterNode.innerHTML = '<option value="all">Everyone</option>' + people.map(person => `<option value="${escapeHtml(person)}">${escapeHtml(person)}</option>`).join('');
+          filterNode.value = filter;
+        }
+        host.innerHTML = entries.length ? `<div class="dropbox-list">${entries.map(entry => `<div class="dropbox-row"><div style="flex:1;min-width:180px"><div style="font-weight:600;font-size:13px">${escapeHtml(entry.action)} <span class="dropbox-meta">· ${escapeHtml(entry.section)}</span></div>${entry.detail ? `<div class="dropbox-meta" style="margin-top:3px">${escapeHtml(entry.detail)}</div>` : ''}</div><div style="text-align:right"><div class="dropbox-meta">${escapeHtml(entry.who)}</div><div class="dropbox-meta">${escapeHtml(new Date(entry.at).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }))}</div></div></div>`).join('')}</div>` : '<p class="settings-hint" style="margin:0">No activity recorded yet. Changes made in Creator HQ will appear here automatically.</p>';
+      }
       function websiteLayout() {
         const saved = Array.isArray(state.creatorProfile.website.layout) ? state.creatorProfile.website.layout.filter(id => VALID_WEBSITE_MODULES.has(id)) : [];
         return [...new Set([...saved, ...DEFAULT_WEBSITE_LAYOUT])];
       }
       function commitWebsiteLayout() {
+        const previous = JSON.stringify(state.creatorProfile.website.layout || []);
         state.creatorProfile.website.layout = [...document.querySelectorAll('#website-layout-list .website-layout-item')].map(item => item.dataset.layoutId);
+        if (JSON.stringify(state.creatorProfile.website.layout) !== previous) logActivity('Website editor', 'Reordered website layout', state.creatorProfile.website.layout.join(' → '));
         saveState();
         renderCreatorProfilePreview();
       }
@@ -2002,6 +2042,169 @@ const defaults = {
             status.textContent = error?.message || 'Could not update the account.';
           }
         });
+      }
+      const dropboxState = { path: '', entries: [], connected: false };
+      const dropboxStatus = text => { const node = document.getElementById('dropbox-file-status'); if (node) node.textContent = text; };
+      const formatDropboxSize = size => !size ? '' : size > 1048576 ? `${(size / 1048576).toFixed(1)} MB` : `${Math.max(1, Math.round(size / 1024))} KB`;
+      function renderDropboxBreadcrumb() {
+        const node = document.getElementById('dropbox-breadcrumb');
+        if (!node) return;
+        const parts = dropboxState.path ? dropboxState.path.split('/').filter(Boolean) : [];
+        let cumulative = '';
+        const crumbs = ['<button type="button" class="dropbox-name" data-dropbox-path="/">Home</button>'];
+        for (const part of parts) {
+          cumulative += `/${part}`;
+          crumbs.push(`<button type="button" class="dropbox-name" data-dropbox-path="${escapeHtml(cumulative)}">/ ${escapeHtml(part)}</button>`);
+        }
+        node.innerHTML = crumbs.join(' ');
+        node.querySelectorAll('[data-dropbox-path]').forEach(button => button.addEventListener('click', () => { dropboxState.path = button.dataset.dropboxPath; loadDropboxFolder(); }));
+      }
+      function renderDropboxList() {
+        const host = document.getElementById('dropbox-list');
+        if (!host) return;
+        if (!dropboxState.entries.length) { host.innerHTML = '<p class="settings-hint" style="margin:0">This folder is empty.</p>'; return; }
+        host.innerHTML = `<div class="dropbox-list">${dropboxState.entries.map(entry => `<div class="dropbox-row"><input type="checkbox" data-dropbox-select="${escapeHtml(entry.path)}" ${entry.isFolder ? 'disabled' : ''}><button type="button" class="dropbox-name" data-dropbox-open="${escapeHtml(entry.path)}" data-is-folder="${entry.isFolder}">${entry.isFolder ? '📁' : '📄'} ${escapeHtml(entry.name)}</button><span class="dropbox-meta">${entry.isFolder ? 'Folder' : formatDropboxSize(entry.size)}${entry.modified ? ` · ${escapeHtml(String(entry.modified).slice(0, 10))}` : ''}</span>${entry.isFolder ? '' : `<button type="button" class="button" data-dropbox-download="${escapeHtml(entry.path)}">Download</button>`}<button type="button" class="button" data-dropbox-move="${escapeHtml(entry.path)}">Move</button><button type="button" class="mini-button delete" data-dropbox-delete="${escapeHtml(entry.path)}" aria-label="Delete ${escapeHtml(entry.name)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M10 11v6m4-6v6M5 7l1 14h12l1-14M9 7V4h6v3"/></svg></button></div>`).join('')}</div>`;
+        host.querySelectorAll('[data-dropbox-open]').forEach(button => button.addEventListener('click', async () => {
+          if (button.dataset.isFolder === 'true') { dropboxState.path = button.dataset.dropboxOpen; loadDropboxFolder(); return; }
+          const link = await window.CreatorHQCloud.dropbox.downloadLink(button.dataset.dropboxOpen);
+          if (link?.link) window.open(link.link, '_blank', 'noopener');
+        }));
+        host.querySelectorAll('[data-dropbox-download]').forEach(button => button.addEventListener('click', async () => {
+          button.disabled = true;
+          try { const link = await window.CreatorHQCloud.dropbox.downloadLink(button.dataset.dropboxDownload); if (link?.link) window.open(link.link, '_blank', 'noopener'); }
+          catch (error) { dropboxStatus(error.message); }
+          finally { button.disabled = false; }
+        }));
+        host.querySelectorAll('[data-dropbox-move]').forEach(button => button.addEventListener('click', () => moveDropboxModal(button.dataset.dropboxMove)));
+        host.querySelectorAll('[data-dropbox-delete]').forEach(button => button.addEventListener('click', async () => {
+          const entry = dropboxState.entries.find(item => item.path === button.dataset.dropboxDelete);
+          if (!window.confirm(`Delete ${entry?.name || 'this item'} from Dropbox?`)) return;
+          try { await window.CreatorHQCloud.dropbox.remove(button.dataset.dropboxDelete); logActivity('Dropbox', 'Deleted item', button.dataset.dropboxDelete); dropboxStatus('Deleted.'); await loadDropboxFolder(); }
+          catch (error) { dropboxStatus(error.message); }
+        }));
+      }
+      function moveDropboxModal(sourcePath) {
+        document.getElementById('modal-root').innerHTML = `<div class="modal-backdrop" data-backdrop><form class="modal" id="dropbox-move-form"><div class="modal-head"><h2>Move item</h2><button type="button" class="mini-button" data-close-modal aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div><div class="modal-body"><p class="settings-hint">Destination folder path. Use <code>/</code> for the top level, or type a folder path such as <code>/Stream Docs</code>.</p><div class="form-field"><label for="dropbox-move-to">Destination folder</label><input id="dropbox-move-to" value="${escapeHtml(dropboxState.path || '/')}" required></div><p id="dropbox-move-status" class="settings-hint" style="margin:0"></p></div><div class="modal-actions"><button type="button" class="button" data-close-modal>Cancel</button><button class="button primary" type="submit">Move here</button></div></form></div>`;
+        document.getElementById('dropbox-move-form').addEventListener('submit', async event => {
+          event.preventDefault();
+          const destination = document.getElementById('dropbox-move-to').value.trim() || '/';
+          const name = sourcePath.split('/').pop();
+          const status = document.getElementById('dropbox-move-status');
+          status.textContent = 'Moving…';
+          try {
+            await window.CreatorHQCloud.dropbox.move(sourcePath, `${destination === '/' ? '' : destination}/${name}`);
+            logActivity('Dropbox', 'Moved item', `${sourcePath} → ${destination}/${name}`);
+            closeModal();
+            dropboxStatus(`Moved ${name}.`);
+            await loadDropboxFolder();
+          } catch (error) { status.textContent = error.message; }
+        });
+      }
+      async function loadDropboxFolder() {
+        const api = window.CreatorHQCloud?.dropbox;
+        if (!api || !dropboxState.connected) return;
+        const listNode = document.getElementById('dropbox-list');
+        dropboxStatus('Loading…');
+        try {
+          const data = await api.list(dropboxState.path || '');
+          dropboxState.entries = data.entries || [];
+          renderDropboxBreadcrumb();
+          renderDropboxList();
+          dropboxStatus(dropboxState.entries.length ? `${dropboxState.entries.length} items.` : 'Folder loaded.');
+        } catch (error) {
+          if (listNode) listNode.innerHTML = `<p class="settings-hint" style="margin:0">${escapeHtml(error.message)}</p>`;
+          dropboxStatus('');
+        }
+      }
+      async function refreshDropboxStatus() {
+        const api = window.CreatorHQCloud?.dropbox;
+        const statusNode = document.getElementById('dropbox-status');
+        if (!api || !statusNode) return;
+        try {
+          const data = await api.status();
+          dropboxState.connected = Boolean(data.connected);
+          document.getElementById('dropbox-connect').hidden = dropboxState.connected;
+          document.getElementById('dropbox-disconnect').hidden = !dropboxState.connected;
+          document.getElementById('dropbox-files-panel').hidden = !dropboxState.connected;
+          statusNode.textContent = data.connected
+            ? `Connected${data.accountName ? ` as ${data.accountName}` : ''}${data.accountEmail ? ` (${data.accountEmail})` : ''}`
+            : data.configured ? 'Not connected. Connect your Dropbox account to browse files.' : 'Dropbox is not configured on the server yet. Add the DROPBOX_APP_KEY and DROPBOX_APP_SECRET secrets.';
+          if (dropboxState.connected && !dropboxState.entries.length) await loadDropboxFolder();
+        } catch (error) {
+          statusNode.textContent = error.message;
+        }
+      }
+      function initDropboxView() {
+        document.getElementById('dropbox-refresh')?.addEventListener('click', () => loadDropboxFolder());
+        document.getElementById('dropbox-connect')?.addEventListener('click', async () => {
+          try {
+            const url = await window.CreatorHQCloud.dropbox.connectUrl();
+            window.open(url, 'dropbox-oauth', 'width=640,height=720');
+            dropboxStatus('Waiting for Dropbox authorization…');
+            const started = Date.now();
+            const poll = window.setInterval(async () => {
+              const api = window.CreatorHQCloud?.dropbox;
+              if (!api) return;
+              try {
+                const status = await api.status();
+                if (status.connected || Date.now() - started > 180000) {
+                  window.clearInterval(poll);
+                  await refreshDropboxStatus();
+                  if (status.connected) dropboxStatus('Connected!');
+                }
+              } catch { /* keep polling */ }
+            }, 2000);
+          } catch (error) { dropboxStatus(error.message); }
+        });
+        document.getElementById('dropbox-disconnect')?.addEventListener('click', async () => {
+          if (!window.confirm('Disconnect Dropbox from Creator HQ?')) return;
+          try { await window.CreatorHQCloud.dropbox.disconnect(); dropboxState.entries = []; await refreshDropboxStatus(); }
+          catch (error) { dropboxStatus(error.message); }
+        });
+        document.getElementById('dropbox-new-folder')?.addEventListener('click', async () => {
+          const name = window.prompt('New folder name (inside the current folder):');
+          if (!name) return;
+          try {
+            await window.CreatorHQCloud.dropbox.createFolder(`${dropboxState.path === '/' ? '' : dropboxState.path}/${name.trim().replace(/^\/+/, '')}`);
+            logActivity('Dropbox', 'Created folder', name.trim());
+            dropboxStatus('Folder created.');
+            await loadDropboxFolder();
+          } catch (error) { dropboxStatus(error.message); }
+        });
+        document.getElementById('dropbox-upload-input')?.addEventListener('change', async event => {
+          const files = [...(event.target.files || [])];
+          event.target.value = '';
+          if (!files.length) return;
+          const base = dropboxState.path === '/' ? '' : dropboxState.path;
+          for (const file of files) {
+            dropboxStatus(`Uploading ${file.name}…`);
+            try { await window.CreatorHQCloud.dropbox.upload(`${base}/${file.name}`, file); logActivity('Dropbox', 'Uploaded file', `${base}/${file.name}`); }
+            catch (error) { dropboxStatus(`Upload failed for ${file.name}: ${error.message}`); return; }
+          }
+          dropboxStatus(`Uploaded ${files.length} file${files.length > 1 ? 's' : ''}.`);
+          await loadDropboxFolder();
+        });
+      }
+      function dropboxPickerModal(onPick) {
+        let pickerPath = '/';
+        document.getElementById('modal-root').innerHTML = `<div class="modal-backdrop" data-backdrop><div class="modal" role="dialog" aria-modal="true"><div class="modal-head"><h2>Link a Dropbox file</h2><button type="button" class="mini-button" data-close-modal aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div><div class="modal-body"><p class="settings-hint" id="dropbox-picker-crumb">/</p><div id="dropbox-picker-list" class="settings-hint">Loading…</div></div></div></div>`;
+        const host = document.getElementById('dropbox-picker-list');
+        const crumb = document.getElementById('dropbox-picker-crumb');
+        const open = async () => {
+          crumb.textContent = pickerPath || '/';
+          host.innerHTML = '<p class="settings-hint" style="margin:0">Loading…</p>';
+          try {
+            const data = await window.CreatorHQCloud.dropbox.list(pickerPath === '/' ? '' : pickerPath);
+            const entries = data.entries || [];
+            if (pickerPath !== '/') entries.unshift({ name: '..', path: pickerPath.split('/').slice(0, -1).join('/') || '/', isFolder: true });
+            host.innerHTML = entries.length ? `<div class="dropbox-list">${entries.map(entry => `<div class="dropbox-row"><button type="button" class="dropbox-name" data-picker-open="${escapeHtml(entry.path)}" data-picker-folder="${entry.isFolder}">${entry.isFolder ? '📁' : '📄'} ${escapeHtml(entry.name)}</button></div>`).join('')}</div>` : '<p class="settings-hint" style="margin:0">Empty folder.</p>';
+            host.querySelectorAll('[data-picker-open]').forEach(button => button.addEventListener('click', () => {
+              if (button.dataset.pickerFolder === 'true') { pickerPath = button.dataset.pickerOpen === '/' ? '/' : button.dataset.pickerOpen; void open(); }
+              else { onPick(button.dataset.pickerOpen); closeModal(); }
+            }));
+          } catch (error) { host.innerHTML = `<p class="settings-hint" style="margin:0">${escapeHtml(error.message)}</p>`; }
+        };
+        void open();
       }
       function renderStaff() { void refreshStaffList(); }
       applyStaffRolePreset(document.getElementById('staff-create-role'));
@@ -2176,6 +2379,8 @@ const defaults = {
         if (name === 'tasks') renderTaskBoard();
         if (name === 'website') renderCreatorProfile();
         if (name === 'staff') refreshStaffList();
+        if (name === 'dropbox') refreshDropboxStatus();
+        if (name === 'activity') renderActivity();
         if (name === 'shop') renderShop();
         if (name === 'linktree') renderLinktree();
         if (name === 'analytics' || name === 'settings') window.CreatorHQCloud?.refreshAnalyticsData?.();
@@ -2233,6 +2438,7 @@ const defaults = {
         const user = gate ? await gate.user() : null;
         if (!user) { showAuth('Sign in to open your workspace.'); return; }
         currentUserAccess = { role: user.role || '', permissions: Array.isArray(user.permissions) ? user.permissions : [], full: user.role === 'owner' || (!user.role && !(user.permissions || []).length) };
+        signedInEmail = user.email || '';
         applyPermissions();
         if (!state.profile?.name) {
           state.profile = { name: personalNameFromEmail(user.email), email: user.email, createdAt: state.profile?.createdAt || new Date().toISOString() };
@@ -2266,6 +2472,7 @@ const defaults = {
           const values = { title, description: String(form.get('description') || '').trim(), priority: String(form.get('priority')), status: String(form.get('status')), category: String(form.get('category') || '').trim(), dueDate: String(form.get('dueDate') || ''), tags: String(form.get('tags') || '').trim(), recurring: String(form.get('recurring')) };
           if (task) Object.assign(task, values, { updatedAt: new Date().toISOString() });
           else state.tasks.unshift({ id: crypto.randomUUID(), ...values, createdAt: new Date().toISOString() });
+          logActivity('Task board', edit ? 'Edited task' : 'Added task', title);
           saveState(); document.getElementById('modal-root').innerHTML = ''; renderAll(); toast(edit ? 'Task updated' : 'Task added to your board');
         });
       }
@@ -2279,6 +2486,7 @@ const defaults = {
         document.getElementById('stream-form').addEventListener('submit', event => {
           event.preventDefault(); const form = new FormData(event.currentTarget);
           state.streams.push({ id: crypto.randomUUID(), title: String(form.get('title')).trim(), date: String(form.get('date')), start: String(form.get('start')), end: String(form.get('end')), platform: String(form.get('platform')), category: String(form.get('category') || '').trim(), description: String(form.get('description') || '').trim(), status: 'Planned', createdAt: new Date().toISOString() });
+          logActivity('Stream schedule', 'Scheduled stream', `${form.get('title')} on ${form.get('date')}`);
           saveState(); document.getElementById('modal-root').innerHTML = ''; renderAll(); toast('Stream session scheduled');
         });
       }
@@ -2288,7 +2496,7 @@ const defaults = {
         const initialTitle = record.title || idea?.title || '';
         const initialDescription = record.description || idea?.notes || '';
         const platformOptions = ['YouTube', 'YouTube Shorts', 'TikTok', 'Instagram Reels', 'Other'];
-        document.getElementById('modal-root').innerHTML = `<div class="modal-backdrop" data-backdrop><form class="modal" id="content-form"><div class="modal-head"><h2>${edit ? 'Edit content' : 'Plan content'}</h2><button type="button" class="mini-button" data-close-modal aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div><div class="modal-body"><div class="form-field"><label for="content-title">Title</label><input id="content-title" name="title" maxlength="120" required value="${escapeHtml(initialTitle)}" placeholder="What are you making?"></div><div class="form-field"><label for="content-description">Description / notes</label><textarea id="content-description" name="description" maxlength="1200" placeholder="Hook, brief, or next steps...">${escapeHtml(initialDescription)}</textarea></div><div class="form-grid"><div class="form-field"><label for="content-platform">Platform</label><select id="content-platform" name="platform">${platformOptions.map(platform => `<option ${record.platform === platform ? 'selected' : ''}>${platform}</option>`).join('')}</select></div><div class="form-field"><label for="content-type">Content type</label><select id="content-type" name="type">${['Video', 'Short', 'Clip', 'Live stream', 'Post', 'Other'].map(type => `<option ${record.type === type ? 'selected' : ''}>${type}</option>`).join('')}</select></div><div class="form-field"><label for="content-stage">Stage</label><select id="content-stage" name="status">${CONTENT_STAGES.map(stage => `<option ${record.status === stage || (!record.status && stage === 'Planning') ? 'selected' : ''}>${escapeHtml(stage)}</option>`).join('')}</select></div><div class="form-field"><label for="content-priority">Priority</label><select id="content-priority" name="priority">${['Low', 'Medium', 'High', 'Critical'].map(priority => `<option ${record.priority === priority || (!record.priority && priority === 'Medium') ? 'selected' : ''}>${priority}</option>`).join('')}</select></div><div class="form-field"><label for="content-due">Due date</label><input id="content-due" name="dueDate" type="date" value="${escapeHtml(record.dueDate || '')}"></div><div class="form-field"><label for="content-publish">Scheduled publish date</label><input id="content-publish" name="publishDate" type="date" value="${escapeHtml(record.publishDate || '')}"></div><div class="form-field"><label for="content-source">Start from planned content</label><select id="buffer-content-source" class="field-control"><option value="">Write a new post</option></select></div><div class="form-field full"><label for="content-url">Published URL</label><input id="content-url" name="url" type="url" maxlength="500" value="${escapeHtml(record.url || '')}" placeholder="https://..."></div></div><div class="modal-actions"><button type="button" class="button" data-close-modal>Cancel</button><button class="button primary" type="submit">${edit ? 'Save content' : 'Add to pipeline'}</button></div></div></form></div>`;
+        document.getElementById('modal-root').innerHTML = `<div class="modal-backdrop" data-backdrop><form class="modal" id="content-form"><div class="modal-head"><h2>${edit ? 'Edit content' : 'Plan content'}</h2><button type="button" class="mini-button" data-close-modal aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div><div class="modal-body"><div class="form-field"><label for="content-title">Title</label><input id="content-title" name="title" maxlength="120" required value="${escapeHtml(initialTitle)}" placeholder="What are you making?"></div><div class="form-field"><label for="content-description">Description / notes</label><textarea id="content-description" name="description" maxlength="1200" placeholder="Hook, brief, or next steps...">${escapeHtml(initialDescription)}</textarea></div><div class="form-grid"><div class="form-field"><label for="content-platform">Platform</label><select id="content-platform" name="platform">${platformOptions.map(platform => `<option ${record.platform === platform ? 'selected' : ''}>${platform}</option>`).join('')}</select></div><div class="form-field"><label for="content-type">Content type</label><select id="content-type" name="type">${['Video', 'Short', 'Clip', 'Live stream', 'Post', 'Other'].map(type => `<option ${record.type === type ? 'selected' : ''}>${type}</option>`).join('')}</select></div><div class="form-field"><label for="content-stage">Stage</label><select id="content-stage" name="status">${CONTENT_STAGES.map(stage => `<option ${record.status === stage || (!record.status && stage === 'Planning') ? 'selected' : ''}>${escapeHtml(stage)}</option>`).join('')}</select></div><div class="form-field"><label for="content-priority">Priority</label><select id="content-priority" name="priority">${['Low', 'Medium', 'High', 'Critical'].map(priority => `<option ${record.priority === priority || (!record.priority && priority === 'Medium') ? 'selected' : ''}>${priority}</option>`).join('')}</select></div><div class="form-field"><label for="content-due">Due date</label><input id="content-due" name="dueDate" type="date" value="${escapeHtml(record.dueDate || '')}"></div><div class="form-field"><label for="content-publish">Scheduled publish date</label><input id="content-publish" name="publishDate" type="date" value="${escapeHtml(record.publishDate || '')}"></div><div class="form-field"><label for="content-source">Start from planned content</label><select id="buffer-content-source" class="field-control"><option value="">Write a new post</option></select></div><div class="form-field full"><label for="content-url">Published URL</label><input id="content-url" name="url" type="url" maxlength="500" value="${escapeHtml(record.url || '')}" placeholder="https://..."></div><div class="form-field full"><label>Dropbox files</label><div id="content-dropbox-list" class="dropbox-list" style="max-height:190px;overflow:auto"></div><button type="button" class="button" id="content-link-dropbox" style="margin-top:8px">Link Dropbox file</button></div></div><div class="modal-actions"><button type="button" class="button" data-close-modal>Cancel</button><button class="button primary" type="submit">${edit ? 'Save content' : 'Add to pipeline'}</button></div></div></form></div>`;
         const contentSource = document.querySelector('#content-form #buffer-content-source');
         if (contentSource) {
           contentSource.id = 'content-source';
@@ -2298,13 +2506,38 @@ const defaults = {
           contentSource.labels[0].htmlFor = 'content-source';
           contentSource.labels[0].textContent = 'Source stream';
         }
+        const linkedFiles = [...(record.dropboxFiles || [])];
+        const renderLinkedFiles = () => {
+          const host = document.getElementById('content-dropbox-list');
+          if (!host) return;
+          host.innerHTML = linkedFiles.length ? linkedFiles.map(file => `<div class="dropbox-row"><button type="button" class="dropbox-name" data-content-file-open="${escapeHtml(file.path)}">📄 ${escapeHtml(file.name)}</button><span class="dropbox-meta">Added by ${escapeHtml(file.addedBy || 'Unknown')} · ${escapeHtml(String(file.addedAt || '').slice(0, 10))}</span><button type="button" class="mini-button delete" data-content-file-remove="${escapeHtml(file.id)}" aria-label="Remove ${escapeHtml(file.name)}">✕</button></div>`).join('') : '<p class="settings-hint" style="margin:0">No Dropbox files linked yet.</p>';
+          host.querySelectorAll('[data-content-file-open]').forEach(button => button.addEventListener('click', async () => {
+            try { const link = await window.CreatorHQCloud?.dropbox?.downloadLink(button.dataset.contentFileOpen); if (link?.link) window.open(link.link, '_blank', 'noopener'); } catch (error) { toast(error.message); }
+          }));
+          host.querySelectorAll('[data-content-file-remove]').forEach(button => button.addEventListener('click', () => {
+            const index = linkedFiles.findIndex(file => file.id === button.dataset.contentFileRemove);
+            if (index < 0) return;
+            const [removed] = linkedFiles.splice(index, 1);
+            logActivity('Content pipeline', 'Unlinked Dropbox file', `${removed?.name || ''} from “${initialTitle || 'content'}”`);
+            renderLinkedFiles();
+          }));
+        };
+        renderLinkedFiles();
+        document.getElementById('content-link-dropbox').addEventListener('click', () => dropboxPickerModal(filePath => {
+          const name = filePath.split('/').pop();
+          linkedFiles.push({ id: crypto.randomUUID(), path: filePath, name, addedBy: signedInEmail || 'Unknown', addedAt: new Date().toISOString() });
+          logActivity('Content pipeline', 'Linked Dropbox file', `${name} on “${initialTitle || 'new content'}”`);
+          renderLinkedFiles();
+        }));
         document.getElementById('content-form').addEventListener('submit', event => {
           event.preventDefault(); const form = new FormData(event.currentTarget); const title = String(form.get('title') || '').trim(); if (!title) return;
           const url = String(form.get('url') || '').trim();
           if (url && !/^https?:\/\//i.test(url)) { toast('Published links must start with http:// or https://'); return; }
           const values = { title, description: String(form.get('description') || '').trim(), platform: String(form.get('platform')), type: String(form.get('type')), status: String(form.get('status')), priority: String(form.get('priority')), dueDate: String(form.get('dueDate') || ''), publishDate: String(form.get('publishDate') || ''), sourceStream: String(form.get('sourceStream') || ''), tags: String(form.get('tags') || '').trim(), url, updatedAt: new Date().toISOString() };
+          values.dropboxFiles = linkedFiles;
           if (item) Object.assign(item, values); else state.content.unshift({ id: crypto.randomUUID(), ...values, createdAt: new Date().toISOString() });
           if (idea) idea.convertedTo = item?.id || state.content[0].id;
+          logActivity('Content pipeline', edit ? 'Edited content' : 'Added content', title);
           saveState(); closeModal(); renderAll(); toast(edit ? 'Content updated' : 'Content added to pipeline');
         });
       }
@@ -2499,7 +2732,7 @@ const defaults = {
         const completeStream = event.target.closest('[data-complete-stream]');
         if (completeStream) { const stream = state.streams.find(item => item.id === completeStream.dataset.completeStream); if (stream) { stream.status = 'Completed'; stream.completedAt = new Date().toISOString(); saveState(); renderAll(); toast('Stream marked completed'); } }
         const editContent = event.target.closest('[data-edit-content]'); if (editContent) { const item = state.content.find(record => record.id === editContent.dataset.editContent); if (item) contentModal(item); }
-        const deleteContent = event.target.closest('[data-delete-content]'); if (deleteContent) { const item = state.content.find(record => record.id === deleteContent.dataset.deleteContent); if (item && window.confirm(`Delete “${item.title}”?`)) { state.content = state.content.filter(record => record.id !== item.id); saveState(); renderAll(); toast('Content removed'); } }
+        const deleteContent = event.target.closest('[data-delete-content]'); if (deleteContent) { const item = state.content.find(record => record.id === deleteContent.dataset.deleteContent); if (item && window.confirm(`Delete “${item.title}”?`)) { state.content = state.content.filter(record => record.id !== item.id); logActivity('Content pipeline', 'Deleted content', item.title); saveState(); renderAll(); toast('Content removed'); } }
         const editIdea = event.target.closest('[data-edit-idea]'); if (editIdea) { const idea = state.ideas.find(record => record.id === editIdea.dataset.editIdea); if (idea) ideaModal(idea); }
         const convertIdea = event.target.closest('[data-convert-idea]'); if (convertIdea) { const idea = state.ideas.find(record => record.id === convertIdea.dataset.convertIdea); if (idea) contentModal(null, idea); }
         const deleteIdea = event.target.closest('[data-delete-idea]'); if (deleteIdea) { const idea = state.ideas.find(record => record.id === deleteIdea.dataset.deleteIdea); if (idea && window.confirm(`Delete “${idea.title}”?`)) { state.ideas = state.ideas.filter(record => record.id !== idea.id); saveState(); renderAll(); toast('Idea deleted'); } }
@@ -2579,6 +2812,10 @@ const defaults = {
           if (!item) return;
           item[productField.dataset.productField] = productField.value;
         } else return;
+        if (event.type === 'change') {
+          const label = (field || websiteProfileField || websiteField || linkField || featuredField || productField)?.querySelector?.('label')?.textContent || 'field updated';
+          logActivity(event.target.closest('#view-linktree') ? 'Linktree' : 'Website editor', 'Updated setting', label.trim().slice(0, 80));
+        }
         saveState();
         renderCreatorProfilePreview();
         if (activeView === 'shop') renderShopPreview();
@@ -2675,6 +2912,7 @@ const defaults = {
         if (addButton) {
           if (state.creatorProfile.links.length >= 20) { toast('A Linktree page can have up to 20 links'); return; }
           state.creatorProfile.links.push({ id: crypto.randomUUID(), icon: 'link', platform: 'other', label: '', url: '' });
+          logActivity('Linktree', 'Added link slot');
           saveState(); renderLinktree();
           document.querySelector(`#profile-linktree-label-${state.creatorProfile.links.length - 1}`)?.focus();
           return;
@@ -2683,7 +2921,7 @@ const defaults = {
         const moveButton = event.target.closest('[data-linktree-move]');
         if (!removeButton && !moveButton) return;
         const index = Number((removeButton || moveButton).dataset.index);
-        if (removeButton) state.creatorProfile.links.splice(index, 1);
+        if (removeButton) { logActivity('Linktree', 'Removed link slot', state.creatorProfile.links[index]?.label || ''); state.creatorProfile.links.splice(index, 1); }
         else {
           const targetIndex = moveButton.dataset.linktreeMove === 'up' ? index - 1 : index + 1;
           if (targetIndex < 0 || targetIndex >= state.creatorProfile.links.length) return;
@@ -2841,6 +3079,9 @@ const defaults = {
       });
       const cloudInstructions = document.getElementById('view-cloud');
       cloudInstructions.innerHTML = cloudInstructions.innerHTML.replace('https://zgqcufmsykxvxajrupgi.supabase.co/auth/v1/callback', 'https://asqszzgunsrdclunbxfq.supabase.co/auth/v1/callback');
+      initDropboxView();
+      document.getElementById('activity-filter')?.addEventListener('change', renderActivity);
+      window.addEventListener('hashchange', () => { if (location.hash.startsWith('#dropbox-connected') || location.hash.startsWith('#dropbox-error')) refreshDropboxStatus(); });
       renderAll(); secureGate();
     })();
   </script>
