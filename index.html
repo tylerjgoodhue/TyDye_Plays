@@ -1373,7 +1373,10 @@
       }
       function profileImageUrl(value) {
         const url = safeHttpUrl(value);
-        return url.startsWith('https://') ? url : '';
+        if (url.startsWith('https://')) return url;
+        // Local asset images (data URLs) are kept so the editor, preview, and public
+        // site all show the same picture; the publisher's size cap guards abuse.
+        return /^data:image\/(png|jpe?g|webp|gif);base64,[a-z0-9+/=]+$/i.test(String(value || '')) ? value : '';
       }
       function websiteScheduleData() {
         const weekly = [...state.settings.days].sort((first, second) => first - second).map(day => ({ day: DAYS[day], time: state.settings.start || '20:00', duration: Number(state.settings.duration) || 3 }));
@@ -1977,26 +1980,48 @@
           const websiteDetails = savedWebsite.website && typeof savedWebsite.website === 'object' ? savedWebsite.website : savedWebsite;
           const savedLinktree = source.linktree && typeof source.linktree === 'object' ? source.linktree : {};
           const current = state.creatorProfile;
-          state.creatorProfile = normalizeCreatorProfile({
-            ...current,
-            ...savedLinktree,
-            links: Array.isArray(savedLinktree.links) ? savedLinktree.links : current.links,
-            website: {
-              ...current.website,
-              ...websiteDetails,
-              name: savedWebsite.name || current.website.name,
-              handle: savedWebsite.handle || current.website.handle,
-              bio: savedWebsite.bio || current.website.bio,
-              avatarUrl: savedWebsite.avatarUrl || current.website.avatarUrl,
-              backgroundColor: websiteDetails.backgroundColor || savedWebsite.backgroundColor || current.website.backgroundColor || '#121712',
-              textColor: websiteDetails.textColor || savedWebsite.textColor || current.website.textColor || '#f0f3ed',
-              buttonColor: websiteDetails.buttonColor || savedWebsite.buttonColor || current.website.buttonColor || '#c6f36b',
-              buttonTextColor: websiteDetails.buttonTextColor || savedWebsite.buttonTextColor || current.website.buttonTextColor || '#17200f',
-              buttonStyle: websiteDetails.buttonStyle || savedWebsite.buttonStyle || current.website.buttonStyle || 'solid',
-              linkShape: websiteDetails.linkShape || savedWebsite.linkShape || current.website.linkShape || 'rounded',
-              vibe: ['clean', 'gamer', 'brat', 'cyber', 'arcade'].includes(websiteDetails.vibe || savedWebsite.vibe) ? (websiteDetails.vibe || savedWebsite.vibe) : 'clean'
-            }
-          });
+          // The database copy is a lossy public projection (images stripped, text trimmed)
+          // that arrives seconds after load. Treat local edits as the source of truth and
+          // only fill fields the local workspace has never set (empty or still default).
+          const savedValue = field => {
+            const value = websiteDetails[field] !== undefined && websiteDetails[field] !== null && websiteDetails[field] !== '' ? websiteDetails[field] : savedWebsite[field];
+            return value === undefined || value === null ? '' : value;
+          };
+          const adopt = (localValue, saved, fallbackValue) => {
+            const localBlank = localValue === undefined || localValue === null || localValue === '' || localValue === fallbackValue;
+            return localBlank && saved !== '' ? saved : (localValue === undefined || localValue === null ? fallbackValue : localValue);
+          };
+          const mergedWebsite = { ...current.website };
+          for (const field of ['tagline', 'heroImage', 'heroTitleImage', 'twitchUrl', 'aboutHeading', 'about', 'primaryCta', 'fourthwallDomain']) mergedWebsite[field] = adopt(mergedWebsite[field], savedValue(field), '');
+          mergedWebsite.backgroundColor = adopt(mergedWebsite.backgroundColor, savedValue('backgroundColor'), '#121712');
+          mergedWebsite.textColor = adopt(mergedWebsite.textColor, savedValue('textColor'), '#f0f3ed');
+          mergedWebsite.buttonColor = adopt(mergedWebsite.buttonColor, savedValue('buttonColor'), '#c6f36b');
+          mergedWebsite.buttonTextColor = adopt(mergedWebsite.buttonTextColor, savedValue('buttonTextColor'), '#17200f');
+          mergedWebsite.buttonStyle = adopt(mergedWebsite.buttonStyle, savedValue('buttonStyle'), 'solid');
+          mergedWebsite.linkShape = adopt(mergedWebsite.linkShape, savedValue('linkShape'), 'rounded');
+          mergedWebsite.vibe = adopt(mergedWebsite.vibe, savedValue('vibe'), 'clean');
+          mergedWebsite.name = adopt(mergedWebsite.name, savedWebsite.name || '', '');
+          mergedWebsite.handle = adopt(mergedWebsite.handle, savedWebsite.handle || '', '');
+          mergedWebsite.bio = adopt(mergedWebsite.bio, savedWebsite.bio || '', '');
+          mergedWebsite.avatarUrl = adopt(mergedWebsite.avatarUrl, savedWebsite.avatarUrl || '', '');
+          if (!Array.isArray(current.website.featured) || !current.website.featured.length) {
+            const savedFeatured = websiteDetails.featured || savedWebsite.featured;
+            if (Array.isArray(savedFeatured) && savedFeatured.length) mergedWebsite.featured = savedFeatured;
+          }
+          if (!Array.isArray(current.website.products) || !current.website.products.filter(item => item.provider !== 'fourthwall').length) {
+            const savedProducts = websiteDetails.products || savedWebsite.products;
+            if (Array.isArray(savedProducts) && savedProducts.length) mergedWebsite.products = savedProducts;
+          }
+          const mergedTop = { ...current };
+          for (const field of ['name', 'handle', 'bio', 'avatarUrl']) mergedTop[field] = adopt(mergedTop[field], savedLinktree[field] || '', '');
+          mergedTop.backgroundColor = adopt(mergedTop.backgroundColor, savedLinktree.backgroundColor || '', '#121712');
+          mergedTop.textColor = adopt(mergedTop.textColor, savedLinktree.textColor || '', '#f0f3ed');
+          mergedTop.buttonColor = adopt(mergedTop.buttonColor, savedLinktree.buttonColor || '', '#c6f36b');
+          mergedTop.buttonTextColor = adopt(mergedTop.buttonTextColor, savedLinktree.buttonTextColor || '', '#17200f');
+          mergedTop.buttonStyle = adopt(mergedTop.buttonStyle, savedLinktree.buttonStyle || '', 'solid');
+          mergedTop.linkShape = adopt(mergedTop.linkShape, savedLinktree.linkShape || '', 'rounded');
+          mergedTop.links = Array.isArray(current.links) && current.links.length ? current.links : (Array.isArray(savedLinktree.links) ? savedLinktree.links : current.links);
+          state.creatorProfile = normalizeCreatorProfile({ ...mergedTop, links: mergedTop.links, website: mergedWebsite });
           saveState({ skipCloud: true, skipPublicProfile: true });
           renderCreatorProfile();
           renderLinktree();

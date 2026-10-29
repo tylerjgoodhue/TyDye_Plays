@@ -486,10 +486,11 @@
         return /^mailto:[^\s@]+@[^\s@]+$/i.test(input) ? input : '';
       };
       const safeImage = value => {
+        const input = String(value || '');
         try {
-          const url = new URL(String(value || ''));
+          const url = new URL(input);
           return url.protocol === 'https:' ? url.href : '';
-        } catch { return ''; }
+        } catch { return /^data:image\/(png|jpe?g|webp|gif);base64,[a-z0-9+/=]+$/i.test(input) ? input : ''; }
       };
       const root = document.getElementById('profile-root');
       let profile;
