@@ -56,8 +56,13 @@ async function authenticatedUser(request: Request) {
 }
 
 function functionBaseUrl(request: Request) {
+  // An explicit secret overrides the derived URL when needed.
+  const configured = (Deno.env.get("DROPBOX_REDIRECT_URI") || "").trim();
+  if (configured) return configured;
   const url = new URL(request.url);
-  return `${url.origin}/functions/v1/dropbox`;
+  // The edge runtime may report an internal http:// origin; Dropbox requires https.
+  const origin = url.origin.replace(/^http:\/\//i, "https://");
+  return `${origin}/functions/v1/dropbox`;
 }
 
 async function exchangeToken(params: Record<string, string>) {
