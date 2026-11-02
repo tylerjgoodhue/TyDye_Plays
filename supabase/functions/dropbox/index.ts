@@ -131,7 +131,7 @@ Deno.serve(async request => {
       headers: {
         "Access-Control-Allow-Origin": origin,
         "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-        "Access-Control-Allow-Headers": "authorization, apikey, content-type, x-client-info",
+        "Access-Control-Allow-Headers": "authorization, apikey, content-type, x-client-info, dropbox-api-arg",
         "Access-Control-Max-Age": "86400",
         "Vary": "Origin"
       }

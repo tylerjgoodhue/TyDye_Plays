@@ -20,6 +20,12 @@ globalThis.fetch = async (url, options = {}) => {
     }
     return new Response(JSON.stringify({ access_token: 'test-access', refresh_token: 'test-refresh' }), { status: 200 });
   }
+  if (String(url).includes('content.dropboxapi.com/2/files/upload')) {
+    assert.equal(options.headers.Authorization, 'Bearer refreshed-access');
+    assert.equal(JSON.parse(options.headers['Dropbox-API-Arg']).path, '/upload-test.txt');
+    assert.equal(await new Response(options.body).text(), 'upload test bytes');
+    return new Response(JSON.stringify({ '.tag': 'file', name: 'upload-test.txt', path_lower: '/upload-test.txt', size: 17 }), { status: 200 });
+  }
   if (String(url).includes('/files/list_folder')) {
     assert.equal(options.headers.Authorization, 'Bearer refreshed-access');
     return new Response(JSON.stringify({ entries: [{ '.tag': 'file', name: 'Stream notes.txt', path_lower: '/stream notes.txt', size: 42 }], cursor: '', has_more: false }), { status: 200 });
@@ -69,4 +75,22 @@ test('loads files with a refreshed access token even when Dropbox returns no new
   assert.equal(refreshRequests, 1);
   assert.equal((await handler(request())).status, 200);
   assert.equal(refreshRequests, 1, 'reuses the valid cached access token');
+});
+
+test('browser preflight permits the file upload metadata header', async () => {
+  const response = await handler(new Request('https://project.example/functions/v1/dropbox?action=upload', { method: 'OPTIONS', headers: { Origin: origin, 'Access-Control-Request-Method': 'POST', 'Access-Control-Request-Headers': 'authorization,apikey,content-type,dropbox-api-arg' } }));
+  assert.equal(response.status, 204);
+  const allowed = response.headers.get('Access-Control-Allow-Headers').toLowerCase().split(',').map(x => x.trim());
+  for (const header of ['authorization', 'apikey', 'content-type', 'dropbox-api-arg']) assert.ok(allowed.includes(header), `Missing ${header}`);
+  assert.equal(response.headers.get('Access-Control-Allow-Origin'), origin);
+});
+test('uploads raw file bytes and returns Dropbox metadata', async () => {
+  const response = await handler(new Request('https://project.example/functions/v1/dropbox?action=upload', { method: 'POST', headers: { Origin: origin, Authorization: 'Bearer test', 'Content-Type': 'application/octet-stream', 'Dropbox-API-Arg': JSON.stringify({path:'/upload-test.txt',mode:'overwrite',mute:false}) }, body: 'upload test bytes' }));
+  const data = await response.json();
+  assert.equal(response.status, 200, JSON.stringify(data));
+  assert.equal(data.name, 'upload-test.txt');
+});
+test('rejects upload preflight from an unapproved origin', async () => {
+  const response = await handler(new Request('https://project.example/functions/v1/dropbox?action=upload', { method: 'OPTIONS', headers: { Origin: 'https://other.example' } }));
+  assert.equal(response.status, 403);
 });
