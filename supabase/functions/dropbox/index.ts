@@ -252,6 +252,21 @@ Deno.serve(async request => {
     let body: Record<string, unknown> = {};
     try { body = JSON.parse(raw || "{}"); } catch { return json({ error: "Invalid JSON body." }, 400, origin); }
 
+    if (action === "thumbnails") {
+      const paths = body.paths;
+      if (!Array.isArray(paths) || !paths.length || paths.length > 25 || paths.some(path => typeof path !== "string" || !path.startsWith("/") || path.length > 2000)) {
+        return json({ error: "Choose between 1 and 25 image paths." }, 400, origin);
+      }
+      const response = await fetch("https://content.dropboxapi.com/2/files/get_thumbnail_batch", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ entries: paths.map(path => ({ path, format: "jpeg", size: "w128h128", mode: "fitone_bestfit" })) })
+      });
+      if (!response.ok) return json({ error: "Image previews are temporarily unavailable." }, 400, origin);
+      const data = await response.json();
+      return json({ thumbnails: (data.entries || []).map((entry: { ".tag": string; thumbnail?: string }, index: number) => ({ path: paths[index], thumbnail: entry[".tag"] === "success" ? entry.thumbnail : null })) }, 200, origin);
+    }
+
     if (action === "list") {
       const path = typeof body.path === "string" ? body.path : "";
       let result;

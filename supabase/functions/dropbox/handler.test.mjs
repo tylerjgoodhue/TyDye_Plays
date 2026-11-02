@@ -26,6 +26,12 @@ globalThis.fetch = async (url, options = {}) => {
     assert.equal(await new Response(options.body).text(), 'upload test bytes');
     return new Response(JSON.stringify({ '.tag': 'file', name: 'upload-test.txt', path_lower: '/upload-test.txt', size: 17 }), { status: 200 });
   }
+  if (String(url).includes('/files/get_thumbnail_batch')) {
+    const entries = JSON.parse(options.body).entries;
+    assert.equal(entries[0].size, 'w128h128');
+    assert.equal(entries[0].format, 'jpeg');
+    return new Response(JSON.stringify({entries: entries.map((entry, index) => index ? {'.tag':'failure'} : {'.tag':'success',thumbnail:'dGVzdA=='})}), {status:200});
+  }
   if (String(url).includes('/files/list_folder')) {
     assert.equal(options.headers.Authorization, 'Bearer refreshed-access');
     return new Response(JSON.stringify({ entries: [{ '.tag': 'file', name: 'Stream notes.txt', path_lower: '/stream notes.txt', size: 42 }], cursor: '', has_more: false }), { status: 200 });
@@ -93,4 +99,16 @@ test('uploads raw file bytes and returns Dropbox metadata', async () => {
 test('rejects upload preflight from an unapproved origin', async () => {
   const response = await handler(new Request('https://project.example/functions/v1/dropbox?action=upload', { method: 'OPTIONS', headers: { Origin: 'https://other.example' } }));
   assert.equal(response.status, 403);
+});
+
+test('loads small thumbnails and tolerates a preview failure', async () => {
+  const response = await handler(new Request('https://project.example/functions/v1/dropbox?action=thumbnails', {method:'POST',headers:{Origin:origin,Authorization:'Bearer test','Content-Type':'application/json'},body:JSON.stringify({paths:['/one.png','/two.png']})}));
+  assert.equal(response.status,200);
+  assert.deepEqual((await response.json()).thumbnails,[{path:'/one.png',thumbnail:'dGVzdA=='},{path:'/two.png',thumbnail:null}]);
+});
+test('limits thumbnail batches and rejects non-file paths', async () => {
+  for (const paths of [[],Array(26).fill('/one.png'),['https://other.example/file.png']]) {
+    const response = await handler(new Request('https://project.example/functions/v1/dropbox?action=thumbnails', {method:'POST',headers:{Origin:origin,Authorization:'Bearer test','Content-Type':'application/json'},body:JSON.stringify({paths})}));
+    assert.equal(response.status,400);
+  }
 });

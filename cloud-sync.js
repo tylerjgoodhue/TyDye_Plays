@@ -389,6 +389,7 @@ const dropboxApi = {
   disconnect: () => dropboxRequest('disconnect'),
   connectUrl: async () => (await dropboxRequest('start', { returnUrl: `${location.origin}${location.pathname}` })).authorizeUrl,
   list: (path, cursor) => dropboxRequest('list', { path, cursor }),
+  thumbnails: paths => dropboxRequest('thumbnails', { paths }),
   move: (fromPath, toPath) => dropboxRequest('move', { fromPath, toPath }),
   batchMove: (entries, toFolder) => dropboxRequest('batch-move', { entries, toFolder }),
   createFolder: path => dropboxRequest('create-folder', { path }),

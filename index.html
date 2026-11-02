@@ -665,6 +665,31 @@
 .buffer-queue-tools { display:flex; flex-wrap:wrap; gap:10px; align-items:end; margin-bottom:10px; }
 .buffer-queue-tools .form-field { flex:1; min-width:200px; }
 .buffer-post-row[hidden] { display:none; }
+
+/* Dropbox file browser */
+#view-dropbox .page-heading { margin-bottom:24px; }
+#view-dropbox #dropbox-status { color:var(--text); font-size:13px; }
+#dropbox-breadcrumb { display:flex; flex-wrap:wrap; gap:8px; padding:12px 0 18px; border-bottom:1px solid var(--line); }
+#dropbox-breadcrumb .dropbox-name { flex:initial; min-width:0; font-size:12px; color:var(--accent); }
+.dropbox-browser-list { display:grid; gap:10px; }
+.dropbox-browser-row { padding:14px 16px; flex-wrap:nowrap; gap:14px; border-radius:14px; background:linear-gradient(110deg,rgba(255,255,255,.025),transparent); transition:border-color .15s,background .15s; }
+.dropbox-browser-row:hover { background:rgba(255,255,255,.035); border-color:var(--accent); }
+.dropbox-file-main { display:flex; align-items:center; gap:16px; flex:1; min-width:0; border:0; background:none; padding:0; text-align:left; color:var(--text); cursor:pointer; }
+.dropbox-file-preview { width:64px; height:64px; flex:0 0 64px; display:grid; place-items:center; overflow:hidden; border-radius:12px; background:#262e25; border:1px solid var(--line); color:#a9b6a2; font-size:11px; font-weight:700; }
+.dropbox-file-preview.folder { background:#293324; color:var(--accent); }
+.dropbox-file-preview svg { width:30px; height:30px; }
+.dropbox-file-preview img { width:100%; height:100%; object-fit:contain; }
+.dropbox-file-preview.loading { background:linear-gradient(110deg,#232b22,#35402e,#232b22); background-size:200% 100%; animation:dropbox-shimmer 1.8s infinite; }
+.dropbox-file-copy { display:grid; gap:7px; min-width:0; }
+.dropbox-file-copy strong { font-size:14px; font-weight:600; overflow-wrap:anywhere; }
+.dropbox-file-copy .dropbox-meta { font-size:11px; color:#a3afa0; }
+.dropbox-file-actions { display:flex; align-items:center; gap:6px; }
+.dropbox-empty { display:grid; justify-items:center; text-align:center; padding:50px 20px; color:var(--text); gap:10px; }
+.dropbox-empty > span { font-size:42px; color:var(--accent); }
+.dropbox-empty p { color:#a3afa0; margin:0; font-size:13px; }
+@keyframes dropbox-shimmer { to { background-position:-200% 0; } }
+@media(prefers-reduced-motion:reduce) { .dropbox-file-preview.loading { animation:none; } }
+@media(max-width:650px) { .dropbox-browser-row { flex-wrap:wrap; padding:12px; gap:10px; }.dropbox-file-main { flex-basis:calc(100% - 32px); }.dropbox-file-actions { margin-left:auto; }.dropbox-file-preview { width:56px; height:56px; flex-basis:56px; } }
 </style>
 </head>
 <body>
@@ -869,9 +894,9 @@
           <article class="panel"><div class="panel-head"><div class="panel-title"><h2>Recent activity</h2></div></div><div class="panel-body"><div id="activity-list" class="settings-hint">Loading activity…</div></div></article>
         </section>
         <section class="view" id="view-dropbox" hidden>
-          <div class="page-heading"><div><div class="eyebrow">Command center files</div><h1>Dropbox</h1><p class="subtitle">Browse, upload, move, and download your Dropbox documents without leaving Creator HQ.</p></div><button class="button primary" id="dropbox-connect"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M21 3l-9 9M10 5H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5"/></svg>Connect Dropbox</button></div>
+          <div class="page-heading"><div><div class="eyebrow">Command center files</div><h1>Dropbox</h1><p class="subtitle">Your files, in focus. Browse images, organize stream assets, and keep everything close at hand.</p></div><button class="button primary" id="dropbox-connect"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M21 3l-9 9M10 5H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5"/></svg>Connect Dropbox</button></div>
           <article class="panel" style="margin-bottom:15px"><div class="panel-head"><div class="panel-title"><h2>Connection</h2></div></div><div class="panel-body" style="display:flex;flex-wrap:wrap;gap:12px;align-items:center"><span id="dropbox-status" class="settings-hint" style="margin:0" role="status">Checking connection…</span><span style="flex:1"></span><button class="button" id="dropbox-disconnect" hidden>Disconnect</button></div></article>
-          <article class="panel" id="dropbox-files-panel" hidden><div class="panel-head"><div class="panel-title"><h2>Files</h2></div><div class="button-row"><button class="button" id="dropbox-new-folder">New folder</button><label class="button primary" for="dropbox-upload-input" style="cursor:pointer">Upload files<input id="dropbox-upload-input" type="file" multiple hidden></label><button class="button ghost" id="dropbox-refresh" aria-label="Refresh">⟳</button></div></div><div class="panel-body"><p class="settings-hint" id="dropbox-breadcrumb" style="margin:0 0 10px">/</p><div id="dropbox-list"></div><p id="dropbox-file-status" class="settings-hint" style="margin:10px 0 0" role="status"></p></div></article>
+          <article class="panel" id="dropbox-files-panel" hidden><div class="panel-head"><div class="panel-title"><h2>Your files</h2></div><div class="button-row"><button class="button" id="dropbox-new-folder">New folder</button><label class="button primary" for="dropbox-upload-input" style="cursor:pointer">Upload files<input id="dropbox-upload-input" type="file" multiple hidden></label><button class="button ghost" id="dropbox-refresh" aria-label="Refresh">⟳</button></div></div><div class="panel-body"><p class="settings-hint" id="dropbox-breadcrumb" style="margin:0 0 10px">/</p><div id="dropbox-list"></div><p id="dropbox-file-status" class="settings-hint" style="margin:10px 0 0" role="status"></p></div></article>
         </section>
         <section class="view" id="view-staff" hidden>
           <div class="page-heading"><div><div class="eyebrow">Workspace access</div><h1>Staff accounts</h1><p class="subtitle">Create and manage the accounts allowed to sign in to Creator HQ.</p></div><button class="button primary" id="staff-refresh"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-2.6-6.4M21 3v6h-6"/></svg>Refresh list</button></div>
@@ -2070,11 +2095,57 @@ const defaults = {
         node.innerHTML = crumbs.join(' ');
         node.querySelectorAll('[data-dropbox-path]').forEach(button => button.addEventListener('click', () => { dropboxState.path = button.dataset.dropboxPath; loadDropboxFolder(); }));
       }
+      let dropboxPreviewObserver;
+      function loadDropboxPreviews(host) {
+        dropboxPreviewObserver?.disconnect();
+        const pending = [];
+        let running = false;
+        async function flush() {
+          if (running) return;
+          running = true;
+          try {
+            while (pending.length && host.isConnected) {
+              const batch = pending.splice(0, 25).filter(node => host.contains(node));
+              if (!batch.length) continue;
+              try {
+                const result = await window.CreatorHQCloud.dropbox.thumbnails(batch.map(node => node.dataset.dropboxThumbnail));
+                const thumbnails = new Map((result.thumbnails || []).map(item => [item.path, item.thumbnail]));
+                batch.forEach(node => {
+                  if (!host.contains(node)) return;
+                  const thumbnail = thumbnails.get(node.dataset.dropboxThumbnail);
+                  node.classList.remove('loading');
+                  if (thumbnail && /^[A-Za-z0-9+/=\r\n]+$/.test(thumbnail)) {
+                    const image = document.createElement('img');
+                    image.src = `data:image/jpeg;base64,${thumbnail}`;
+                    image.alt = '';
+                    image.decoding = 'async';
+                    node.replaceChildren(image);
+                  } else { node.title = 'Preview unavailable — open the file to view it'; }
+                });
+              } catch {
+                batch.forEach(node => { node.classList.remove('loading'); node.title = 'Preview unavailable — open the file to view it'; });
+              }
+            }
+          } finally { running = false; }
+        }
+        const nodes = host.querySelectorAll('[data-dropbox-thumbnail]');
+        if (!('IntersectionObserver' in window)) { pending.push(...nodes); void flush(); return; }
+        dropboxPreviewObserver = new IntersectionObserver(entries => {
+          entries.forEach(entry => { if (entry.isIntersecting) { pending.push(entry.target); dropboxPreviewObserver.unobserve(entry.target); } });
+          void flush();
+        }, { rootMargin: '160px' });
+        nodes.forEach(node => dropboxPreviewObserver.observe(node));
+      }
       function renderDropboxList() {
         const host = document.getElementById('dropbox-list');
         if (!host) return;
-        if (!dropboxState.entries.length) { host.innerHTML = '<p class="settings-hint" style="margin:0">This folder is empty.</p>'; return; }
-        host.innerHTML = `<div class="dropbox-list">${dropboxState.entries.map(entry => `<div class="dropbox-row"><input type="checkbox" data-dropbox-select="${escapeHtml(entry.path)}" ${entry.isFolder ? 'disabled' : ''}><button type="button" class="dropbox-name" data-dropbox-open="${escapeHtml(entry.path)}" data-is-folder="${entry.isFolder}">${entry.isFolder ? '📁' : '📄'} ${escapeHtml(entry.name)}</button><span class="dropbox-meta">${entry.isFolder ? 'Folder' : formatDropboxSize(entry.size)}${entry.modified ? ` · ${escapeHtml(String(entry.modified).slice(0, 10))}` : ''}</span>${entry.isFolder ? '' : `<button type="button" class="button" data-dropbox-download="${escapeHtml(entry.path)}">Download</button>`}<button type="button" class="button" data-dropbox-move="${escapeHtml(entry.path)}">Move</button><button type="button" class="mini-button delete" data-dropbox-delete="${escapeHtml(entry.path)}" aria-label="Delete ${escapeHtml(entry.name)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M10 11v6m4-6v6M5 7l1 14h12l1-14M9 7V4h6v3"/></svg></button></div>`).join('')}</div>`;
+        if (!dropboxState.entries.length) { host.innerHTML = '<div class="dropbox-empty"><span aria-hidden="true">▱</span><strong>A little room for your next idea</strong><p>Upload images, stream assets, or documents to this folder.</p></div>'; return; }
+        host.innerHTML = `<div class="dropbox-browser-list">${dropboxState.entries.map(entry => {
+          const image = !entry.isFolder && /\.(jpe?g|png|tiff?|gif|webp|ppm|bmp)$/i.test(entry.name);
+          const extension = entry.name.includes('.') ? entry.name.split('.').pop().slice(0, 5).toUpperCase() : 'FILE';
+          return `<div class="dropbox-row dropbox-browser-row"><input type="checkbox" aria-label="Select ${escapeHtml(entry.name)}" data-dropbox-select="${escapeHtml(entry.path)}" ${entry.isFolder ? 'disabled' : ''}><button type="button" class="dropbox-file-main" data-dropbox-open="${escapeHtml(entry.path)}" data-is-folder="${entry.isFolder}"><span class="dropbox-file-preview ${entry.isFolder ? 'folder' : image ? 'loading' : ''}" ${image ? `data-dropbox-thumbnail="${escapeHtml(entry.path)}"` : ''}>${entry.isFolder ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v10H3Z"/></svg>' : image ? '<span aria-hidden="true">▧</span>' : `<span>${escapeHtml(extension)}</span>`}</span><span class="dropbox-file-copy"><strong>${escapeHtml(entry.name)}</strong><span class="dropbox-meta">${entry.isFolder ? 'Folder' : `${image ? 'Image · ' : ''}${formatDropboxSize(entry.size)}`}${entry.modified ? ` · ${escapeHtml(new Date(entry.modified).toLocaleDateString(undefined, {month:'short',day:'numeric',year:'numeric'}))}` : ''}</span></span></button><div class="dropbox-file-actions">${entry.isFolder ? '' : `<button type="button" class="button ghost" data-dropbox-download="${escapeHtml(entry.path)}">Download</button>`}<button type="button" class="button ghost" data-dropbox-move="${escapeHtml(entry.path)}">Move</button><button type="button" class="mini-button delete" data-dropbox-delete="${escapeHtml(entry.path)}" aria-label="Delete ${escapeHtml(entry.name)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M10 11v6m4-6v6M5 7l1 14h12l1-14M9 7V4h6v3"/></svg></button></div></div>`;
+        }).join('')}</div>`;
+        loadDropboxPreviews(host);
         host.querySelectorAll('[data-dropbox-open]').forEach(button => button.addEventListener('click', async () => {
           if (button.dataset.isFolder === 'true') { dropboxState.path = button.dataset.dropboxOpen; loadDropboxFolder(); return; }
           const link = await window.CreatorHQCloud.dropbox.downloadLink(button.dataset.dropboxOpen);
