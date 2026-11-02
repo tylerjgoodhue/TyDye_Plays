@@ -76,7 +76,7 @@ async function exchangeToken(params: Record<string, string>) {
     body: new URLSearchParams({ ...params, client_id: appKey, client_secret: appSecret })
   });
   const data = await response.json().catch(() => ({}));
-  if (!response.ok || !data.refresh_token) {
+  if (!response.ok || typeof data.access_token !== "string" || !data.access_token) {
     throw new Error(data.error_description || data.error || "Dropbox authorization failed.");
   }
   return data as { access_token: string; refresh_token: string; expires_in: number; account_id: string };
