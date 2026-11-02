@@ -270,3 +270,11 @@ Official references: [Storefront getting started](https://docs.fourthwall.com/st
 The root `CNAME` keeps `tydyeplays.com` in the deployment output and makes the custom-domain public base `/`. Creator HQ also computes its public base from the actual `/CreatorHQ/` URL, so links work under both the custom domain and the previous GitHub project path. A fresh browser origin initializes the existing Supabase project from `public-profile.json`; signing in again is still required because browser sessions cannot be transferred between domains.
 
 The deployed API allowlist includes `https://tydyeplays.com` and `https://www.tydyeplays.com`, while preserving the previous GitHub origin and local development origin. Keep these entries when updating `ALLOWED_APP_ORIGINS`. The `www` DNS entry must be a CNAME to `tylerjgoodhue.github.io`, and GitHub Pages must finish issuing the domain certificate before HTTPS can be enforced. Supabase sign-in/password-reset return addresses must include the new `/CreatorHQ/` address. Do not publish private credentials or transfer login tokens in URLs to migrate a browser session.
+
+## Buffer usability update
+
+The composer supports one saved draft per signed-in account in this browser (and a separate local draft when signed out). Save and restore includes copy, channel selections, per-channel overrides, media, and publishing time. Saving never schedules a post. Drafts are separate from workspace backups and cloud sync. Quick starts cover stream announcements, clips, videos, and community questions.
+
+The preflight checklist catches missing copy, channel selections, invalid HTTPS media links, and past publishing times. Buffer still validates network-specific requirements. Scheduled search covers loaded posts in both list and calendar views; load additional pages for older posts. Refresh retrieves the current Buffer queue. Per-channel customizations survive selection changes, and partial-success retries leave only unsuccessful channels selected.
+
+Live Buffer verification requires the signed-in application and deployed Buffer function.

@@ -17,6 +17,7 @@ let bufferLoadedForUser = null;
 let bufferPostsCursor = null;
 let bufferPostsHasNext = false;
 let bufferScheduling = false;
+const bufferCustomizations = new Map();
 let lastBufferRefresh = 0;
 let bufferRefreshPromise = null;
 let socialLinksSyncedForUser = null;
@@ -745,15 +746,16 @@ function setBufferStatus(text, connected = false) {
     const setupNote = setupCopy.closest('.architecture-note');
     if (setupNote) setupNote.hidden = enabled;
   }
-  for (const id of ['buffer-organization', 'buffer-channel-filter', 'buffer-channel', 'buffer-post-text', 'buffer-schedule-mode']) {
+  for (const id of ['buffer-organization', 'buffer-channel-filter', 'buffer-channel']) {
     const element = document.getElementById(id);
     if (element) element.disabled = !enabled;
   }
   document.querySelectorAll('#buffer-channel-targets input, #buffer-channel-customizations textarea, #buffer-channel-customizations select, #buffer-channel-customizations input').forEach(element => { element.disabled = !enabled; });
   for (const id of ['buffer-media-type', 'buffer-media-url']) {
     const element = document.getElementById(id);
-    if (element) element.disabled = !enabled || (id === 'buffer-media-url' && !document.getElementById('buffer-media-type')?.value);
+    if (element) element.disabled = id === 'buffer-media-url' && !document.getElementById('buffer-media-type')?.value;
   }
+  for (const id of ['buffer-post-text', 'buffer-schedule-mode']) document.getElementById(id).disabled = false;
   const submit = document.getElementById('buffer-schedule-submit');
   if (submit) submit.disabled = !enabled;
 }
@@ -819,7 +821,7 @@ function ensureBufferQueueViews() {
     }
     const moreButton = event.target.closest('[data-buffer-day]');
     if (moreButton) {
-      const dayPosts = bufferPosts.filter(post => post.dueAt && new Date(post.dueAt).toLocaleDateString('en-CA') === moreButton.dataset.bufferDay);
+      const dayPosts = bufferPosts.filter(post => matchesBufferSearch(post) && post.dueAt && new Date(post.dueAt).toLocaleDateString('en-CA') === moreButton.dataset.bufferDay);
       openBufferPostList(dayPosts);
     }
   });
@@ -1045,7 +1047,7 @@ function renderBufferCalendar() {
   };
   const organization = selectedBufferOrganization();
   const channelFilter = document.getElementById('buffer-channel-filter')?.value || 'all';
-  const posts = bufferPosts.filter(post => channelFilter === 'all' || post.channelId === channelFilter);
+  const posts = bufferPosts.filter(post => (channelFilter === 'all' || post.channelId === channelFilter) && matchesBufferSearch(post));
   const days = Array.from({ length: 42 }, (_, index) => {
     const day = new Date(gridStart.getFullYear(), gridStart.getMonth(), gridStart.getDate() + index);
     const key = day.toLocaleDateString('en-CA');
@@ -1090,10 +1092,12 @@ function renderBufferTargetChoices() {
 function updateBufferBatchLabel() {
   const count = document.querySelectorAll('#buffer-channel-targets [data-buffer-target]:checked').length;
   const button = document.getElementById('buffer-schedule-submit');
-  if (button) button.textContent = count > 1 ? `Schedule ${count} posts in Buffer` : 'Schedule in Buffer';
+  if (button) button.textContent = document.getElementById('buffer-schedule-mode').value === 'custom' ? `Schedule ${count || ''} post${count === 1 ? '' : 's'}` : `Add ${count || ''} post${count === 1 ? '' : 's'} to queue`;
+  updateBufferReadiness();
 }
 
 function renderBufferTargetCustomizations() {
+  rememberBufferCustomizations();
   const org = selectedBufferOrganization();
   const selectedIds = [...document.querySelectorAll('#buffer-channel-targets [data-buffer-target]:checked')].map(input => input.value);
   const host = document.getElementById('buffer-channel-customizations');
@@ -1102,6 +1106,9 @@ function renderBufferTargetCustomizations() {
     const channel = org?.channels?.find(item => item.id === id);
     return `<details class="buffer-target-detail"><summary><span>${bufferHtml(channel?.name || 'Channel')}</span><span class="buffer-target-customize-hint">Customize copy and media</span></summary><label class="form-field"><span>Copy override <small>Leave blank to use shared copy</small></span><textarea data-target-text="${bufferHtml(id)}" maxlength="5000" placeholder="Use the main post copy"></textarea><span class="workflow-meta"><span data-target-character-count="${bufferHtml(id)}">0 / 5,000</span><span>Buffer validates channel limits</span></span></label><div class="form-grid"><label class="form-field"><span>Media for this channel</span><select class="field-control" data-target-media="${bufferHtml(id)}"><option value="inherit">Use shared media</option><option value="none">No media</option><option value="image">Different image</option><option value="video">Different video</option></select></label><label class="form-field"><span>Channel media URL</span><input class="field-control" data-target-url="${bufferHtml(id)}" type="url" placeholder="https://..." disabled></label></div></details>`;
   }).join('');
+  host.querySelectorAll('[data-target-text]').forEach(input => { input.value = bufferCustomizations.get(input.dataset.targetText)?.text || ''; });
+  host.querySelectorAll('[data-target-media]').forEach(input => { input.value = bufferCustomizations.get(input.dataset.targetMedia)?.media || 'inherit'; });
+  host.querySelectorAll('[data-target-url]').forEach(input => { input.value = bufferCustomizations.get(input.dataset.targetUrl)?.url || ''; });
   host.querySelectorAll('[data-target-text]').forEach(input => input.addEventListener('input', () => {
     const counter = host.querySelector(`[data-target-character-count="${CSS.escape(input.dataset.targetText)}"]`);
     if (counter) counter.textContent = `${input.value.length.toLocaleString()} / 5,000`;
@@ -1159,9 +1166,11 @@ async function loadBufferWorkspace() {
     const result = await callBuffer('workspace');
     bufferOrganizations = Array.isArray(result.organizations) ? result.organizations : [];
     const selector = document.getElementById('buffer-organization');
+    const previousOrganization = selector.value;
     selector.innerHTML = bufferOrganizations.length
       ? bufferOrganizations.map(organization => `<option value="${bufferHtml(organization.id)}">${bufferHtml(organization.name)}</option>`).join('')
       : '<option value="">No Buffer organizations found</option>';
+    if (bufferOrganizations.some(org => org.id === previousOrganization)) selector.value = previousOrganization;
     renderBufferChannels();
     setBufferStatus(bufferOrganizations.length ? `Connected to Buffer account ${result.account?.email || ''}. Your channels are ready.` : 'Buffer is connected, but this account has no organizations or channels yet.', true);
     if (bufferOrganizations.length) await loadBufferPosts();
@@ -1211,6 +1220,7 @@ async function loadBufferPosts({ append = false } = {}) {
     document.getElementById('buffer-load-more').textContent = 'Load next 50';
     document.getElementById('buffer-queue').hidden = bufferQueueView !== 'list';
     document.getElementById('buffer-calendar').hidden = bufferQueueView !== 'calendar';
+    applyBufferSearch();
     renderBufferCalendar();
   } catch (error) {
     if (append) {
@@ -1235,7 +1245,7 @@ async function scheduleBufferPost() {
   if (!selectedIds.length) throw new Error('Select at least one Buffer channel.');
   if (selectedIds.length > 10) throw new Error('Select no more than 10 channels per batch.');
   if (!sharedText) throw new Error('Write shared post copy first.');
-  if (custom && !localDateTime) throw new Error('Choose a date and time for the post.');
+  if (custom && (!localDateTime || !Number.isFinite(new Date(localDateTime).getTime()) || new Date(localDateTime).getTime() <= Date.now())) throw new Error('Choose a future date and time for the post.');
   const targets = selectedIds.map(channelId => {
     const override = document.querySelector(`[data-target-text="${CSS.escape(channelId)}"]`)?.value.trim() || '';
     const mediaMode = document.querySelector(`[data-target-media="${CSS.escape(channelId)}"]`)?.value || 'inherit';
@@ -1243,6 +1253,8 @@ async function scheduleBufferPost() {
     const targetMediaUrl = mediaMode === 'inherit' ? sharedAssetUrl : document.querySelector(`[data-target-url="${CSS.escape(channelId)}"]`)?.value.trim() || '';
     return { channelId, text: override || sharedText, assetType: targetMediaType, assetUrl: targetMediaUrl };
   });
+  const issues = bufferReadiness();
+  if (issues.length) throw new Error(issues.join(' '));
   const result = await callBuffer('schedule', {
     targets,
     mode: custom ? 'customScheduled' : 'addToQueue',
@@ -1256,7 +1268,14 @@ async function scheduleBufferPost() {
   document.getElementById('buffer-batch-result').innerHTML = `<strong>${bufferHtml(summary)}</strong>${failures.length ? `<ul>${failures.map(item => `<li>${bufferHtml(channelNames.get(item.channelId) || 'Channel')}: ${bufferHtml(item.error)}</li>`).join('')}</ul>` : ''}`;
   document.getElementById('buffer-batch-result').hidden = false;
   if (!successes.length) throw new Error(failures.map(item => item.error).join('; ') || 'Buffer did not schedule any posts.');
+  if (failures.length) {
+    const succeeded = new Set(successes.map(entry => entry.channelId || entry.post?.channelId));
+    document.querySelectorAll('[data-buffer-target]').forEach(input => { if (succeeded.has(input.value)) input.checked = false; });
+    renderBufferTargetCustomizations();
+    updateBufferBatchLabel();
+  }
   if (!failures.length) {
+    bufferCustomizations.clear();
     document.getElementById('buffer-post-text').value = '';
     document.getElementById('buffer-content-source').value = '';
     document.getElementById('buffer-media-type').value = '';
@@ -1273,11 +1292,121 @@ async function scheduleBufferPost() {
   return result;
 }
 
-document.getElementById('buffer-organization').addEventListener('change', () => { renderBufferChannels(); loadBufferPosts(); });
+function rememberBufferCustomizations() {
+  document.querySelectorAll('[data-target-text]').forEach(input => {
+    const id = input.dataset.targetText;
+    bufferCustomizations.set(id, { text: input.value, media: document.querySelector(`[data-target-media="${CSS.escape(id)}"]`)?.value || 'inherit', url: document.querySelector(`[data-target-url="${CSS.escape(id)}"]`)?.value || '' });
+  });
+}
+
+function bufferReadiness() {
+  const issues = [];
+  const targets = [...document.querySelectorAll('[data-buffer-target]:checked')];
+  if (!targets.length) issues.push('Choose at least one channel.');
+  if (targets.length > 10) issues.push('Choose up to 10 channels.');
+  const text = document.getElementById('buffer-post-text').value.trim();
+  if (!text) issues.push('Write your shared post copy.');
+  const custom = document.getElementById('buffer-schedule-mode').value === 'custom';
+  const due = new Date(document.getElementById('buffer-due-at').value).getTime();
+  if (custom && (!Number.isFinite(due) || due <= Date.now())) issues.push('Choose a future date and time.');
+  const channels = selectedBufferOrganization()?.channels || [];
+  targets.forEach(target => {
+    const id = target.value;
+    const channel = channels.find(item => item.id === id);
+    const mode = document.querySelector(`[data-target-media="${CSS.escape(id)}"]`)?.value || 'inherit';
+    const type = mode === 'inherit' ? document.getElementById('buffer-media-type').value : mode === 'none' ? '' : mode;
+    const url = mode === 'inherit' ? document.getElementById('buffer-media-url').value.trim() : document.querySelector(`[data-target-url="${CSS.escape(id)}"]`)?.value.trim();
+    if (type) {
+      try { const parsed = new URL(url); if (parsed.protocol !== 'https:' || parsed.username || parsed.password) throw new Error(); }
+      catch { issues.push(`${channel?.name || 'Channel'} needs a public HTTPS media URL.`); }
+    }
+  });
+  return [...new Set(issues)];
+}
+
+function updateBufferReadiness() {
+  const host = document.getElementById('buffer-readiness');
+  if (!host) return;
+  const issues = bufferReadiness();
+  host.innerHTML = issues.length ? `<strong>Before scheduling</strong><ul>${issues.map(issue => `<li>${bufferHtml(issue)}</li>`).join('')}</ul>` : '<strong>Ready for Buffer</strong><p>Your selections are complete. Buffer will check each network’s requirements when you submit.</p>';
+  host.dataset.ready = String(!issues.length);
+}
+
+function matchesBufferSearch(post) {
+  const query = document.getElementById('buffer-search')?.value.trim().toLowerCase() || '';
+  const channel = selectedBufferOrganization()?.channels?.find(item => item.id === post.channelId);
+  return `${post.text || ''} ${post.status || ''} ${channel?.name || ''} ${channel?.service || ''}`.toLowerCase().includes(query);
+}
+
+function applyBufferSearch() {
+  const rows = document.querySelectorAll('#buffer-queue [data-buffer-post]');
+  let visible = 0;
+  rows.forEach(row => { row.hidden = !matchesBufferSearch(bufferPosts.find(post => post.id === row.dataset.bufferPost) || {}); if (!row.hidden) visible++; });
+  const note = document.getElementById('buffer-search-summary');
+  if (note) note.textContent = `${visible} of ${bufferPosts.length} loaded posts shown${bufferPostsHasNext ? ' · Load more to search older posts' : ''}`;
+}
+
+function ensureBufferConveniences() {
+  const fields = document.getElementById('buffer-composer-fields');
+  const preview = document.querySelector('.buffer-composer-preview');
+  if (!fields || !preview) return;
+  fields.insertAdjacentHTML('afterbegin', `<div class="buffer-draft-tools"><div class="button-row"><button type="button" class="button" id="buffer-save-draft">Save draft</button><button type="button" class="button" id="buffer-load-draft">Restore draft</button></div><p class="settings-hint" id="buffer-draft-note" role="status">Drafts stay in this browser and are never published automatically.</p><label class="form-field"><span>Quick start</span><select class="field-control" id="buffer-quick-start"><option value="">Choose a starting point…</option><option value="live">Stream announcement</option><option value="clip">Share a clip</option><option value="vod">New video / VOD</option><option value="community">Community question</option></select></label></div>`);
+  preview.insertAdjacentHTML('beforeend', '<div id="buffer-readiness" class="buffer-readiness" aria-live="polite"></div>');
+  const draftKey = () => `creator-hq-buffer-draft-v1:${session?.user?.id || 'local'}`;
+  const ids = ['buffer-post-text', 'buffer-media-type', 'buffer-media-url', 'buffer-schedule-mode', 'buffer-due-at', 'buffer-content-source'];
+  document.getElementById('buffer-save-draft').onclick = () => {
+    rememberBufferCustomizations();
+    const draft = { organization: document.getElementById('buffer-organization').value, values: Object.fromEntries(ids.map(id => [id, document.getElementById(id).value])), targets: [...document.querySelectorAll('[data-buffer-target]:checked')].map(input => input.value), overrides: [...bufferCustomizations], savedAt: new Date().toISOString() };
+    try { localStorage.setItem(draftKey(), JSON.stringify(draft)); document.getElementById('buffer-draft-note').textContent = `Draft saved in this browser at ${new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}.`; }
+    catch { ui()?.notify('Could not save the draft. Browser storage may be full.'); }
+  };
+  document.getElementById('buffer-load-draft').onclick = () => {
+    try {
+      const draft = JSON.parse(localStorage.getItem(draftKey()) || 'null');
+      if (!draft) return ui()?.notify('No saved draft for this account in this browser yet.');
+      if (draft.organization && draft.organization !== document.getElementById('buffer-organization').value) return ui()?.notify('Choose the draft’s Buffer organization in Scheduled first, then restore it.');
+      ids.forEach(id => { if (typeof draft.values?.[id] === 'string') document.getElementById(id).value = draft.values[id]; });
+      document.querySelectorAll('[data-buffer-target]').forEach(input => { input.checked = draft.targets?.includes(input.value); });
+      document.querySelectorAll('[data-target-text]').forEach(input => input.value = '');
+      // Restore after the renderer captures current fields, so current edits cannot overwrite the saved draft.
+      document.getElementById('buffer-channel-customizations').innerHTML = '';
+      bufferCustomizations.clear();
+      (draft.overrides || []).forEach(([id, value]) => bufferCustomizations.set(id, value));
+      renderBufferTargetCustomizations();
+      document.getElementById('buffer-media-url').disabled = !document.getElementById('buffer-media-type').value;
+      document.getElementById('buffer-due-field').hidden = document.getElementById('buffer-schedule-mode').value !== 'custom';
+      document.getElementById('buffer-post-text').dispatchEvent(new Event('input', { bubbles: true }));
+      updateBufferBatchLabel();
+      document.getElementById('buffer-draft-note').textContent = 'Saved draft restored. Review your channels and publishing time before scheduling.';
+    } catch { ui()?.notify('This draft could not be restored.'); }
+  };
+  const starters = { live: 'I’m going live!\n\nToday we’re [what you’re streaming]. Join me at [time + timezone]:\n[stream link]', clip: 'One of my favorite moments from the stream!\n\n[Describe the moment]\n\nWatch here: [clip link]', vod: 'Missed the stream? The replay is ready.\n\n[What viewers can expect]\n\nWatch: [video link]', community: 'Question for the community: [your question]\n\nTell me what you think below!' };
+  document.getElementById('buffer-quick-start').onchange = event => {
+    const input = document.getElementById('buffer-post-text');
+    if (input.value.trim()) { ui()?.notify('Save your current draft and clear the copy before choosing a starting point.'); event.target.value = ''; return; }
+    input.value = starters[event.target.value] || '';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.focus();
+  };
+  fields.addEventListener('input', updateBufferReadiness);
+  fields.addEventListener('change', () => { updateBufferBatchLabel(); });
+  const queue = document.getElementById('buffer-queue');
+  queue.insertAdjacentHTML('beforebegin', '<div class="buffer-queue-tools"><label class="form-field"><span>Search loaded posts</span><input class="field-control" id="buffer-search" type="search" placeholder="Search copy, channel, or status"></label><button class="button" type="button" id="buffer-refresh">Refresh Buffer</button><a class="button" href="https://publish.buffer.com/" target="_blank" rel="noopener noreferrer">Open Buffer ↗</a></div><p class="settings-hint" id="buffer-search-summary" role="status"></p>');
+  document.getElementById('buffer-search').oninput = () => { applyBufferSearch(); renderBufferCalendar(); };
+  document.getElementById('buffer-refresh').onclick = async event => { const button = event.currentTarget; button.disabled = true; try { await loadBufferWorkspace(); } finally { button.disabled = false; } };
+  document.getElementById('buffer-due-at').insertAdjacentHTML('afterend', `<span class="settings-hint">Times use this device’s timezone: ${bufferHtml(Intl.DateTimeFormat().resolvedOptions().timeZone)}. Queue slots use your Buffer channel’s schedule.</span>`);
+  document.getElementById('buffer-batch-result')?.setAttribute('role', 'status');
+  updateBufferReadiness();
+}
+
+document.getElementById('buffer-organization').addEventListener('change', () => { bufferCustomizations.clear(); document.getElementById('buffer-channel-customizations').innerHTML = ''; renderBufferChannels(); loadBufferPosts(); });
 document.getElementById('buffer-channel-filter').addEventListener('change', loadBufferPosts);
 ensureBufferContentPicker();
 ensureBufferMediaControls();
 ensureBufferComposerLayout();
+ensureBufferTargetPicker();
+ensureBufferComposerSections();
+ensureBufferConveniences();
 document.getElementById('buffer-content-source').addEventListener('change', event => {
   const item = (storage()?.getWorkspace()?.content || []).find(content => content.id === event.target.value);
   if (!item) return;
