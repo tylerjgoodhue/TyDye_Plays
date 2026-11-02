@@ -443,3 +443,10 @@ entrypoint = "./functions/social-analytics/index.ts"
 enabled = true
 verify_jwt = false
 entrypoint = "./functions/social-accounts/index.ts"
+
+# Dropbox redirects cannot send a Supabase JWT. The handler authenticates API
+# requests itself and verifies signed, expiring state for OAuth callbacks.
+[functions.dropbox]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/dropbox/index.ts"

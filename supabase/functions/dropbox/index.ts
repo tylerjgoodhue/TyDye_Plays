@@ -1,5 +1,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 
+import { authorizationUrl, createState, verifyState } from "./oauth.mjs";
+
 const MAX_BODY_BYTES = 60_000; // JSON API bodies; uploads stream separately below
 const DROPBOX_API = "https://api.dropboxapi.com/2";
 const TOKEN_URL = "https://api.dropbox.com/oauth2/token";
@@ -120,7 +122,7 @@ Deno.serve(async request => {
   const origin = request.headers.get("Origin") || "";
   const origins = allowedOrigins();
   const requestUrl = new URL(request.url);
-  const action = requestUrl.searchParams.get("action") || "api";
+  const action = requestUrl.searchParams.get("action") || (request.method === "GET" && (requestUrl.searchParams.has("code") || requestUrl.searchParams.has("error") || requestUrl.searchParams.has("state")) ? "callback" : "api");
 
   if (request.method === "OPTIONS") {
     if (!origins.includes(origin)) return new Response(null, { status: 403 });
@@ -142,23 +144,27 @@ Deno.serve(async request => {
     const code = requestUrl.searchParams.get("code") || "";
     const state = requestUrl.searchParams.get("state") || "";
     const errorParam = requestUrl.searchParams.get("error_description") || requestUrl.searchParams.get("error") || "";
-    const appBase = origins[0] || `${requestUrl.origin}/`;
-    if (errorParam || !code || !state) {
+    const { appKey, appSecret } = dropboxAppConfig();
+    if (!appKey || !appSecret) return json({ error: "Dropbox is not configured on the server." }, 503);
+    let flow;
+    try { flow = await verifyState(state, appSecret, origins); }
+    catch (error) { return json({ error: (error as Error).message }, 400); }
+    const appBase = flow.returnUrl;
+    if (errorParam || !code) {
       return Response.redirect(`${appBase}#dropbox-error=${encodeURIComponent(errorParam || "Missing authorization code.")}`, 302);
     }
     try {
-      const { appKey, appSecret } = dropboxAppConfig();
-      if (!appKey || !appSecret) throw new Error("Dropbox is not configured on the server.");
       const token = await exchangeToken({
         grant_type: "authorization_code",
         code,
         redirect_uri: functionBaseUrl(request)
       });
+      if (!token.refresh_token) throw new Error("Dropbox did not return a persistent connection. Please connect again.");
       const admin = serviceClient();
       const who = await dropboxCall("/users/get_current_account", token.access_token, null);
       const account = who.ok && who.data ? who.data as { name?: { display_name?: string }; email?: string } : {};
       const { error } = await admin.from("dropbox_connections").upsert({
-        user_id: state,
+        user_id: flow.userId,
         refresh_token: token.refresh_token,
         account_name: account.name?.display_name || "",
         account_email: account.email || "",
@@ -179,15 +185,18 @@ Deno.serve(async request => {
     const admin = serviceClient();
 
     if (action === "start") {
-      const { appKey } = dropboxAppConfig();
-      if (!appKey) throw new Error("Dropbox is not configured. Set the DROPBOX_APP_KEY secret.");
-      const authorize = new URL("https://www.dropbox.com/oauth2/authorize");
-      authorize.searchParams.set("client_id", appKey);
-      authorize.searchParams.set("response_type", "code");
-      authorize.searchParams.set("token_access_type", "offline");
-      authorize.searchParams.set("redirect_uri", functionBaseUrl(request));
-      authorize.searchParams.set("state", user.id);
-      return json({ authorizeUrl: authorize.toString() }, 200, origin);
+      const { appKey, appSecret } = dropboxAppConfig();
+      if (!appKey || !appSecret) throw new Error("Dropbox is not configured. Set the DROPBOX_APP_KEY and DROPBOX_APP_SECRET secrets.");
+      const raw = await request.text();
+      if (raw.length > MAX_BODY_BYTES) return json({ error: "Request too large." }, 413, origin);
+      let body;
+      try { body = JSON.parse(raw || "{}"); } catch { return json({ error: "Invalid JSON body." }, 400, origin); }
+      const returnUrl = new URL(typeof body?.returnUrl === "string" ? body.returnUrl : "/CreatorHQ/", origin);
+      if (returnUrl.origin !== origin || returnUrl.username || returnUrl.password) throw new Error("Return to Creator HQ and try connecting again.");
+      returnUrl.hash = "";
+      returnUrl.search = "";
+      const state = await createState(user.id, returnUrl.toString(), appSecret);
+      return json({ authorizeUrl: authorizationUrl(appKey, functionBaseUrl(request), state) }, 200, origin);
     }
 
     if (action === "disconnect") {

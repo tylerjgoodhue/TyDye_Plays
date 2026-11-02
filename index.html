@@ -2128,6 +2128,13 @@ const defaults = {
         }
       }
       async function refreshDropboxStatus() {
+        const callback = new URLSearchParams(location.hash.slice(1));
+        const callbackError = callback.get('dropbox-error');
+        if (callbackError) {
+          document.getElementById('dropbox-status').textContent = `Dropbox connection failed: ${callbackError}`;
+          dropboxStatus('Try Connect Dropbox again. Personal accounts are supported; this app does not need team administrator access.');
+          return;
+        }
         const api = window.CreatorHQCloud?.dropbox;
         const statusNode = document.getElementById('dropbox-status');
         if (!api || !statusNode) return;
@@ -2151,26 +2158,18 @@ const defaults = {
       function initDropboxView() {
         document.getElementById('dropbox-refresh')?.addEventListener('click', () => loadDropboxFolder());
         document.getElementById('dropbox-connect')?.addEventListener('click', async () => {
+          const button = document.getElementById('dropbox-connect');
+          button.disabled = true;
+          dropboxStatus('Opening Dropbox sign-in…');
+          if (location.hash.startsWith('#dropbox-')) history.replaceState(null, '', location.pathname + location.search);
           try {
             const url = await window.CreatorHQCloud.dropbox.connectUrl();
             // Navigate in the same tab so the browser's normal Dropbox session and
             // cookies apply — popups can be blocked from third-party cookies.
             window.location.href = url;
-            return;
-            const started = Date.now();
-            const poll = window.setInterval(async () => {
-              const api = window.CreatorHQCloud?.dropbox;
-              if (!api) return;
-              try {
-                const status = await api.status();
-                if (status.connected || Date.now() - started > 180000) {
-                  window.clearInterval(poll);
-                  await refreshDropboxStatus();
-                  if (status.connected) dropboxStatus('Connected!');
-                }
-              } catch { /* keep polling */ }
-            }, 2000);
+
           } catch (error) { dropboxStatus(error.message); }
+          finally { button.disabled = false; }
         });
         document.getElementById('dropbox-disconnect')?.addEventListener('click', async () => {
           if (!window.confirm('Disconnect Dropbox from Creator HQ?')) return;
@@ -2462,6 +2461,7 @@ const defaults = {
           saveState();
         }
         unlockWorkspace();
+        if (location.hash.startsWith('#dropbox-')) setView('dropbox');
         toast(`Signed in as ${user.email}`);
       }
       async function secureGate() {

@@ -52,7 +52,7 @@ To test the production layout locally, run `node scripts/build-site.mjs` and ser
 
 The **Dropbox** view in Creator HQ is a small file manager: connect your Dropbox account with OAuth, then browse folders, upload files, create folders, move items, and download through secure temporary links. The browser never sees Dropbox credentials.
 
-1. Create a Dropbox app at [dropbox.com/developers/apps](https://www.dropbox.com/developers/apps) with **Scoped access** and permissions `files.metadata.read`, `files.content.read`, and `files.content.write`.
+1. Create a Dropbox app at [dropbox.com/developers/apps](https://www.dropbox.com/developers/apps) with **Scoped access** and permissions `account_info.read`, `files.metadata.read`, `files.content.read`, and `files.content.write`.
 2. In the app's settings, add this redirect URI exactly:
 
 	`https://asqszzgunsrdclunbxfq.supabase.co/functions/v1/dropbox`
@@ -68,7 +68,11 @@ The **Dropbox** view in Creator HQ is a small file manager: connect your Dropbox
 
 4. Apply `20261030000000_dropbox_connections.sql` (the connection table). Then open Creator HQ → **Dropbox → Connect Dropbox**, approve the Dropbox prompt, and browse. To disconnect, use **Disconnect**; the stored token is deleted.
 
-The OAuth callback redirects back to the app with a status hash; the refresh token is stored in an owner-only table (`dropbox_connections`) and exchanged server-side for short-lived access tokens. Only the account owner can use the stored connection.
+Creator HQ explicitly requests only these four user permissions, so personal Dropbox accounts can connect without work-only permissions. If Dropbox still says “Please sign in with a work account”, check the app’s Permissions tab and disable team permissions (such as `team_data.member`). Use a scoped Dropbox API app for user files rather than a legacy Dropbox Business/team-only app. If replacing the app, update its server-side key and secret and register the same redirect URI.
+
+After changing the function, run `supabase functions deploy dropbox` from this repository; pushing GitHub Pages alone does not update the Dropbox server.
+
+The OAuth callback validates a signed, ten-minute state and redirects back to the originating Creator HQ page with a status hash; the refresh token is stored in an owner-only table (`dropbox_connections`) and exchanged server-side for short-lived access tokens. Only the account owner can use the stored connection.
 
 ## Manage staff accounts
 
