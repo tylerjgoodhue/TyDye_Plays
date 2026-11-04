@@ -1632,7 +1632,7 @@ const defaults = {
         const sessions = state.streams.filter(stream => stream.status !== 'Canceled' && stream.status !== 'Completed' && stream.date && parseLocalDate(stream.date) >= today)
           .sort((first, second) => `${first.date}${first.start}`.localeCompare(`${second.date}${second.start}`))
           .slice(0, 6)
-          .map(stream => ({ date: formatDate(parseLocalDate(stream.date), { weekday: 'short', month: 'short', day: 'numeric' }), time: stream.start || '', title: stream.title || '', category: stream.category || stream.platform || '' }));
+          .map(stream => ({ isoDate:stream.date,duration:Number(stream.duration)||Number(state.settings.duration)||3, date: formatDate(parseLocalDate(stream.date), { weekday: 'short', month: 'short', day: 'numeric' }), time: stream.start || '', title: stream.title || '', category: stream.category || stream.platform || '' }));
         return { weekly, sessions,timezone:state.settings.timezone==='local'?Intl.DateTimeFormat().resolvedOptions().timeZone:state.settings.timezone };
       }
       function profilePublicData() {

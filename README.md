@@ -310,3 +310,11 @@ Validation: with Node 22.13 or newer, run `node --test supabase/functions/buffer
 - Common Dropbox, Buffer, import and cloud-restore actions use matching dialogs. Deployment still requires pushing the frontend through GitHub Pages plus deploying the Buffer and Dropbox functions.
 
 Run `node --test scripts/workflow.test.mjs` and, with Node 22.13+, `node --test supabase/functions/buffer/buffer.test.mjs supabase/functions/dropbox/*.test.mjs`.
+
+## Polished public homepage
+
+The public homepage now uses a two-column hero with the configured logo, identity, colors and background, plus a live-aware channel card. The watch/plan/shop strip gives visitors clear paths into the stream, schedule and collection. Without configured highlights, the section points to the real Twitch channel rather than presenting fabricated videos. A configured Discord destination becomes the community action. The homepage shows up to four merch items and links to the full collection; the shop page retains search, sorting and all products.
+
+The next-stream card computes weekly and explicitly dated sessions from the published creator timezone and displays the next appointment in the visitor’s timezone. Calendar export is a single-event ICS file, not a subscription. Missing/invalid timezone data uses published weekly labels and does not invent a date or offer a calendar download. Sessions now include ISO dates and durations when saved from CreatorHQ. The stream schedule and Twitch’s actual live status are independent. Existing appearance settings and saved module order still apply.
+
+`public-site-utils.js` is a build asset shared by the public pages. Run `node --test scripts/public-site.test.cjs` for timezone, daylight-saving, expired-session, invalid-date, and calendar-export checks. Deploy through the existing GitHub Pages workflow. No backend update is required for this visual refresh.

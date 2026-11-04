@@ -537,15 +537,89 @@ a[hidden] { display:none!important; }
 @keyframes site-load { to { transform:rotate(360deg); } }
 @media(max-width:680px) { body { padding-bottom:calc(80px + env(safe-area-inset-bottom)); }.site-hero { min-height:520px;height:75svh;padding-top:70px;padding-bottom:50px; }.site-hero-actions .site-button { min-height:46px; }.site-mobile-actions { position:fixed;bottom:0;left:0;right:0;display:flex;justify-content:space-around;align-items:center;gap:6px;padding:10px 10px calc(10px + env(safe-area-inset-bottom));border-top:1px solid var(--site-line);background:var(--site-bg);z-index:30;box-shadow:0 -8px 30px #0003; }.site-mobile-actions a { display:grid;place-items:center;min-height:44px;flex:1;border:1px solid var(--site-line);border-radius:10px;text-decoration:none;font-size:12px; }.site-mobile-actions a:first-child { background:var(--site-accent);color:var(--site-button-text);font-weight:700; }.site-nav { gap:10px; }.site-wordmark { min-width:0; }.site-nav-links { flex-basis:100%; }.site-section { scroll-margin-top:110px; } }
 @media(prefers-reduced-motion:reduce) { .site-loading span { animation:none; } }
+/* Public homepage: polished gaming-brand layout. */
+.public-polished { --public-radius:20px; }
+.public-polished .site-nav { padding:0 max(5vw,24px);border-bottom-color:#ffffff13;min-height:82px; }
+.public-polished .site-nav-links a { font-size:12px; }
+.public-polished .site-hero { min-height:700px;height:auto;padding:110px max(5vw,24px) 100px; }
+.public-polished .site-hero::after { background:linear-gradient(90deg,#090d0bf2 0%,#0c100de3 40%,#0b0e0ba3 100%),linear-gradient(0deg,var(--site-bg),transparent 30%); }
+.public-polished .site-hero-image { opacity:.65; }
+.public-polished .site-hero-grid { width:100%;max-width:1440px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1.25fr) minmax(320px,.75fr);gap:clamp(28px,5vw,88px);align-items:center; }
+.public-polished .site-hero-copy { width:100%;max-width:760px;margin:0; }
+.public-polished .site-hero-copy::before { display:none; }
+.public-polished .site-identity { align-items:center;gap:22px; }
+.public-polished .site-hero-logo { width:104px;height:104px;flex:0 0 104px;border-radius:24px;border:1px solid #ffffff30;padding:6px;background:#ffffff07;box-shadow:0 16px 48px #0005; }
+.public-polished .site-hero-logo img { border-radius:18px;object-fit:contain; }
+.public-polished .site-hero h1 { font-size:clamp(40px,4.9vw,74px);line-height:1.02;letter-spacing:-.045em;max-width:100%; }
+.public-polished .site-eyebrow { letter-spacing:.14em;font-size:10px;margin-bottom:13px; }
+.public-polished .site-status { margin-bottom:28px;border-color:#ffffff21;background:#ffffff06;letter-spacing:.05em; }
+.public-polished .site-hero-tagline { max-width:540px;font-size:18px;line-height:1.75;color:#c5cec1;margin-top:26px; }
+.public-polished .site-hero-actions { margin-top:28px;gap:12px; }
+.public-polished .site-hero-actions .site-button { min-height:50px;padding:0 21px;font-size:12px; }
+.public-polished .site-hero-actions .site-button.outline { border-color:#ffffff30; }
+.public-polished .site-hero-socials { top:22px;right:max(5vw,24px);gap:7px; }
+.public-polished .site-hero-social-link { width:36px;height:36px;flex-basis:36px;border-color:#ffffff24; }
+.public-polished .site-scroll-cue { display:none; }
+.site-channel-card { padding:30px;border:1px solid #ffffff25;border-radius:var(--public-radius);background:linear-gradient(140deg,#273022d9,#151b17ed);box-shadow:0 24px 70px #0005;backdrop-filter:blur(20px); }
+.site-channel-card-top { display:flex;justify-content:space-between;align-items:center;gap:12px; }
+.site-channel-card-top .site-kicker { margin:0;font-size:10px;letter-spacing:.15em; }
+.site-channel-light { width:8px;height:8px;border-radius:50%;background:#96a18f;box-shadow:0 0 0 5px #ffffff07; }
+.site-channel-light.is-live { background:#ff7169;box-shadow:0 0 0 5px #ff71691a; }
+.site-channel-state { margin:28px 0 10px;color:#a6b59c;font-size:11px; }
+.site-channel-card h2 { margin:0;max-width:400px;font:600 clamp(25px,2.5vw,36px)/1.14 'Space Grotesk',sans-serif;letter-spacing:-.025em;color:var(--site-ink); }
+.site-channel-copy { color:#b6c1b0;line-height:1.75;font-size:13px;margin:15px 0 25px; }
+.site-next-stream { display:grid;gap:9px;border-top:1px solid #ffffff19;padding-top:23px; }
+.site-next-stream > span { color:#a7b59f;font-size:10px;text-transform:uppercase;letter-spacing:.12em; }
+.site-next-stream strong { font-size:18px;color:var(--site-ink);line-height:1.45; }
+.site-next-stream small { color:#98a78f;font-size:10px; }
+.site-stream-days { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:20px; }
+.site-stream-days > div { display:grid;gap:7px;padding:12px 8px;border:1px solid #ffffff12;border-radius:10px;background:#ffffff03; }
+.site-stream-days span { color:#a8b59e;text-transform:uppercase;font-size:10px;letter-spacing:.08em; }
+.site-stream-days strong { color:var(--site-ink);font-size:12px;white-space:nowrap; }
+.site-card-schedule-link { display:flex;justify-content:space-between;align-items:center;margin-top:22px;text-decoration:none;color:var(--site-accent);font-size:11px;padding:8px 0; }
+.public-polished .site-broadcast { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;margin:0;border-bottom:1px solid #ffffff13;padding:0 max(5vw,24px);background:var(--site-bg); }
+.site-guide-card { position:relative;padding:32px 28px 32px 0;text-decoration:none;border-right:1px solid #ffffff13; }
+.site-guide-card + .site-guide-card { padding-left:28px; }
+.site-guide-card:last-child { border-right:0; }
+.site-guide-number { color:var(--site-accent);font-size:9px;letter-spacing:.15em; }
+.site-guide-card h2 { margin:14px 0 10px;font:600 20px/1.3 'Space Grotesk',sans-serif;letter-spacing:-.02em; }
+.site-guide-card p { color:var(--site-muted);font-size:12px;line-height:1.8;max-width:290px;margin:0; }
+.site-guide-arrow { position:absolute;top:30px;right:20px;color:#9ca994; }
+.site-guide-card:hover h2 { color:var(--site-accent); }
+.public-polished .site-section { padding-left:max(5vw,24px);padding-right:max(5vw,24px); }
+.public-polished .site-section-head h2 { font-size:clamp(30px,4vw,48px);letter-spacing:-.035em; }
+.public-polished .site-about { gap:8vw;padding-top:100px;padding-bottom:100px; }
+.public-polished .site-schedule { padding:28px;border-radius:var(--public-radius);background:#ffffff03;border:1px solid #ffffff17; }
+.public-polished .site-schedule h3 { letter-spacing:-.02em; }
+.site-save-stream { margin-top:22px;font-size:11px;min-height:44px; }
+.site-save-stream[hidden] { display:none; }
+.public-polished .site-feature { border-radius:16px;overflow:hidden;border:1px solid #ffffff1a;background:#ffffff03; }
+.public-polished .site-feature-content { padding:22px; }
+.public-polished .site-feature h3 { font-size:20px;line-height:1.35; }
+.site-watch-fallback { grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:28px;padding:36px;border:1px solid #ffffff1f;border-radius:var(--public-radius);background:linear-gradient(120deg,#ffffff06,transparent); }
+.site-watch-fallback h3 { font:600 28px/1.25 'Space Grotesk',sans-serif;margin:12px 0;max-width:520px;letter-spacing:-.025em; }
+.site-watch-fallback p { color:var(--site-muted);font-size:13px;line-height:1.8;margin-bottom:0; }
+.public-polished .site-community { margin:28px max(5vw,24px);padding:48px;border:1px solid #ffffff20;border-radius:var(--public-radius);background:linear-gradient(120deg,color-mix(in srgb,var(--site-accent) 8%,var(--site-bg)),var(--site-bg)); }
+.public-polished .site-contact { padding-top:90px;padding-bottom:90px; }
+.public-polished .site-footer { border-top:1px solid #ffffff16;padding-top:28px;padding-bottom:28px; }
+.public-polished a:focus-visible,.public-polished button:focus-visible { outline:2px solid var(--site-accent);outline-offset:5px; }
+@media(min-width:1600px) { .public-polished .site-section,.public-polished .site-broadcast { padding-left:max(calc((100vw - 1440px)/2),5vw);padding-right:max(calc((100vw - 1440px)/2),5vw); } }
+@media(max-width:1000px) { .public-polished .site-hero-grid { grid-template-columns:minmax(0,1fr) minmax(290px,.8fr);gap:30px; }.public-polished .site-identity { flex-wrap:wrap; }.public-polished .site-hero-logo { width:88px;height:88px;flex-basis:88px; }.public-polished .site-hero h1 { font-size:48px; }.site-channel-card { padding:24px; }.site-guide-card { padding-right:20px; }.site-guide-card h2 { font-size:18px; } }
+@media(max-width:760px) { .public-polished .site-hero { min-height:0;padding-top:85px;padding-bottom:60px; }.public-polished .site-hero-grid { grid-template-columns:1fr;gap:36px; }.public-polished .site-identity { flex-wrap:nowrap;gap:16px; }.public-polished .site-hero h1 { font-size:clamp(32px,6.6vw,50px); }.public-polished .site-hero-tagline { font-size:16px; }.public-polished .site-scroll-cue { display:none; }.site-channel-card { max-width:100%; }.site-channel-card h2 { font-size:30px; }.public-polished .site-broadcast { grid-template-columns:1fr; }.site-guide-card,.site-guide-card+.site-guide-card { padding:24px 0;border-right:0;border-bottom:1px solid #ffffff13; }.site-guide-card:last-child { border-bottom:0; }.site-guide-card p { max-width:90%; }.site-guide-arrow { right:0; }.public-polished .site-about { gap:35px;padding-top:64px;padding-bottom:64px; }.site-watch-fallback { align-items:flex-start;flex-direction:column;padding:25px; }.site-watch-fallback h3 { font-size:26px; }.public-polished .site-community { padding:28px;margin:14px 20px; }.public-polished .site-contact { padding-top:60px;padding-bottom:60px; }.public-polished .site-nav { min-height:74px;padding-left:18px;padding-right:18px; } }
+@media(max-width:420px) { .public-polished .site-hero-logo { width:74px;height:74px;flex-basis:74px;border-radius:18px; }.public-polished .site-hero h1 { font-size:32px; }.public-polished .site-hero-actions .site-button { width:100%;justify-content:center; }.public-polished .site-hero { padding-left:20px;padding-right:20px; }.site-stream-days strong { font-size:11px; }.public-polished .site-nav-links a { font-size:11px;padding:9px; } }
+
+@media(max-width:760px){.public-polished .site-nav-links{justify-content:flex-start;width:100%;scroll-padding-inline:8px;}}
 </style>
   <link rel="stylesheet" href="./storefront.css">
 </head>
 <body>
   <a class="site-skip-link" href="#profile-root">Skip to content</a>
   <main class="profile-shell" id="profile-root" tabindex="-1" aria-live="polite"><section class="site-loading" role="status"><span></span><p>Loading the latest from the channel…</p></section></main>
+  <script src="./public-site-utils.js"></script>
   <script src="./storefront.js"></script>
   <script>
     (async () => {
+      const publicTools=window.CreatorPublicSite;
       const twitchStatusEndpoint = 'https://asqszzgunsrdclunbxfq.supabase.co/functions/v1/twitch-status';
       const twitchStatusIntervalMs = 60_000;
       const icons = { play: '▶', stream: '◉', camera: '◎', chat: '✦', music: '♫', link: '↗', mail: '@', shop: '◇', community: '✳' };
@@ -689,8 +763,9 @@ a[hidden] { display:none!important; }
       const initials = name.split(/\s+/).slice(0, 2).map(part => part[0] || '').join('').toUpperCase();
       const ctaClass = `site-button ${style} shape-${shape}`;
       const watchButton = twitchUrl ? `<a class="${ctaClass}" data-live-cta style="--site-accent:${escapeHtml(buttonColor)};--site-button-text:${escapeHtml(buttonTextColor)}" href="${escapeHtml(twitchUrl)}" target="_blank" rel="noopener noreferrer">${escapeHtml(live ? 'Join the live stream' : primaryCta)} <span aria-hidden="true">↗</span></a>` : '';
+      const scheduledSessions=(Array.isArray(schedule.sessions)?schedule.sessions:[]).filter(item=>{if(!item.isoDate||!publicTools?.validZone(schedule.timezone))return true;const time=publicTools.zonedTime(item.isoDate,item.time,schedule.timezone);return time&&time>new Date();});
       const scheduleRows = Array.isArray(schedule.weekly) || Array.isArray(schedule.sessions)
-        ? `${(schedule.weekly || []).length ? `<div class="site-schedule-group"><p class="site-schedule-group-title">Weekly rhythm</p>${schedule.weekly.slice(0, 7).map(item => `<div class="site-schedule-row"><span>${escapeHtml(item.day || '')}</span><span>${escapeHtml(item.time || '')}${item.duration ? ` · ${escapeHtml(item.duration)}h` : ''}</span></div>`).join('')}</div>` : ''}${(schedule.sessions || []).length ? `<div class="site-schedule-group"><p class="site-schedule-group-title">Upcoming streams</p>${schedule.sessions.slice(0, 6).map(item => `<div class="site-schedule-row"><span>${escapeHtml(item.date || '')}<small>${item.title ? `<br>${escapeHtml(item.title)}` : ''}</small></span><span>${escapeHtml(item.time || '')}${item.category ? `<br>${escapeHtml(item.category)}` : ''}</span></div>`).join('')}</div>` : ''}` || '<p class="site-about-copy">No upcoming streams scheduled.</p>'
+        ? `${(schedule.weekly || []).length ? `<div class="site-schedule-group"><p class="site-schedule-group-title">Weekly rhythm</p>${schedule.weekly.slice(0, 7).map(item => `<div class="site-schedule-row"><span>${escapeHtml(item.day || '')}</span><span>${escapeHtml(publicTools?.clock(item.time)||item.time||'')}${item.duration ? ` · ${escapeHtml(item.duration)}h` : ''}</span></div>`).join('')}</div>` : ''}${scheduledSessions.length ? `<div class="site-schedule-group"><p class="site-schedule-group-title">Upcoming streams</p>${scheduledSessions.slice(0, 6).map(item => `<div class="site-schedule-row"><span>${escapeHtml(item.date || '')}<small>${item.title ? `<br>${escapeHtml(item.title)}` : ''}</small></span><span>${escapeHtml(publicTools?.clock(item.time)||item.time||'')}${item.category ? `<br>${escapeHtml(item.category)}` : ''}</span></div>`).join('')}</div>` : ''}` || '<p class="site-about-copy">No upcoming streams scheduled.</p>'
         : String(schedule || '').split(/\r?\n/).map(line => line.trim()).filter(Boolean).slice(0, 7).map(line => {
           const parts = line.split(/\s*[|·]\s*/, 2);
           return `<div class="site-schedule-row"><span>${escapeHtml(parts[0])}</span>${parts[1] ? `<span>${escapeHtml(parts[1])}</span>` : ''}</div>`;
@@ -698,7 +773,7 @@ a[hidden] { display:none!important; }
       const featuredMarkup = featured.length ? featured.map(item => {
         const content = `<div class="site-feature-image-wrap"><img class="site-feature-image" src="${escapeHtml(item.imageUrl)}" alt="${escapeHtml(item.title)} thumbnail" width="640" height="360" decoding="async" loading="lazy"><span class="site-feature-play" aria-hidden="true">▶</span></div><div class="site-feature-content"><span class="site-feature-meta">From the stream</span><h3>${escapeHtml(item.title)}</h3>${item.description ? `<p>${escapeHtml(item.description)}</p>` : ''}</div>`;
         return item.url ? `<a class="site-feature" href="${escapeHtml(item.url)}" target="_blank" rel="noopener noreferrer">${content}</a>` : `<article class="site-feature">${content}</article>`;
-      }).join('') : '<p class="site-empty-feature">New videos and stream highlights will land here.</p>';
+      }).join('') : `<div class="site-watch-fallback"><div><span class="site-kicker">Keep watching</span><h3>The next good moment starts on the channel.</h3><p>Visit Twitch for live streams and to see what’s available to watch.</p></div>${twitchUrl?`<a class="site-button ${style} shape-${shape}" href="${escapeHtml(twitchUrl)}" target="_blank" rel="noopener noreferrer">Explore the channel ↗</a>`:''}</div>`;
       const linkMarkup = links.map(link => {
         const href = safeLink(link.url);
         const label = String(link.label || '').slice(0, 80);
@@ -736,13 +811,13 @@ a[hidden] { display:none!important; }
       document.documentElement.style.setProperty('--site-accent', buttonColor);
       document.documentElement.style.setProperty('--site-button-text', buttonTextColor);
       document.body.className = vibe === 'clean' ? '' : `vibe-${vibe}`;
-      root.className = 'creator-site';
+      root.className = 'creator-site public-polished';
       const storefront = window.CreatorStorefront.create({ profile });
       if (['product.html', 'shop.html', 'cart.html'].some(page => location.pathname.endsWith('/' + page))) {
         await storefront.renderPage(root);
         return;
       }
-      root.innerHTML = `<header class="site-nav"><a class="site-wordmark" href="#top"><span class="site-mark">${avatar ? `<img src="${escapeHtml(avatar)}" alt="">` : escapeHtml(initials || 'C')}</span>${escapeHtml(name)}</a><nav class="site-nav-links" aria-label="Website navigation"><a href="#about">About</a><a href="#highlights">Highlights</a><a href="#shop">Shop</a><a href="#contact">Contact</a><a href="#community">Community</a></nav>${twitchUrl ? `<a class="site-nav-cta ${style} shape-${shape}" data-nav-live-cta style="--site-accent:${escapeHtml(buttonColor)};--site-button-text:${escapeHtml(buttonTextColor)}" href="${escapeHtml(twitchUrl)}" target="_blank" rel="noopener noreferrer">${live ? 'Live now' : 'Twitch'} <span aria-hidden="true">↗</span></a>` : ''}</header><section class="site-hero" id="top"><img class="site-hero-image" src="${escapeHtml(heroImage)}" alt="Gaming setup" fetchpriority="high"><div class="site-hero-copy"><span class="site-status ${liveStatusClass}" data-live-status aria-live="polite"><span class="site-status-dot"></span>${escapeHtml(liveStatusLabel)}</span><p class="site-eyebrow">${handle ? escapeHtml(handle.startsWith('@') ? handle : `@${handle}`) : 'Twitch creator'}</p><h1>${escapeHtml(name)}</h1><p class="site-hero-tagline">${escapeHtml(tagline)}</p><div class="site-hero-actions">${watchButton}<a class="site-button outline ${style} shape-${shape}" href="#stream-schedule">Stream schedule</a>${featured.length ? `<a class="site-button outline ${style} shape-${shape}" href="#highlights">Watch highlights</a>` : ''}</div></div><a class="site-scroll-cue" href="#about">Scroll to explore</a></section><section class="site-section site-about" id="about"><div><div class="site-section-head"><p class="site-kicker">The person behind the stream</p><h2>${escapeHtml(aboutHeading)}</h2></div><div class="site-about-copy">${escapeHtml(about || 'A little more about the stream is on the way.')}</div></div><aside class="site-schedule" id="stream-schedule"><p class="site-kicker">Stream schedule</p><h3>Catch the next one</h3>${schedule.timezone ? `<p class="site-schedule-zone">Times in ${escapeHtml(schedule.timezone)}</p>` : ''}<div class="site-schedule-list">${scheduleRows}</div></aside></section><section class="site-section site-featured" id="highlights"><div class="site-section-head"><p class="site-kicker">From the channel</p><h2>Recent highlights</h2></div><div class="site-feature-grid">${featuredMarkup}</div></section><section class="site-section site-community" id="community"><div><p class="site-kicker">The community</p><h2>Make yourself at home.</h2><p>Come by the stream, say hello, and be part of what we build next.</p></div>${watchButton}</section><section class="site-section site-contact" id="contact"><div class="site-contact-intro"><p class="site-kicker">Get in touch</p><h2>Let's make something happen.</h2><p class="site-contact-copy">Business inquiries, collaborations, sponsorships, or just want to say hey? Write your message below, then send it from your email app.</p><a class="site-contact-email" href="mailto:Contact@TyDyePlays.com"><span class="site-contact-email-label">Email</span><strong>Contact@TyDyePlays.com</strong><span class="site-contact-email-arrow" aria-hidden="true">↗</span></a><div class="site-contact-tags"><span>Collabs</span><span>Sponsorships</span><span>Fan mail</span></div></div><form class="site-contact-form" id="contact-form" novalidate><div class="site-contact-row"><label for="contact-name">Your name<input id="contact-name" name="name" maxlength="80" placeholder="What should I call you?" autocomplete="name" required></label><label for="contact-from">Your email<input id="contact-from" name="from" type="email" maxlength="120" placeholder="you@example.com" autocomplete="email" required></label></div><label for="contact-subject">Subject<select id="contact-subject" name="subject"><option>General question</option><option>Collaboration</option><option>Sponsorship / business</option><option>Just saying hey</option></select></label><label for="contact-message">Message<textarea id="contact-message" name="message" maxlength="4000" rows="6" placeholder="Type your message here…" required></textarea></label><button class="site-button ${style} shape-${shape}" type="submit">Open email draft <span aria-hidden="true">↗</span></button><p class="site-contact-status" id="contact-status" role="status"></p></form></section>${linkMarkup ? `<nav class="site-socials" aria-label="More ways to follow">${linkMarkup}</nav>` : ''}<footer class="site-footer"><span>${escapeHtml(name)} · Twitch creator</span><a href="#top">Back to top ↑</a></footer>`;
+      root.innerHTML = `<header class="site-nav"><a class="site-wordmark" href="#top"><span class="site-mark">${avatar ? `<img src="${escapeHtml(avatar)}" alt="">` : escapeHtml(initials || 'C')}</span>${escapeHtml(name)}</a><nav class="site-nav-links" aria-label="Website navigation"><a href="#about">About</a><a href="#stream-schedule">Schedule</a><a href="#highlights">${featured.length?'Highlights':'Watch'}</a><a href="#shop">Shop</a><a href="#contact">Contact</a><a href="#community">Community</a></nav>${twitchUrl ? `<a class="site-nav-cta ${style} shape-${shape}" data-nav-live-cta style="--site-accent:${escapeHtml(buttonColor)};--site-button-text:${escapeHtml(buttonTextColor)}" href="${escapeHtml(twitchUrl)}" target="_blank" rel="noopener noreferrer">${live ? 'Live now' : 'Twitch'} <span aria-hidden="true">↗</span></a>` : ''}</header><section class="site-hero" id="top"><img class="site-hero-image" src="${escapeHtml(heroImage)}" alt="Gaming setup" fetchpriority="high"><div class="site-hero-copy"><span class="site-status ${liveStatusClass}" data-live-status aria-live="polite"><span class="site-status-dot"></span>${escapeHtml(liveStatusLabel)}</span><p class="site-eyebrow">${handle ? escapeHtml(handle.startsWith('@') ? handle : `@${handle}`) : 'Twitch creator'}</p><h1>${escapeHtml(name)}</h1><p class="site-hero-tagline">${escapeHtml(tagline)}</p><div class="site-hero-actions">${watchButton}<a class="site-button outline ${style} shape-${shape}" href="#stream-schedule">Stream schedule</a>${featured.length ? `<a class="site-button outline ${style} shape-${shape}" href="#highlights">Watch highlights</a>` : ''}</div></div><a class="site-scroll-cue" href="#about">Scroll to explore</a></section><section class="site-section site-about" id="about"><div><div class="site-section-head"><p class="site-kicker">The person behind the stream</p><h2>${escapeHtml(aboutHeading)}</h2></div><div class="site-about-copy">${escapeHtml(about || 'A place to enjoy the games, hang out with chat, and share the moments that make a stream worth watching.')}</div></div><aside class="site-schedule" id="stream-schedule"><p class="site-kicker">Stream schedule</p><h3>Catch the next one</h3>${schedule.timezone ? `<p class="site-schedule-zone">Times in ${escapeHtml(schedule.timezone)}</p>` : ''}<div class="site-schedule-list">${scheduleRows}</div></aside></section><section class="site-section site-featured" id="highlights"><div class="site-section-head"><p class="site-kicker">From the channel</p><h2>${featured.length?'Recent highlights':'More from the channel'}</h2></div><div class="site-feature-grid">${featuredMarkup}</div></section><section class="site-section site-community" id="community"><div><p class="site-kicker">The community</p><h2>Make yourself at home.</h2><p>Come by the stream, say hello, and be part of what we build next.</p></div>${watchButton}</section><section class="site-section site-contact" id="contact"><div class="site-contact-intro"><p class="site-kicker">Get in touch</p><h2>Let's make something happen.</h2><p class="site-contact-copy">Business inquiries, collaborations, sponsorships, or just want to say hey? Write your message below, then send it from your email app.</p><a class="site-contact-email" href="mailto:Contact@TyDyePlays.com"><span class="site-contact-email-label">Email</span><strong>Contact@TyDyePlays.com</strong><span class="site-contact-email-arrow" aria-hidden="true">↗</span></a><div class="site-contact-tags"><span>Collabs</span><span>Sponsorships</span><span>Fan mail</span></div></div><form class="site-contact-form" id="contact-form" novalidate><div class="site-contact-row"><label for="contact-name">Your name<input id="contact-name" name="name" maxlength="80" placeholder="What should I call you?" autocomplete="name" required></label><label for="contact-from">Your email<input id="contact-from" name="from" type="email" maxlength="120" placeholder="you@example.com" autocomplete="email" required></label></div><label for="contact-subject">Subject<select id="contact-subject" name="subject"><option>General question</option><option>Collaboration</option><option>Sponsorship / business</option><option>Just saying hey</option></select></label><label for="contact-message">Message<textarea id="contact-message" name="message" maxlength="4000" rows="6" placeholder="Type your message here…" required></textarea></label><button class="site-button ${style} shape-${shape}" type="submit">Open email draft <span aria-hidden="true">↗</span></button><p class="site-contact-status" id="contact-status" role="status"></p></form></section>${linkMarkup ? `<nav class="site-socials" aria-label="More ways to follow">${linkMarkup}</nav>` : ''}<footer class="site-footer"><span>${escapeHtml(name)} · Twitch creator</span><a href="#top">Back to top ↑</a></footer>`;
       {
         const shop = document.createElement('section');
         shop.className = 'site-section site-shop';
@@ -794,6 +869,39 @@ a[hidden] { display:none!important; }
         socialNav.innerHTML = socialIconMarkup;
         document.querySelector('.site-hero')?.prepend(socialNav);
       }
+      const hero=document.querySelector('.site-hero');
+      const heroGrid=document.createElement('div');heroGrid.className='site-hero-grid';
+      const channelCard=document.createElement('aside');channelCard.className='site-channel-card';channelCard.setAttribute('aria-label','Channel status and stream times');
+      const weekly=Array.isArray(schedule.weekly)?schedule.weekly:[];
+      channelCard.innerHTML=`<div class="site-channel-card-top"><span class="site-kicker">On the channel</span><span class="site-channel-light" data-channel-light></span></div><p class="site-channel-state" data-channel-state>Checking Twitch</p><h2 data-channel-title>See you on stream.</h2><p class="site-channel-copy" data-channel-copy>Catch a live session, hang out with chat, and see where the game takes us.</p><div class="site-next-stream"><span data-next-label>Stream schedule</span><strong data-next-stream>See the schedule below</strong><small data-next-zone></small></div>${weekly.length?`<div class="site-stream-days">${weekly.slice(0,7).map(day=>`<div><span>${escapeHtml(String(day.day||'').slice(0,3))}</span><strong>${escapeHtml(publicTools?.clock(day.time)||day.time||'')}</strong></div>`).join('')}</div>`:''}<a class="site-card-schedule-link" href="#stream-schedule">Full stream schedule <span aria-hidden="true">↗</span></a>`;
+      heroGrid.append(heroCopy,channelCard);hero.append(heroGrid);
+      const schedulePanel=document.getElementById('stream-schedule');
+      const saveStream=document.createElement('button');saveStream.type='button';saveStream.className=`site-button outline shape-${shape} site-save-stream`;saveStream.textContent='Save next stream to calendar';saveStream.hidden=true;schedulePanel.append(saveStream);
+      let nextPublicStream=null;
+      function updateNextStream(){
+        nextPublicStream=publicTools?.nextStream(schedule)||null;
+        const label=channelCard.querySelector('[data-next-label]'),time=channelCard.querySelector('[data-next-stream]'),zone=channelCard.querySelector('[data-next-zone]');
+        if(nextPublicStream){
+          label.textContent='Next published stream';
+          time.textContent=new Intl.DateTimeFormat(undefined,{weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}).format(new Date(nextPublicStream.start));
+          zone.textContent=`Your time · ${Intl.DateTimeFormat().resolvedOptions().timeZone}`;
+          saveStream.hidden=false;
+        }else{
+          label.textContent=weekly.length?'Weekly stream nights':'Stream schedule';time.textContent=weekly.length?weekly.map(day=>String(day.day||'').slice(0,3)).join(' / '):'Check the channel for the latest';
+          zone.textContent=publicTools?.validZone(schedule.timezone)?schedule.timezone:'';saveStream.hidden=true;
+        }
+      }
+      updateNextStream();
+      setInterval(()=>{if(!document.hidden)updateNextStream();},60000);
+      saveStream.onclick=()=>{
+        updateNextStream();if(!nextPublicStream)return;
+        const blob=new Blob([publicTools.calendar(nextPublicStream,name,twitchUrl)],{type:'text/calendar;charset=utf-8'});const url=URL.createObjectURL(blob);const link=document.createElement('a');link.href=url;link.download='next-stream.ics';document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+      };
+      // Community actions use the creator’s actual configured destinations.
+      const discord=links.find(link=>{try{return ['discord.gg','discord.com','www.discord.com'].includes(new URL(link.url).hostname);}catch{return false;}});
+      const community=document.querySelector('.site-community');
+      if(discord){let action=community.querySelector('a.site-button');if(!action){action=document.createElement('a');action.className=`site-button ${style} shape-${shape}`;action.target='_blank';action.rel='noopener noreferrer';community.append(action);}action.href=safeLink(discord.url);action.textContent='Join the community ↗';action.removeAttribute('data-live-cta');}
+      const communityCopy=community.querySelector('p:not(.site-kicker)');if(communityCopy)communityCopy.textContent=discord?'The conversation keeps going between streams. Join the community and make yourself at home.':'Come by the stream, say hello in chat, and make yourself at home.';
       const featureGrid = document.querySelector('.site-featured .site-feature-grid');
       const featureCards = featureGrid ? [...featureGrid.children].filter(card => card.matches('.site-feature')) : [];
       if (featureGrid && featureCards.length) {
@@ -861,8 +969,8 @@ a[hidden] { display:none!important; }
       });
       const broadcast = document.createElement('section');
       broadcast.className = 'site-broadcast';
-      broadcast.setAttribute('aria-label', 'Twitch broadcast status');
-      broadcast.innerHTML = `<div><p class="site-broadcast-label"><span class="site-status-dot"></span><span data-broadcast-label>Checking channel</span></p><h2 data-broadcast-title>Finding the next stream</h2><p class="site-broadcast-copy" data-broadcast-copy>Live updates from Twitch</p></div><div class="site-broadcast-stat"><span data-broadcast-stat-label>Channel</span><strong data-broadcast-stat>On Twitch</strong></div>${twitchUrl ? `<a class="site-button site-broadcast-link ${style} shape-${shape}" data-broadcast-link href="${escapeHtml(twitchUrl)}" target="_blank" rel="noopener noreferrer">Visit channel <span aria-hidden="true">↗</span></a>` : ''}`;
+      broadcast.setAttribute('aria-label', 'Explore the channel');
+      broadcast.innerHTML=`<a class="site-guide-card" href="${escapeHtml(twitchUrl||'#highlights')}" ${twitchUrl?'target="_blank" rel="noopener noreferrer"':''}><span class="site-guide-number">01 / WATCH</span><h2 data-guide-watch>Find your next watch</h2><p>Live sessions, good company, and moments worth coming back for.</p><span class="site-guide-arrow" aria-hidden="true">↗</span></a><a class="site-guide-card" href="#stream-schedule"><span class="site-guide-number">02 / PLAN</span><h2>Make it a stream night</h2><p>Find the published stream times and plan your next visit.</p><span class="site-guide-arrow" aria-hidden="true">↗</span></a><a class="site-guide-card" href="#shop"><span class="site-guide-number">03 / REP THE CHANNEL</span><h2>Find your next favorite</h2><p>Explore the merch collection and take a little of the channel with you.</p><span class="site-guide-arrow" aria-hidden="true">↗</span></a>`;
       document.querySelector('.site-hero').insertAdjacentElement('afterend', broadcast);
       const WEBSITE_MODULE_SELECTORS = { hero: '.site-hero', broadcast: '.site-broadcast', about: '.site-about', featured: '.site-featured', shop: '.site-shop', contact: '.site-contact', community: '.site-community', socials: '.site-socials' };
       const WEBSITE_MODULE_ORDER = ['hero', 'broadcast', 'about', 'featured', 'shop', 'contact', 'community', 'socials'];
@@ -889,6 +997,11 @@ a[hidden] { display:none!important; }
       };
       const setLiveState = stream => {
         live = Boolean(stream.live);
+        document.querySelector('[data-channel-state]').textContent=live?'Live right now':'Between streams';
+        document.querySelector('[data-channel-light]').classList.toggle('is-live',live);
+        document.querySelector('[data-channel-title]').textContent=live?(stream.game||'We’re live. Come hang out.'):'See you on stream.';
+        document.querySelector('[data-channel-copy]').textContent=live?(stream.title||'The stream is on. Join the channel and say hello in chat.'):'Catch a live session, hang out with chat, and see where the game takes us.';
+        const guideWatch=document.querySelector('[data-guide-watch]');if(guideWatch)guideWatch.textContent=live?'The stream is live':'Find your next watch';
         updateCreatorImages(stream.profileImageUrl);
         liveStatusResolved = true;
         liveStatusLabel = live ? 'Live now on Twitch' : 'Currently offline';
@@ -922,6 +1035,7 @@ a[hidden] { display:none!important; }
         if (liveStatusResolved) return;
         const status = document.querySelector('[data-live-status]');
         if (!status) return;
+        document.querySelector('[data-channel-state]').textContent='Check the channel for live status';
         liveStatusLabel = 'Live status unavailable';
         liveStatusClass = 'unavailable';
         status.className = `site-status ${liveStatusClass}`;
@@ -964,7 +1078,8 @@ a[hidden] { display:none!important; }
         sectionLinks.forEach(link => link.classList.toggle('is-active', link.hash === `#${activeId}`));
         if (activeId && activeId !== activeSectionId) {
           activeSectionId = activeId;
-          document.querySelector(`.site-nav-links a[href="#${activeId}"]`)?.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' });
+          const activeLink=document.querySelector(`.site-nav-links a[href="#${activeId}"]`);const nav=activeLink?.parentElement;
+          if(nav&&nav.scrollWidth>nav.clientWidth){const linkBox=activeLink.getBoundingClientRect(),navBox=nav.getBoundingClientRect();nav.scrollTo({left:Math.max(0,nav.scrollLeft+linkBox.left-navBox.left-(nav.clientWidth-linkBox.width)/2),behavior:'smooth'});}
         }
       };
       window.addEventListener('scroll', updateActiveSection, { passive: true });

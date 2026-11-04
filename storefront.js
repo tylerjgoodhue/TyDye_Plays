@@ -185,8 +185,8 @@
             if (sort === 'price-low') filtered.sort((a, b) => price(a) - price(b));
             if (sort === 'price-high') filtered.sort((a, b) => price(b) - price(a));
             if (sort === 'name') filtered.sort((a, b) => a.name.localeCompare(b.name));
-            host.querySelector('[data-fw-result-count]').textContent = `${filtered.length} ${filtered.length === 1 ? 'product' : 'products'}`;
-            host.querySelector('[data-fw-grid]').innerHTML = filtered.length ? filtered.map(card).join('') : '<p class="fw-message">No products found. Try a different search or check back soon.</p>';
+            host.querySelector('[data-fw-result-count]').textContent = `${!full&&filtered.length>4?'Showing 4 of ':''}${filtered.length} ${filtered.length === 1 ? 'product' : 'products'}`;
+            host.querySelector('[data-fw-grid]').innerHTML = filtered.length ? (full?filtered:filtered.slice(0,4)).map(card).join('') : '<p class="fw-message">No products found. Try a different search or check back soon.</p>';
           };
           host.querySelector('[data-fw-search]')?.addEventListener('input', render);
           host.querySelector('[data-fw-sort]')?.addEventListener('change', render);

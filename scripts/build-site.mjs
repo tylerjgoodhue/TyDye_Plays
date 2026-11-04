@@ -21,7 +21,7 @@ await cp(path.join(root, 'profile.html'), path.join(output, 'profile.html'));
 for (const page of ['product.html', 'shop.html', 'cart.html']) {
 	await cp(path.join(root, 'profile.html'), path.join(output, page));
 }
-for (const asset of ['storefront.js', 'storefront.css', 'storefront-config.json']) {
+for (const asset of ['storefront.js', 'storefront.css', 'storefront-config.json', 'public-site-utils.js']) {
 	await cp(path.join(root, asset), path.join(output, asset));
 }
 await cp(path.join(root, 'linktree.html'), path.join(output, 'linktree.html'));
