@@ -522,11 +522,27 @@
     @keyframes vibe-live-blink { 0%,100% { box-shadow: 0 0 14px #ff655f99; } 50% { box-shadow: 0 0 26px #ff655f; } }
     @keyframes vibe-flicker { 0%,92%,100% { opacity: 1; } 94% { opacity: .5; } 96% { opacity: .9; } 98% { opacity: .4; } }
     @media (prefers-reduced-motion: reduce) { body[class*="vibe-"]::before, body[class*="vibe-"] .site-button, body[class*="vibe-"] .site-nav-cta, body[class*="vibe-"] .site-status-dot { animation: none !important; } }
-  </style>
+
+.site-skip-link { position:fixed;left:16px;top:-70px;z-index:100;padding:14px 20px;background:var(--site-accent);color:var(--site-bg);border-radius:8px; }
+.site-skip-link:focus { top:14px; }
+.site-loading { min-height:65vh;display:grid;align-content:center;justify-items:center;gap:18px;color:var(--site-muted); }
+.site-loading span { width:48px;height:48px;border:2px solid var(--site-line);border-top-color:var(--site-accent);border-radius:50%;animation:site-load 1s linear infinite; }
+.site-schedule-zone { color:var(--site-muted);font-size:12px;line-height:1.5; }
+.site-image-fallback { display:grid;place-items:center;min-height:180px;background:linear-gradient(135deg,#273126,#151a17);color:var(--site-muted);font-size:14px; }
+.site-feature-image-wrap { aspect-ratio:16/9; }
+.site-mobile-actions { display:none; }
+a[hidden] { display:none!important; }
+.site-contact-form input,.site-contact-form select,.site-contact-form textarea { font-size:16px; }
+.site-hero-actions { display:flex;flex-wrap:wrap;gap:12px; }
+@keyframes site-load { to { transform:rotate(360deg); } }
+@media(max-width:680px) { body { padding-bottom:calc(80px + env(safe-area-inset-bottom)); }.site-hero { min-height:520px;height:75svh;padding-top:70px;padding-bottom:50px; }.site-hero-actions .site-button { min-height:46px; }.site-mobile-actions { position:fixed;bottom:0;left:0;right:0;display:flex;justify-content:space-around;align-items:center;gap:6px;padding:10px 10px calc(10px + env(safe-area-inset-bottom));border-top:1px solid var(--site-line);background:var(--site-bg);z-index:30;box-shadow:0 -8px 30px #0003; }.site-mobile-actions a { display:grid;place-items:center;min-height:44px;flex:1;border:1px solid var(--site-line);border-radius:10px;text-decoration:none;font-size:12px; }.site-mobile-actions a:first-child { background:var(--site-accent);color:var(--site-button-text);font-weight:700; }.site-nav { gap:10px; }.site-wordmark { min-width:0; }.site-nav-links { flex-basis:100%; }.site-section { scroll-margin-top:110px; } }
+@media(prefers-reduced-motion:reduce) { .site-loading span { animation:none; } }
+</style>
   <link rel="stylesheet" href="./storefront.css">
 </head>
 <body>
-  <main class="profile-shell" id="profile-root" aria-live="polite"></main>
+  <a class="site-skip-link" href="#profile-root">Skip to content</a>
+  <main class="profile-shell" id="profile-root" tabindex="-1" aria-live="polite"><section class="site-loading" role="status"><span></span><p>Loading the latest from the channel…</p></section></main>
   <script src="./storefront.js"></script>
   <script>
     (async () => {
@@ -551,6 +567,11 @@
         } catch { return /^data:image\/(png|jpe?g|webp|gif);base64,[a-z0-9+/=]+$/i.test(input) ? input : ''; }
       };
       const root = document.getElementById('profile-root');
+      root.addEventListener('error',event=>{
+        const image=event.target;if(image?.tagName!=='IMG')return;
+        image.hidden=true;const parent=image.parentElement;
+        if(parent?.classList.contains('site-feature-image-wrap')&&!parent.querySelector('.site-image-fallback')){const label=document.createElement('span');label.className='site-image-fallback';label.textContent='Watch the highlight';parent.append(label);}
+      },true);
       let profile;
       let publicProfileConfig;
       let publicProfileError = '';
@@ -602,7 +623,8 @@
         } catch (error) { publicProfileError = error.message || 'The public profile database could not be reached.'; }
       }
       if (!profile || typeof profile !== 'object') {
-        root.innerHTML = `<section class="empty"><h1>Creator website unavailable</h1><p>${escapeHtml(publicProfileError || 'Open the published website link from Creator HQ to view this profile.')}</p></section>`;
+        root.innerHTML = `<section class="empty"><h1>Creator website unavailable</h1><p>${escapeHtml(publicProfileError || 'Please try again in a moment.')}</p><button class="site-button shape-rounded" id="public-retry" type="button">Try again</button></section>`;
+        document.getElementById('public-retry').onclick=()=>location.reload();
         return;
       }
       const name = String(profile.name || 'Creator').slice(0, 60);
@@ -637,7 +659,7 @@
       const about = String(website.about || bio || '').slice(0, 1200);
       const schedule = website.schedule && typeof website.schedule === 'object' ? website.schedule : String(website.schedule || '').slice(0, 600);
       const primaryCta = String(website.primaryCta || 'Watch on Twitch').slice(0, 40);
-      const heroImage = safeImage(website.heroImage) || 'https://images.unsplash.com/photo-1593305841991-05c297ba4575?auto=format&fit=crop&w=2200&q=90';
+      const heroImage = safeImage(website.heroImage) || 'https://images.unsplash.com/photo-1593305841991-05c297ba4575?auto=format&fit=crop&w=1600&q=80';
       const heroTitleImage = safeImage(website.heroTitleImage);
       const featured = Array.isArray(website.featured) ? website.featured.slice(0, 30).filter(item => item && item.title).map(item => ({
         title: String(item.title || '').slice(0, 80),
@@ -674,7 +696,7 @@
           return `<div class="site-schedule-row"><span>${escapeHtml(parts[0])}</span>${parts[1] ? `<span>${escapeHtml(parts[1])}</span>` : ''}</div>`;
         }).join('') || '<p class="site-about-copy">Schedule details coming soon.</p>';
       const featuredMarkup = featured.length ? featured.map(item => {
-        const content = `<div class="site-feature-image-wrap"><img class="site-feature-image" src="${escapeHtml(item.imageUrl)}" alt="${escapeHtml(item.title)} thumbnail" loading="lazy"><span class="site-feature-play" aria-hidden="true">▶</span></div><div class="site-feature-content"><span class="site-feature-meta">From the stream</span><h3>${escapeHtml(item.title)}</h3>${item.description ? `<p>${escapeHtml(item.description)}</p>` : ''}</div>`;
+        const content = `<div class="site-feature-image-wrap"><img class="site-feature-image" src="${escapeHtml(item.imageUrl)}" alt="${escapeHtml(item.title)} thumbnail" width="640" height="360" decoding="async" loading="lazy"><span class="site-feature-play" aria-hidden="true">▶</span></div><div class="site-feature-content"><span class="site-feature-meta">From the stream</span><h3>${escapeHtml(item.title)}</h3>${item.description ? `<p>${escapeHtml(item.description)}</p>` : ''}</div>`;
         return item.url ? `<a class="site-feature" href="${escapeHtml(item.url)}" target="_blank" rel="noopener noreferrer">${content}</a>` : `<article class="site-feature">${content}</article>`;
       }).join('') : '<p class="site-empty-feature">New videos and stream highlights will land here.</p>';
       const linkMarkup = links.map(link => {
@@ -720,7 +742,7 @@
         await storefront.renderPage(root);
         return;
       }
-      root.innerHTML = `<header class="site-nav"><a class="site-wordmark" href="#top"><span class="site-mark">${avatar ? `<img src="${escapeHtml(avatar)}" alt="">` : escapeHtml(initials || 'C')}</span>${escapeHtml(name)}</a><nav class="site-nav-links" aria-label="Website navigation"><a href="#about">About</a><a href="#highlights">Highlights</a><a href="#shop">Shop</a><a href="#contact">Contact</a><a href="#community">Community</a></nav>${twitchUrl ? `<a class="site-nav-cta ${style} shape-${shape}" data-nav-live-cta style="--site-accent:${escapeHtml(buttonColor)};--site-button-text:${escapeHtml(buttonTextColor)}" href="${escapeHtml(twitchUrl)}" target="_blank" rel="noopener noreferrer">${live ? 'Live now' : 'Twitch'} <span aria-hidden="true">↗</span></a>` : ''}</header><section class="site-hero" id="top"><img class="site-hero-image" src="${escapeHtml(heroImage)}" alt="Gaming setup" fetchpriority="high"><div class="site-hero-copy"><span class="site-status ${liveStatusClass}" data-live-status aria-live="polite"><span class="site-status-dot"></span>${escapeHtml(liveStatusLabel)}</span><p class="site-eyebrow">${handle ? escapeHtml(handle.startsWith('@') ? handle : `@${handle}`) : 'Twitch creator'}</p><h1>${escapeHtml(name)}</h1><p class="site-hero-tagline">${escapeHtml(tagline)}</p><div class="site-hero-actions">${watchButton}</div></div><a class="site-scroll-cue" href="#about">Scroll to explore</a></section><section class="site-section site-about" id="about"><div><div class="site-section-head"><p class="site-kicker">The person behind the stream</p><h2>${escapeHtml(aboutHeading)}</h2></div><div class="site-about-copy">${escapeHtml(about || 'A little more about the stream is on the way.')}</div></div><aside class="site-schedule"><p class="site-kicker">Stream schedule</p><h3>Catch the next one</h3><div class="site-schedule-list">${scheduleRows}</div></aside></section><section class="site-section site-featured" id="highlights"><div class="site-section-head"><p class="site-kicker">From the channel</p><h2>Recent highlights</h2></div><div class="site-feature-grid">${featuredMarkup}</div></section><section class="site-section site-community" id="community"><div><p class="site-kicker">The community</p><h2>Make yourself at home.</h2><p>Come by the stream, say hello, and be part of what we build next.</p></div>${watchButton}</section><section class="site-section site-contact" id="contact"><div class="site-contact-intro"><p class="site-kicker">Get in touch</p><h2>Let's make something happen.</h2><p class="site-contact-copy">Business inquiries, collaborations, sponsorships, or just want to say hey? Drop a message and it lands straight in the inbox.</p><a class="site-contact-email" href="mailto:Contact@TyDyePlays.com"><span class="site-contact-email-label">Email</span><strong>Contact@TyDyePlays.com</strong><span class="site-contact-email-arrow" aria-hidden="true">↗</span></a><div class="site-contact-tags"><span>Collabs</span><span>Sponsorships</span><span>Fan mail</span></div></div><form class="site-contact-form" id="contact-form" novalidate><div class="site-contact-row"><label for="contact-name">Your name<input id="contact-name" name="name" maxlength="80" placeholder="What should I call you?" autocomplete="name" required></label><label for="contact-from">Your email<input id="contact-from" name="from" type="email" maxlength="120" placeholder="you@example.com" autocomplete="email" required></label></div><label for="contact-subject">Subject<select id="contact-subject" name="subject"><option>General question</option><option>Collaboration</option><option>Sponsorship / business</option><option>Just saying hey</option></select></label><label for="contact-message">Message<textarea id="contact-message" name="message" maxlength="4000" rows="6" placeholder="Type your message here…" required></textarea></label><button class="site-button ${style} shape-${shape}" type="submit">Send message <span aria-hidden="true">↗</span></button><p class="site-contact-status" id="contact-status" role="status"></p></form></section>${linkMarkup ? `<nav class="site-socials" aria-label="More ways to follow">${linkMarkup}</nav>` : ''}<footer class="site-footer"><span>${escapeHtml(name)} · Twitch creator</span><a href="#top">Back to top ↑</a></footer>`;
+      root.innerHTML = `<header class="site-nav"><a class="site-wordmark" href="#top"><span class="site-mark">${avatar ? `<img src="${escapeHtml(avatar)}" alt="">` : escapeHtml(initials || 'C')}</span>${escapeHtml(name)}</a><nav class="site-nav-links" aria-label="Website navigation"><a href="#about">About</a><a href="#highlights">Highlights</a><a href="#shop">Shop</a><a href="#contact">Contact</a><a href="#community">Community</a></nav>${twitchUrl ? `<a class="site-nav-cta ${style} shape-${shape}" data-nav-live-cta style="--site-accent:${escapeHtml(buttonColor)};--site-button-text:${escapeHtml(buttonTextColor)}" href="${escapeHtml(twitchUrl)}" target="_blank" rel="noopener noreferrer">${live ? 'Live now' : 'Twitch'} <span aria-hidden="true">↗</span></a>` : ''}</header><section class="site-hero" id="top"><img class="site-hero-image" src="${escapeHtml(heroImage)}" alt="Gaming setup" fetchpriority="high"><div class="site-hero-copy"><span class="site-status ${liveStatusClass}" data-live-status aria-live="polite"><span class="site-status-dot"></span>${escapeHtml(liveStatusLabel)}</span><p class="site-eyebrow">${handle ? escapeHtml(handle.startsWith('@') ? handle : `@${handle}`) : 'Twitch creator'}</p><h1>${escapeHtml(name)}</h1><p class="site-hero-tagline">${escapeHtml(tagline)}</p><div class="site-hero-actions">${watchButton}<a class="site-button outline ${style} shape-${shape}" href="#stream-schedule">Stream schedule</a>${featured.length ? `<a class="site-button outline ${style} shape-${shape}" href="#highlights">Watch highlights</a>` : ''}</div></div><a class="site-scroll-cue" href="#about">Scroll to explore</a></section><section class="site-section site-about" id="about"><div><div class="site-section-head"><p class="site-kicker">The person behind the stream</p><h2>${escapeHtml(aboutHeading)}</h2></div><div class="site-about-copy">${escapeHtml(about || 'A little more about the stream is on the way.')}</div></div><aside class="site-schedule" id="stream-schedule"><p class="site-kicker">Stream schedule</p><h3>Catch the next one</h3>${schedule.timezone ? `<p class="site-schedule-zone">Times in ${escapeHtml(schedule.timezone)}</p>` : ''}<div class="site-schedule-list">${scheduleRows}</div></aside></section><section class="site-section site-featured" id="highlights"><div class="site-section-head"><p class="site-kicker">From the channel</p><h2>Recent highlights</h2></div><div class="site-feature-grid">${featuredMarkup}</div></section><section class="site-section site-community" id="community"><div><p class="site-kicker">The community</p><h2>Make yourself at home.</h2><p>Come by the stream, say hello, and be part of what we build next.</p></div>${watchButton}</section><section class="site-section site-contact" id="contact"><div class="site-contact-intro"><p class="site-kicker">Get in touch</p><h2>Let's make something happen.</h2><p class="site-contact-copy">Business inquiries, collaborations, sponsorships, or just want to say hey? Write your message below, then send it from your email app.</p><a class="site-contact-email" href="mailto:Contact@TyDyePlays.com"><span class="site-contact-email-label">Email</span><strong>Contact@TyDyePlays.com</strong><span class="site-contact-email-arrow" aria-hidden="true">↗</span></a><div class="site-contact-tags"><span>Collabs</span><span>Sponsorships</span><span>Fan mail</span></div></div><form class="site-contact-form" id="contact-form" novalidate><div class="site-contact-row"><label for="contact-name">Your name<input id="contact-name" name="name" maxlength="80" placeholder="What should I call you?" autocomplete="name" required></label><label for="contact-from">Your email<input id="contact-from" name="from" type="email" maxlength="120" placeholder="you@example.com" autocomplete="email" required></label></div><label for="contact-subject">Subject<select id="contact-subject" name="subject"><option>General question</option><option>Collaboration</option><option>Sponsorship / business</option><option>Just saying hey</option></select></label><label for="contact-message">Message<textarea id="contact-message" name="message" maxlength="4000" rows="6" placeholder="Type your message here…" required></textarea></label><button class="site-button ${style} shape-${shape}" type="submit">Open email draft <span aria-hidden="true">↗</span></button><p class="site-contact-status" id="contact-status" role="status"></p></form></section>${linkMarkup ? `<nav class="site-socials" aria-label="More ways to follow">${linkMarkup}</nav>` : ''}<footer class="site-footer"><span>${escapeHtml(name)} · Twitch creator</span><a href="#top">Back to top ↑</a></footer>`;
       {
         const shop = document.createElement('section');
         shop.className = 'site-section site-shop';
@@ -729,6 +751,10 @@
         storefront.mountCollection(shop);
         storefront.attachNav();
       }
+      root.removeAttribute('aria-live');
+      const mobileNav=document.createElement('nav');mobileNav.className='site-mobile-actions';mobileNav.setAttribute('aria-label','Quick actions');
+      mobileNav.innerHTML=`${twitchUrl?`<a href="${escapeHtml(twitchUrl)}" target="_blank" rel="noopener noreferrer" data-mobile-live>${live?'Watch live':'Watch on Twitch'}</a>`:''}<a href="#stream-schedule">Schedule</a>${featured.length?'<a href="#highlights">Highlights</a>':'<a href="#community">Community</a>'}`;
+      root.append(mobileNav);
       if (!tagline) document.querySelector('.site-hero-tagline')?.remove();
       const heroCopy = document.querySelector('.site-hero-copy');
       const statusBadge = heroCopy.querySelector('[data-live-status]');
@@ -874,6 +900,7 @@
           if (live && stream.game) status.setAttribute('aria-label', `Live now on Twitch, playing ${stream.game}`);
         }
         document.querySelectorAll('[data-live-cta]').forEach(link => { link.firstChild.textContent = live ? 'Join the live stream ' : `${primaryCta} `; });
+        const mobileCta=document.querySelector('[data-mobile-live]');if(mobileCta)mobileCta.textContent=live?'Watch live':'Watch on Twitch';
         const navCta = document.querySelector('[data-nav-live-cta]');
         if (navCta) navCta.firstChild.textContent = live ? 'Live now ' : 'Twitch ';
         const broadcastPanel = document.querySelector('.site-broadcast');
@@ -943,6 +970,8 @@
       window.addEventListener('scroll', updateActiveSection, { passive: true });
       window.addEventListener('resize', updateActiveSection);
       updateActiveSection();
+      const refreshSectionLinks=()=>document.querySelectorAll('.site-nav-links a[href^="#"],.site-mobile-actions a[href^="#"]').forEach(link=>{const section=document.getElementById(link.hash.slice(1));link.hidden=!section||section.hidden;});
+      refreshSectionLinks();new MutationObserver(refreshSectionLinks).observe(root,{childList:true,subtree:true});
     })();
   </script>
 </body>

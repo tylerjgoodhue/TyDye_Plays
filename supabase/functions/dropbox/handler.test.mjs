@@ -20,6 +20,10 @@ globalThis.fetch = async (url, options = {}) => {
     }
     return new Response(JSON.stringify({ access_token: 'test-access', refresh_token: 'test-refresh' }), { status: 200 });
   }
+  if (String(url).includes('content.dropboxapi.com/2/files/download')) {
+    assert.equal(JSON.parse(options.headers['Dropbox-API-Arg']).path,'/linked.png');
+    return new Response('private bytes',{status:200,headers:{'Content-Type':'image/png','Content-Length':'13'}});
+  }
   if (String(url).includes('content.dropboxapi.com/2/files/upload')) {
     assert.equal(options.headers.Authorization, 'Bearer refreshed-access');
     assert.equal(JSON.parse(options.headers['Dropbox-API-Arg']).path, '/upload-test.txt');
@@ -111,4 +115,9 @@ test('limits thumbnail batches and rejects non-file paths', async () => {
     const response = await handler(new Request('https://project.example/functions/v1/dropbox?action=thumbnails', {method:'POST',headers:{Origin:origin,Authorization:'Bearer test','Content-Type':'application/json'},body:JSON.stringify({paths})}));
     assert.equal(response.status,400);
   }
+});
+
+test('reads a linked private file through the authenticated publishing-copy endpoint',async()=>{
+ const response=await handler(new Request('https://project.example/functions/v1/dropbox?action=download-file',{method:'POST',headers:{Origin:origin,Authorization:'Bearer test','Content-Type':'application/json'},body:JSON.stringify({path:'/linked.png'})}));
+ assert.equal(response.status,200);assert.equal(response.headers.get('Access-Control-Allow-Origin'),origin);assert.equal(response.headers.get('Cache-Control'),'no-store');assert.equal(await response.text(),'private bytes');
 });

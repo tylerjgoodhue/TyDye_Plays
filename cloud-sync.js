@@ -100,7 +100,8 @@ function setAccountState() {
 function withoutLocalImageBytes(workspace) {
   return {
     ...workspace,
-    assets: (workspace.assets || []).map(asset => ({ ...asset, dataUrl: '', mimeType: '' }))
+    assets: (workspace.assets || []).map(asset => ({ ...asset, dataUrl: '', mimeType: '' })),
+    recoveryTrash:(workspace.recoveryTrash||[]).map(item=>({...item,record:{...item.record,dataUrl:'',mimeType:''}}))
   };
 }
 
@@ -116,7 +117,7 @@ async function uploadWorkspace({ confirmOverwrite = false } = {}) {
   const user = await currentUser();
   const existing = await client.from('creator_workspaces').select('user_id').eq('user_id', user.id).maybeSingle();
   if (existing.error) throw existing.error;
-  if (confirmOverwrite && existing.data && !window.confirm('A cloud workspace already exists. Replace it with this browser\'s current workspace? Export a backup first if you are unsure.')) return;
+  if (confirmOverwrite && existing.data && !await window.CreatorHQDialogs.confirm('Replace the cloud workspace?', 'This browser’s workspace will become the current cloud version. The previous version will be kept in cloud save history.', 'Upload this workspace')) return;
 
   const snapshot = withoutLocalImageBytes(storage().getWorkspace());
   const snapshotText = JSON.stringify(snapshot);
@@ -134,6 +135,19 @@ async function uploadWorkspace({ confirmOverwrite = false } = {}) {
   ui()?.setSyncStatus(`Synced at ${new Date().toLocaleTimeString()}. Local image bytes remain on this device.`);
 }
 
+async function listWorkspaceHistory(){
+  const user=await currentUser();
+  const {data,error}=await client.from('creator_workspace_history').select('id,workspace_updated_at,captured_at').eq('user_id',user.id).order('captured_at',{ascending:false}).limit(20);
+  if(error)throw new Error('Cloud history is unavailable. Your current workspace is still saved.');
+  return data||[];
+}
+async function restoreWorkspaceHistory(id){
+  const user=await currentUser();
+  const {data,error}=await client.from('creator_workspace_history').select('workspace_data').eq('user_id',user.id).eq('id',id).single();
+  if(error||!data?.workspace_data)throw new Error('This cloud save could not be loaded.');
+  storage().replaceWorkspace(data.workspace_data);queueSync();
+}
+
 async function pullWorkspace() {
   const user = await currentUser();
   const { data, error } = await client.from('creator_workspaces')
@@ -145,7 +159,7 @@ async function pullWorkspace() {
     ui()?.setSyncStatus('No cloud workspace exists yet. Upload this browser workspace to create one.');
     return;
   }
-  if (!window.confirm(`Replace this browser's current workspace with the cloud snapshot last updated ${new Date(data.updated_at).toLocaleString()}? Export a backup first if you are unsure.`)) return;
+  if (!await window.CreatorHQDialogs.confirm('Restore the cloud workspace?', `Load the cloud save from ${new Date(data.updated_at).toLocaleString()}? Your current workspace will get a local checkpoint first.`, 'Restore workspace')) return;
   const localAssets = new Map((storage().getWorkspace().assets || []).map(asset => [asset.id, asset]));
   const restored = {
     ...data.workspace_data,
@@ -163,6 +177,7 @@ async function flushSync() {
   if (syncing) { syncPending = true; return; }
   if (!client || !session?.user || !readConfig().syncEnabled) return;
   syncing = true;
+  ui()?.setSyncStatus('Syncing workspace…');
   try {
     await uploadWorkspace();
   } catch (error) {
@@ -395,19 +410,18 @@ const dropboxApi = {
   createFolder: path => dropboxRequest('create-folder', { path }),
   remove: path => dropboxRequest('delete', { path }),
   downloadLink: path => dropboxRequest('download-link', { path }),
-  upload: async (path, file) => {
-    const config = readConfig();
-    if (!client || !config.url || !config.anonKey) throw new Error('Connect a Supabase project to use Dropbox.');
-    if (!session?.access_token) throw new Error('Sign in to Creator HQ to use Dropbox.');
-    const dropboxArg = JSON.stringify({ path, mode: 'overwrite', mute: false });
-    const response = await fetch(`${config.url.replace(/\/$/, '')}/functions/v1/dropbox?action=upload`, {
-      method: 'POST',
-      headers: { 'Dropbox-API-Arg': dropboxArg, 'Content-Type': 'application/octet-stream', apikey: config.anonKey, Authorization: `Bearer ${session.access_token}` },
-      body: file
+  upload: async (path,file,options={})=>{
+    const config=readConfig();if(!client||!session?.access_token)throw new Error('Sign in to Creator HQ before uploading.');
+    const argument=JSON.stringify({path,mode:options.replace?'overwrite':'add',autorename:!options.replace,mute:false}).replace(/[\u007f-\uffff]/g,character=>'\\u'+character.charCodeAt(0).toString(16).padStart(4,'0'));
+    return new Promise((resolve,reject)=>{
+      const xhr=new XMLHttpRequest();xhr.open('POST',`${config.url.replace(/\/$/,'')}/functions/v1/dropbox?action=upload`);
+      xhr.setRequestHeader('Authorization',`Bearer ${session.access_token}`);xhr.setRequestHeader('apikey',config.anonKey);xhr.setRequestHeader('Content-Type','application/octet-stream');xhr.setRequestHeader('Dropbox-API-Arg',argument);
+      xhr.upload.onprogress=event=>{if(event.lengthComputable)options.onProgress?.(Math.round(event.loaded/event.total*100));};
+      xhr.onload=()=>{let data={};try{data=JSON.parse(xhr.responseText);}catch{}if(xhr.status>=200&&xhr.status<300)resolve(data);else reject(new Error(data.error||`Upload failed (${xhr.status}).`));};
+      xhr.onerror=()=>reject(new Error('The upload connection was interrupted. Check your connection and retry.'));
+      xhr.timeout=10*60*1000;xhr.ontimeout=()=>reject(new Error('This upload took too long. Retry with a smaller file.'));
+      xhr.send(file);
     });
-    const data = await response.json().catch(() => ({}));
-    if (!response.ok) throw new Error(data?.error || 'Upload failed.');
-    return data;
   }
 };
 
@@ -447,6 +461,13 @@ const authGate = {
 
 window.CreatorHQCloud = {
   queueSync,
+  listWorkspaceHistory,
+  restoreWorkspaceHistory,
+  startContentPost,
+  showContentPosts,
+  refreshLinkedContentPosts,
+  getDraftLibrary:()=>structuredClone(bufferLibrary()),
+  restoreDraftLibrary:drafts=>{localStorage.setItem(bufferLibraryKey(),JSON.stringify(Array.isArray(drafts)?drafts:[]));renderBufferDraftLibrary();},
   queuePublicProfileSync,
   restoreSavedLinktree,
   getPublicProfileConfig,
@@ -643,7 +664,7 @@ async function connectSocialPlatform(provider) {
 }
 
 async function disconnectSocialPlatform(provider) {
-  if (!window.confirm(`Disconnect ${provider} and remove its saved authorization and metrics?`)) return;
+  if(!await window.CreatorHQDialogs.confirm('Disconnect this platform?',`Disconnect ${provider} and remove its saved connection and metrics?`,'Disconnect'))return;
   try {
     await socialAccountsRequest('disconnect', { provider });
     platformAccounts = platformAccounts.filter(account => account.provider !== provider);
@@ -743,7 +764,7 @@ function setBufferStatus(text, connected = false) {
   if (messageNode) messageNode.textContent = text;
   const setupCopy = document.querySelector('#buffer-setup-panel .architecture-note p');
   if (setupCopy) {
-    setupCopy.textContent = 'Create a personal API key at Buffer Settings → API. In the project folder, use an ignored .env.local file and Supabase CLI to set BUFFER_API_KEY, BUFFER_ALLOWED_USER_ID (your Creator HQ Auth user UUID), and ALLOWED_APP_ORIGINS=http://127.0.0.1:8765, then deploy the buffer Edge Function. Full commands are in README.md. Never enter the Buffer key in this browser.';
+    setupCopy.textContent = 'Your Buffer connection is managed by the site owner. Sign in to Creator HQ and refresh Buffer. If a channel needs attention, reconnect that channel in Buffer. The project README contains setup details for the owner.';
     const setupNote = setupCopy.closest('.architecture-note');
     if (setupNote) setupNote.hidden = enabled;
   }
@@ -906,7 +927,7 @@ function ensureBufferComposerLayout() {
   body.append(layout);
   const footer = document.createElement('div');
   footer.className = 'buffer-composer-footer';
-  footer.innerHTML = '<p class="settings-hint">Media must be publicly accessible over HTTPS. Local device files are not uploaded.</p>';
+  footer.innerHTML = '<p class="settings-hint">Publishing media uses public HTTPS links. Upload a file above or paste its direct link.</p>';
   footer.append(submit);
   body.append(footer);
   fields.addEventListener('input', renderBufferComposerPreview);
@@ -992,8 +1013,8 @@ function openBufferPost(post) {
   const form = document.getElementById('buffer-post-edit-form');
   form.elements.text.oninput = () => { document.getElementById('buffer-edit-live').innerHTML = bufferPreviewMarkup({...post,text:form.elements.text.value},channel); };
   if (!readOnly) form.elements.mode.onchange = () => { document.getElementById('buffer-edit-date-field').hidden = form.elements.mode.value !== 'customScheduled'; };
-  document.getElementById('buffer-reuse').onclick = () => {
-    if (document.getElementById('buffer-post-text').value.trim() && !confirm('Replace the current composer with this post? Save a draft first if you want to keep it.')) return;
+  document.getElementById('buffer-reuse').onclick = async () => {
+    if (document.getElementById('buffer-post-text').value.trim() && !await window.CreatorHQDialogs.confirm('Reuse this post?','Replace the current composer with this post? Save a draft first if you want to keep it.','Reuse post')) return;
     document.getElementById('buffer-post-text').value = form.elements.text.value;
     const asset = post.assets?.[0];
     document.getElementById('buffer-media-type').value = asset ? (String(asset.type).toLowerCase().includes('video') ? 'video' : 'image') : '';
@@ -1129,6 +1150,49 @@ function renderBufferTargetCustomizations() {
   renderBufferComposerPreview();
 }
 
+async function refreshLinkedContentPosts(contentId){
+  const items=(storage()?.getWorkspace()?.content||[]).filter(item=>!contentId||item.id===contentId);
+  const ids=[...new Set(items.flatMap(item=>item.bufferPostIds||[]))];
+  let unresolved=0;
+  for(let offset=0;offset<ids.length;offset+=10){const result=await callBuffer('contentPosts',{ids:ids.slice(offset,offset+10)});storage()?.reconcileBufferPosts?.(result.posts||[]);unresolved+=(result.unresolved||0);}
+  if(unresolved)throw new Error(`${unresolved} linked posts could not be checked. Their previous status was kept.`);
+}
+async function showContentPosts(contentId){
+  const item=(storage()?.getWorkspace()?.content||[]).find(item=>item.id===contentId);if(!item)return;
+  try{await refreshLinkedContentPosts(contentId);}catch(error){ui()?.notify(error.message);}
+  const latest=(storage()?.getWorkspace()?.content||[]).find(item=>item.id===contentId)||item;
+  const states=Object.values(latest.bufferPostStates||{});
+  const status=states.some(post=>post.status==='error')?'error':states.some(post=>post.status==='draft')?'draft':states.length&&states.every(post=>post.status==='sent')?'sent':'scheduled';
+  document.getElementById('buffer-status-filter').value=status;
+  document.getElementById('buffer-search').value='';
+  await loadBufferPosts();
+  const ids=new Set(item.bufferPostIds||[]);const linked=bufferPosts.filter(post=>ids.has(post.id));
+  if(linked.length===1)openBufferPost(linked[0]);else if(linked.length)openBufferPostList(linked);else ui()?.notify('The planner is showing this content’s status. Load more posts if the linked post is older.');
+}
+function startContentPost(contentId){
+  const item=(storage()?.getWorkspace()?.content||[]).find(item=>item.id===contentId);if(!item)return;
+  renderBufferContentSources();const picker=document.getElementById('buffer-content-source');picker.value=contentId;picker.dispatchEvent(new Event('change',{bubbles:true}));
+}
+function renderContentPublishingFiles(item){
+  let host=document.getElementById('buffer-content-files');
+  if(!host){host=document.createElement('div');host.id='buffer-content-files';host.className='buffer-upload-box';document.getElementById('buffer-media-controls').insertAdjacentElement('beforebegin',host);}
+  const files=item?.dropboxFiles||[];host.hidden=!files.length;
+  host.innerHTML=files.length?`<strong>Files linked to this content</strong><p>Choose a file to copy from private Dropbox into public publishing storage. Only the file you choose is copied.</p>${files.map(file=>`<div class="hq-linked-media"><span>${bufferHtml(file.name)}</span><button class="button" type="button" data-publish-dropbox="${bufferHtml(file.path)}">Use for publishing</button></div>`).join('')}`:'';
+  host.querySelectorAll('[data-publish-dropbox]').forEach(button=>button.onclick=async()=>{
+    const path=button.dataset.publishDropbox;const name=path.split('/').pop();const extension=name.split('.').pop().toLowerCase();
+    const types={jpg:'image/jpeg',jpeg:'image/jpeg',png:'image/png',webp:'image/webp',gif:'image/gif',mp4:'video/mp4',mov:'video/quicktime',webm:'video/webm'};
+    if(!types[extension]){ui()?.notify('Choose an image or supported video file for publishing.');return;}
+    button.disabled=true;
+    try{
+      if(!session?.access_token)throw new Error('Sign in before using a linked Dropbox file.');
+      const config=readConfig();const response=await fetch(`${config.url}/functions/v1/dropbox?action=download-file`,{method:'POST',headers:{Authorization:`Bearer ${session.access_token}`,apikey:config.anonKey,'Content-Type':'application/json'},body:JSON.stringify({path})});
+      if(!response.ok){const data=await response.json().catch(()=>({}));throw new Error(data.error||'Could not read the Dropbox file.');}
+      const blob=await response.blob();if(blob.size>50*1024*1024)throw new Error('Choose a file under 50 MB for publishing.');
+      await uploadBufferPublishingFile(new File([blob],name,{type:types[extension]}));
+    }catch(error){ui()?.notify(error.message);}finally{button.disabled=false;}
+  });
+}
+
 function ensureBufferContentPicker() {
   let picker = document.getElementById('buffer-content-source');
   if (!picker) {
@@ -1236,6 +1300,7 @@ async function loadBufferPosts({ append = false } = {}) {
     document.getElementById('buffer-load-more').textContent = 'Load next 50';
     document.getElementById('buffer-queue').hidden = bufferQueueView !== 'list';
     document.getElementById('buffer-calendar').hidden = bufferQueueView !== 'calendar';
+    storage()?.reconcileBufferPosts?.(bufferPosts);
     applyBufferSearch();
     renderBufferPlannerSummary();
     renderBufferCalendar();
@@ -1281,6 +1346,7 @@ async function scheduleBufferPost() {
   });
   const successes = (result.results || []).filter(entry => entry.post);
   const failures = (result.results || []).filter(entry => entry.error);
+  storage()?.reportIssue?.('buffer-publish',failures.length?`${failures.length} social posts need attention.`:'','buffer-compose');
   if (contentId && successes.length) storage()?.markContentScheduled?.(contentId, successes.map(entry => entry.post));
   const channelNames = new Map(channels.map(channel => [channel.id, channel.name]));
   const summary = `${successes.length} of ${targets.length} channel${targets.length === 1 ? '' : 's'} ${document.getElementById('buffer-schedule-mode').value === 'draft' ? 'saved as Buffer drafts' : custom ? 'scheduled' : 'added to queue'}.`;
@@ -1376,7 +1442,7 @@ function bufferLibraryKey() { return `creator-hq-buffer-library-v1:${session?.us
 function bufferLibrary() {
   try {
     const list = JSON.parse(localStorage.getItem(bufferLibraryKey()) || '[]');
-    return Array.isArray(list) ? list : [];
+    return Array.isArray(list) && list.length ? list : (storage()?.getSavedBufferDrafts?.() || []);
   } catch { return []; }
 }
 function saveBufferLibraryDraft(draft) {
@@ -1385,24 +1451,25 @@ function saveBufferLibraryDraft(draft) {
   list.unshift({...draft,id,title:(draft.values['buffer-post-text'] || 'Untitled draft').split('\n')[0].slice(0,90)});
   if (list.length > 50) throw new Error('Your draft library is full. Remove an old draft before saving another.');
   localStorage.setItem(bufferLibraryKey(),JSON.stringify(list));
+  storage()?.bufferDraftsChanged?.(list);
 }
 function renderBufferDraftLibrary() {
   const host = document.getElementById('buffer-draft-library'); if (!host) return;
   const list = bufferLibrary();
-  host.innerHTML = `<div class="buffer-library-heading"><h3>Saved drafts <span class="chip">${list.length}</span></h3><span class="settings-hint">This account · this browser</span></div>${list.length ? list.map(draft=>`<article class="buffer-library-row"><div><strong>${bufferHtml(draft.title)}</strong><p>${bufferHtml(new Date(draft.savedAt).toLocaleString())} · ${(draft.targets || []).length} channels</p></div><button class="button" type="button" data-load-buffer-draft="${bufferHtml(draft.id)}">Continue</button><button class="mini-button" type="button" data-remove-buffer-draft="${bufferHtml(draft.id)}" aria-label="Remove draft ${bufferHtml(draft.title)}">×</button></article>`).join('') : '<p class="settings-hint">Save several posts here while you plan. Use “Save as Buffer draft” to keep a draft in your Buffer account across devices.</p>'}`;
-  host.querySelectorAll('[data-load-buffer-draft]').forEach(button=>button.onclick=()=>{
+  host.innerHTML = `<div class="buffer-library-heading"><h3>Saved drafts <span class="chip">${list.length}</span></h3><span class="settings-hint">This account · workspace drafts</span></div>${list.length ? list.map(draft=>`<article class="buffer-library-row"><div><strong>${bufferHtml(draft.title)}</strong><p>${bufferHtml(new Date(draft.savedAt).toLocaleString())} · ${(draft.targets || []).length} channels</p></div><button class="button" type="button" data-load-buffer-draft="${bufferHtml(draft.id)}">Continue</button><button class="mini-button" type="button" data-remove-buffer-draft="${bufferHtml(draft.id)}" aria-label="Remove draft ${bufferHtml(draft.title)}">×</button></article>`).join('') : '<p class="settings-hint">Save several posts here while you plan. Use “Save as Buffer draft” to keep a draft in your Buffer account across devices.</p>'}`;
+  host.querySelectorAll('[data-load-buffer-draft]').forEach(button=>button.onclick=async()=>{
     const draft = list.find(item=>item.id===button.dataset.loadBufferDraft);
     if (!draft) return;
-    if (document.getElementById('buffer-post-text').value.trim() && !confirm('Replace the current composer with this saved draft?')) return;
+    if (document.getElementById('buffer-post-text').value.trim() && !await window.CreatorHQDialogs.confirm('Open this saved draft?','Replace the current composer with this saved draft?','Open draft')) return;
     try {
       localStorage.setItem(`creator-hq-buffer-draft-v1:${session?.user?.id || 'local'}`,JSON.stringify(draft));
       document.getElementById('buffer-load-draft').click();
       document.querySelector('.nav-button[data-view="buffer-compose"]')?.click();
     } catch { ui()?.notify('Could not restore this draft.'); }
   });
-  host.querySelectorAll('[data-remove-buffer-draft]').forEach(button=>button.onclick=()=>{
-    if (!confirm('Remove this saved browser draft? This does not change posts in Buffer.')) return;
-    try { localStorage.setItem(bufferLibraryKey(),JSON.stringify(list.filter(item=>item.id!==button.dataset.removeBufferDraft))); renderBufferDraftLibrary(); }
+  host.querySelectorAll('[data-remove-buffer-draft]').forEach(button=>button.onclick=async()=>{
+    if (!await window.CreatorHQDialogs.confirm('Remove this saved draft?','This removes the draft from your draft library. It does not change posts in Buffer.','Remove draft')) return;
+    try { const remaining=list.filter(item=>item.id!==button.dataset.removeBufferDraft);localStorage.setItem(bufferLibraryKey(),JSON.stringify(remaining));storage()?.bufferDraftsChanged?.(remaining);renderBufferDraftLibrary(); }
     catch { ui()?.notify('Could not remove the draft.'); }
   });
 }
@@ -1413,6 +1480,23 @@ function renderBufferPlannerSummary() {
   const upcoming = bufferPosts.filter(post=>post.dueAt && new Date(post.dueAt)>new Date()).sort((a,b)=>new Date(a.dueAt)-new Date(b.dueAt))[0];
   host.innerHTML = `<div class="buffer-planner-stats"><div><span>Connected channels</span><strong>${channels.length}</strong></div><div><span>${bufferHtml(status.replace('_',' '))} · loaded</span><strong>${bufferPosts.length}${bufferPostsHasNext ? '+' : ''}</strong></div><div><span>Next loaded post</span><strong class="buffer-small-stat">${upcoming ? bufferHtml(new Date(upcoming.dueAt).toLocaleString([], {month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})) : 'No upcoming time'}</strong></div></div><div class="buffer-channel-health">${channels.map(channel=>`<div><span class="buffer-health-dot ${channel.isDisconnected || channel.isLocked ? 'needs-attention' : ''}"></span><strong>${bufferHtml(channel.name)}</strong><span>${bufferHtml(channel.service)} · ${bufferHtml(channel.timezone || '')}</span><span class="chip">${channel.isDisconnected ? 'Reconnect in Buffer' : channel.isLocked ? 'Locked in Buffer' : channel.isQueuePaused ? 'Queue paused' : 'Ready'}</span></div>`).join('')}</div>`;
 }
+async function uploadBufferPublishingFile(file){
+  const note=document.getElementById('buffer-upload-status');
+  const input=document.getElementById('buffer-media-file');
+  if(bufferMediaUploading){ui()?.notify('Wait for the current upload to finish.');return;}
+  if(file.size>50*1024*1024){note.textContent='Choose a file under 50 MB.';return;}
+  input.disabled=true;bufferMediaUploading=true;updateBufferReadiness();note.textContent=`Uploading ${file.name} for publishing…`;
+  try{
+    if(!session?.access_token||!client)throw new Error('Sign in before uploading publishing media.');
+    const config=readConfig();
+    const response=await fetch(`${config.url}/functions/v1/buffer?action=uploadMedia`,{method:'POST',headers:{Authorization:`Bearer ${session.access_token}`,apikey:config.anonKey,'Content-Type':file.type},body:file});
+    const result=await response.json().catch(()=>({}));if(!response.ok)throw new Error(result.error||`Upload failed (${response.status}).`);
+    document.getElementById('buffer-media-type').value=result.type;document.getElementById('buffer-media-url').value=result.url;document.getElementById('buffer-media-url').disabled=false;
+    renderBufferComposerPreview();note.textContent=`${file.name} attached. Its public publishing link is ready.`;storage()?.reportIssue?.('buffer-upload','','buffer-compose');
+  }catch(error){note.textContent=error.message||'Media upload failed.';storage()?.reportIssue?.('buffer-upload','A publishing-media upload needs attention.','buffer-compose');}
+  finally{input.disabled=false;bufferMediaUploading=false;updateBufferReadiness();}
+}
+
 function ensureBufferPlanner() {
   const schedule = document.getElementById('buffer-schedule-mode');
   schedule.insertAdjacentHTML('beforeend','<option value="draft">Save as Buffer draft — do not publish</option>');
@@ -1424,25 +1508,7 @@ function ensureBufferPlanner() {
   queue.insertAdjacentHTML('beforebegin',`<div class="buffer-status-toolbar"><label class="form-field"><span>Show posts</span><select class="field-control" id="buffer-status-filter"><option value="scheduled">Scheduled queue</option><option value="draft">Buffer drafts</option><option value="error">Failed posts</option><option value="sent">Published posts</option><option value="needs_approval">Awaiting approval</option></select></label><p class="settings-hint">Open a post to edit, change its timing, move it to drafts, or reuse its copy and media.</p></div>`);
   queue.closest('.panel').insertAdjacentHTML('afterend','<article class="panel buffer-library-panel"><div class="panel-body" id="buffer-draft-library"></div></article>');
   document.getElementById('buffer-status-filter').onchange = () => { document.querySelector('[data-buffer-view="list"]')?.click(); loadBufferPosts(); };
-  document.getElementById('buffer-media-file').onchange = async event => {
-    const file = event.target.files?.[0]; event.target.value=''; if (!file) return;
-    const note = document.getElementById('buffer-upload-status');
-    if (file.size > 50*1024*1024) { note.textContent='Choose a file under 50 MB.'; return; }
-    event.target.disabled = true; bufferMediaUploading = true; updateBufferReadiness(); note.textContent=`Uploading ${file.name} for publishing…`;
-    try {
-      if (!session?.access_token || !client) throw new Error('Sign in to Creator HQ before uploading publishing media.');
-      const config=readConfig();
-      const response = await fetch(`${config.url}/functions/v1/buffer?action=uploadMedia`,{method:'POST',headers:{Authorization:`Bearer ${session.access_token}`,apikey:config.anonKey,'Content-Type':file.type},body:file});
-      const result=await response.json().catch(()=>({}));
-      if (!response.ok) throw new Error(result.error || `Upload failed (${response.status}).`);
-      document.getElementById('buffer-media-type').value=result.type;
-      document.getElementById('buffer-media-url').value=result.url;
-      document.getElementById('buffer-media-url').disabled=false;
-      renderBufferComposerPreview(); updateBufferReadiness();
-      note.textContent=`${file.name} attached. Its public publishing link is ready.`;
-    } catch(error) { note.textContent=error.message || 'Media upload failed. Try again.'; }
-    finally { event.target.disabled=false; bufferMediaUploading=false; updateBufferReadiness(); }
-  };
+  document.getElementById('buffer-media-file').onchange=event=>{const file=event.target.files?.[0];event.target.value='';if(file)uploadBufferPublishingFile(file);};
   renderBufferPlannerSummary();
 }
 
@@ -1450,7 +1516,7 @@ function ensureBufferConveniences() {
   const fields = document.getElementById('buffer-composer-fields');
   const preview = document.querySelector('.buffer-composer-preview');
   if (!fields || !preview) return;
-  fields.insertAdjacentHTML('afterbegin', `<div class="buffer-draft-tools"><div class="button-row"><button type="button" class="button" id="buffer-save-draft">Save draft</button><button type="button" class="button" id="buffer-load-draft">Restore draft</button></div><p class="settings-hint" id="buffer-draft-note" role="status">Drafts stay in this browser and are never published automatically.</p><label class="form-field"><span>Quick start</span><select class="field-control" id="buffer-quick-start"><option value="">Choose a starting point…</option><option value="live">Stream announcement</option><option value="clip">Share a clip</option><option value="vod">New video / VOD</option><option value="community">Community question</option></select></label></div>`);
+  fields.insertAdjacentHTML('afterbegin', `<div class="buffer-draft-tools"><div class="button-row"><button type="button" class="button" id="buffer-save-draft">Save draft</button><button type="button" class="button" id="buffer-load-draft">Restore draft</button></div><p class="settings-hint" id="buffer-draft-note" role="status">Saved drafts join workspace backups and cloud sync when enabled. Nothing publishes automatically.</p><label class="form-field"><span>Quick start</span><select class="field-control" id="buffer-quick-start"><option value="">Choose a starting point…</option><option value="live">Stream announcement</option><option value="clip">Share a clip</option><option value="vod">New video / VOD</option><option value="community">Community question</option></select></label></div>`);
   preview.insertAdjacentHTML('beforeend', '<div id="buffer-readiness" class="buffer-readiness" aria-live="polite"></div>');
   const draftKey = () => `creator-hq-buffer-draft-v1:${session?.user?.id || 'local'}`;
   const ids = ['buffer-post-type', 'buffer-video-title', 'buffer-video-category', 'buffer-board-id', 'buffer-post-text', 'buffer-media-type', 'buffer-media-url', 'buffer-schedule-mode', 'buffer-due-at', 'buffer-content-source'];
@@ -1464,7 +1530,7 @@ function ensureBufferConveniences() {
     try {
       const draft = JSON.parse(localStorage.getItem(draftKey()) || 'null');
       if (!draft) return ui()?.notify('No saved draft for this account in this browser yet.');
-      if (draft.organization && draft.organization !== document.getElementById('buffer-organization').value) return ui()?.notify('Choose the draft’s Buffer organization in Scheduled first, then restore it.');
+      if (draft.organization && draft.organization !== document.getElementById('buffer-organization').value) return ui()?.notify('Choose the draft’s Buffer organization in Publishing planner first, then restore it.');
       document.getElementById('buffer-video-kids').checked = draft.madeForKids === true;
       ids.forEach(id => { if (typeof draft.values?.[id] === 'string') document.getElementById(id).value = draft.values[id]; });
       document.querySelectorAll('[data-buffer-target]').forEach(input => { input.checked = draft.targets?.includes(input.value); });
@@ -1514,7 +1580,15 @@ ensureBufferConveniences();
 renderBufferDraftLibrary();
 document.getElementById('buffer-content-source').addEventListener('change', event => {
   const item = (storage()?.getWorkspace()?.content || []).find(content => content.id === event.target.value);
+  renderContentPublishingFiles(item);
   if (!item) return;
+  bufferCustomizations.clear();document.getElementById('buffer-channel-customizations').innerHTML='';
+  const service=String(item.platform||'').toLowerCase().replace('x (twitter)','twitter');
+  const matching=selectedBufferOrganization()?.channels?.filter(channel=>channel.service===service)||[];
+  if(matching.length)document.querySelectorAll('[data-buffer-target]').forEach(input=>{input.checked=matching.some(channel=>channel.id===input.value);});
+  renderBufferTargetCustomizations();
+  document.getElementById('buffer-video-title').value=item.title||'';
+  if(item.publishDate){const date=new Date(`${item.publishDate}T12:00:00`);if(date>new Date()){document.getElementById('buffer-schedule-mode').value='custom';document.getElementById('buffer-due-at').value=bufferLocalDateTime(date);document.getElementById('buffer-due-field').hidden=false;}}
   const text = [item.title, item.description].filter(Boolean).join('\n\n');
   document.getElementById('buffer-post-text').value = text;
   document.getElementById('buffer-character-count').textContent = `${text.length.toLocaleString()} / 5,000`;

@@ -724,6 +724,41 @@
 .buffer-post-failure { color:#edb484; font-size:12px;line-height:1.6; }
 button.buffer-calendar-number { background:none;border:0;color:inherit;cursor:pointer;text-align:left;padding:2px 4px;border-radius:5px; }
 button.buffer-calendar-number:hover { background:var(--accent);color:#172015; }
+.hq-save-status { border:1px solid var(--line);border-radius:99px;padding:8px 12px;min-height:34px;background:var(--panel);color:var(--accent);font-size:11px;cursor:pointer;white-space:nowrap; }
+.hq-save-status[data-state="error"] { color:#ffc18d;border-color:#8f6339; }
+.hq-save-status[data-state="syncing"] { color:#d7decf; }
+.hq-action-panel { margin:18px 0; }
+.hq-action-grid { display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px; }
+.hq-action-grid button { display:grid;gap:9px;text-align:left;cursor:pointer;color:var(--text);background:#ffffff04;border:1px solid var(--line);border-radius:12px;padding:18px; }
+.hq-action-grid strong { font-size:26px;color:var(--accent); }
+.hq-action-grid span { font-size:12px;line-height:1.5; }
+.hq-next-content { padding:0 20px 14px; }
+.hq-next-content > div,.hq-linked-media { display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 0;font-size:12px; }
+.hq-next-content > div > span,.hq-linked-media > span { overflow-wrap:anywhere;min-width:0; }
+.hq-content-publishing { display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;font-size:11px;color:#a7b39f; }
+.hq-content-publishing:empty { display:none; }
+.hq-recovery-modal { width:min(760px,calc(100vw - 30px)); }
+.hq-recovery-modal .modal-body { max-height:75vh;overflow:auto; }
+.hq-recovery-row { display:flex;align-items:center;gap:14px;justify-content:space-between;padding:13px 0;border-bottom:1px solid var(--line); }
+.hq-recovery-row > div { min-width:0;display:grid;gap:6px; }
+.hq-recovery-row strong { font-size:13px;overflow-wrap:anywhere; }
+.hq-recovery-row small { color:#a7b39f;font-size:11px; }
+.hq-dialog-backdrop { position:fixed;inset:0;z-index:5000;background:#0009;backdrop-filter:blur(6px);display:grid;place-items:center;padding:20px; }
+.hq-dialog { width:min(480px,100%); }
+.hq-dialog p { line-height:1.7;font-size:13px; }
+.hq-dropbox-toolbar { display:grid;grid-template-columns:2fr 1fr 1fr;gap:12px;margin:16px 0; }
+.hq-dropzone { border:1px dashed #647257;border-radius:12px;padding:20px;margin-bottom:16px;color:#b3c0a9;font-size:12px;line-height:1.7;text-align:center; }
+.hq-dropzone.dragging { border-color:var(--accent);background:#c6f36b0b; }
+#dropbox-upload-progress { width:100%;height:12px;margin:10px 0;accent-color:var(--accent); }
+#dropbox-load-more { margin-top:18px; }
+.hq-image-modal { width:min(950px,calc(100vw - 28px)); }
+.hq-image-modal .modal-body { max-height:78vh;overflow:auto; }
+.hq-image-modal img { width:100%;height:auto;max-height:68vh;object-fit:contain;border-radius:10px; }
+#hq-website-readiness { margin-top:18px; }
+#hq-website-readiness li { font-size:13px;line-height:1.9; }
+@media(max-width:760px) { .hq-action-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }.hq-dropbox-toolbar { grid-template-columns:1fr; }.hq-save-status { font-size:10px;padding:7px 9px; }.hq-next-content > div { flex-wrap:wrap; }.hq-recovery-row { align-items:flex-start; }.hq-linked-media { flex-wrap:wrap; } }
+
+@media(max-width:600px){#dropbox-files-panel .panel-head{flex-wrap:wrap;gap:12px;}#dropbox-files-panel .panel-title{flex-basis:100%;}#dropbox-files-panel .panel-head .button-row{width:100%;justify-content:flex-start;gap:8px;}#dropbox-files-panel .panel-head .button{white-space:nowrap;min-height:40px;}#dropbox-refresh{min-width:40px;font-size:20px;}}
 </style>
 </head>
 <body>
@@ -772,7 +807,7 @@ button.buffer-calendar-number:hover { background:var(--accent);color:#172015; }
         <button class="nav-button" data-view="linktree"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0M19 8h3m-1.5-1.5v3"/></svg><span>Linktree</span></button>
       </nav></details>
       </div>
-      <div class="sidebar-note"><span class="phase-tag">Creator operations</span><p>Buffer scheduling is connected. Account analytics sync from connected platforms; Linktree clicks update automatically.</p></div>
+      <div class="sidebar-note"><span class="phase-tag">Creator operations</span><p>Plan your content, organize your files, and keep publishing in one place.</p></div>
       <div class="side-profile"><div class="avatar" id="sidebar-avatar">C</div><div class="profile-meta"><div class="profile-name" id="sidebar-name">Creator</div><div class="profile-plan">Personal workspace</div></div><button class="mini-button" aria-label="Open settings" data-view="settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-1.7 1.7-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5v.2h-2.4v-.2a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1L6 17l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H4.7v-2.4h.2a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.9L6 8.6l1.7-1.7.1.1a1.7 1.7 0 0 0 1.9.3 1.7 1.7 0 0 0 1-1.5v-.2h2.4v.2a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1 1.7 1.7-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.5 1h.2V14h-.2a1.7 1.7 0 0 0-1.5 1Z"/></svg></button></div>
     </aside>
     <main class="main">
@@ -1000,7 +1035,7 @@ button.buffer-calendar-number:hover { background:var(--accent);color:#172015; }
 const DEFAULT_WEBSITE_LAYOUT = ['hero', 'broadcast', 'about', 'featured', 'shop', 'contact', 'community', 'socials'];
 const VALID_WEBSITE_MODULES = new Set(Object.keys(WEBSITE_MODULE_LABELS));
 const defaults = {
-        activityLog: [],
+        activityLog: [], recoveryTrash: [], bufferDraftLibrary: [], integrationIssues: [],
         profile: null,
         creatorProfile: { name: '', handle: '', bio: '', avatarUrl: '', backgroundColor: '#121712', textColor: '#f0f3ed', buttonColor: '#c6f36b', buttonTextColor: '#17200f', buttonStyle: 'solid', linkShape: 'rounded', links: [], website: { separate: true, name: '', handle: '', bio: '', avatarUrl: '', backgroundColor: '#121712', textColor: '#f0f3ed', buttonColor: '#c6f36b', buttonTextColor: '#17200f', buttonStyle: 'solid', linkShape: 'rounded', tagline: '', heroImage: '', twitchUrl: '', liveStatus: 'offline', aboutHeading: '', about: '', schedule: '', primaryCta: 'Watch on Twitch', featured: [], products: [], fourthwallDomain: '', vibe: 'clean', layout: [] } },
         settings: { name: '', handle: '', timezone: 'local', accent: 'lime', days: [2, 4, 6], start: '20:00', duration: 3, hiddenWidgets: [] },
@@ -1033,6 +1068,113 @@ const defaults = {
       let fourthwallOrdersTotal = 0;
       let fourthwallInventory = new Map();
 
+      let workspaceSaveFailed = false;
+      let lastLocalRecoveryAt = 0;
+      function workspaceSaveStatus(label, detail, kind='saved') {
+        let badge=document.getElementById('workspace-save-status');
+        if (!badge) {
+          badge=document.createElement('button');badge.id='workspace-save-status';badge.type='button';badge.className='hq-save-status';badge.setAttribute('aria-label','Workspace save status and recovery');
+          badge.onclick=()=>openRecoveryCenter();document.querySelector('.topbar')?.append(badge);
+        }
+        if(workspaceSaveFailed && kind!=='error') return;
+        badge.textContent=label;badge.title=detail || label;badge.dataset.state=kind;
+      }
+      function recoveryKey(){return `creator-hq-recovery-v1:${signedInEmail || 'local'}`;}
+      function localRecoveryHistory(){try {const value=JSON.parse(localStorage.getItem(recoveryKey())||'[]');return Array.isArray(value)?value:[];}catch{return [];}}
+      function captureLocalRecovery(raw,reason='Before recent changes') {
+        try {
+          const snapshot=typeof raw==='string'?JSON.parse(raw):structuredClone(raw);
+          if(!snapshot || typeof snapshot!=='object') return;
+          snapshot.assets=(snapshot.assets||[]).map(asset=>({...asset,dataUrl:'',mimeType:''}));
+          snapshot.recoveryTrash=(snapshot.recoveryTrash||[]).map(item=>({...item,record:{...item.record,dataUrl:'',mimeType:''}}));
+          const list=localRecoveryHistory();list.unshift({id:crypto.randomUUID(),at:new Date().toISOString(),reason,workspace:snapshot});
+          localStorage.setItem(recoveryKey(),JSON.stringify(list.slice(0,5)));lastLocalRecoveryAt=Date.now();
+        }catch(error){console.warn('Recovery snapshot unavailable',error);}
+      }
+      function moveToRecovery(collection,id){
+        const allowed=['tasks','streams','content','ideas','goals','assets','crm','communityEvents','communityLinks','communityFeedback'];if(!allowed.includes(collection))return;
+        const item=state[collection].find(record=>record.id===id);if(!item)return;
+        const previous=structuredClone(state);
+        state.recoveryTrash=Array.isArray(state.recoveryTrash)?state.recoveryTrash:[];
+        state.recoveryTrash.unshift({id:crypto.randomUUID(),collection,record:structuredClone(item),deletedAt:new Date().toISOString()});
+        state[collection]=state[collection].filter(record=>record.id!==id);
+        if(!saveState()){state=previous;return;}
+        renderAll();toast('Moved to Recently deleted. Restore it from Save status → Recovery.');
+      }
+      function restoreRecoveryItem(id){
+        const item=(state.recoveryTrash||[]).find(record=>record.id===id);if(!item||!['tasks','streams','content','ideas','goals','assets','crm','communityEvents','communityLinks','communityFeedback'].includes(item.collection)||!item.record||typeof item.record!=='object')return;
+        const previous=structuredClone(state);const restored=structuredClone(item.record);
+        if(state[item.collection].some(record=>record.id===restored.id))restored.id=crypto.randomUUID();
+        state[item.collection].unshift(restored);state.recoveryTrash=state.recoveryTrash.filter(record=>record.id!==id);
+        if(!saveState()){state=previous;return;}
+        renderAll();openRecoveryCenter();toast('Item restored.');
+      }
+      async function openRecoveryCenter(){
+        const root=document.getElementById('modal-root');
+        root.innerHTML=`<div class="modal-backdrop" data-backdrop><section class="modal hq-recovery-modal" role="dialog" aria-modal="true" aria-labelledby="recovery-title"><div class="modal-head"><h2 id="recovery-title">Recovery & save history</h2><button class="mini-button" type="button" data-close-modal aria-label="Close">×</button></div><div class="modal-body"><h3>Recently deleted</h3><p class="settings-hint">Restore workspace items here. Dropbox deletions are recovered through Dropbox.</p><div id="hq-deleted-items">${(state.recoveryTrash||[]).map(item=>`<div class="hq-recovery-row"><div><strong>${escapeHtml(item.record.title||item.record.name||item.record.company||String(item.record.text||'').slice(0,80)||'Untitled')}</strong><small>${escapeHtml(item.collection)} · ${escapeHtml(new Date(item.deletedAt).toLocaleString())}</small></div><button class="button" type="button" data-restore-hq-item="${escapeHtml(item.id)}">Restore</button></div>`).join('')||'<p class="settings-hint">No deleted items.</p>'}</div><h3>Local checkpoints</h3><p class="settings-hint">Last five checkpoints in this browser. Image bytes stay on their original device.</p><div id="hq-local-checkpoints">${localRecoveryHistory().map(item=>`<div class="hq-recovery-row"><div><strong>${escapeHtml(item.reason)}</strong><small>${escapeHtml(new Date(item.at).toLocaleString())}</small></div><button class="button" type="button" data-restore-hq-local="${escapeHtml(item.id)}">Restore</button></div>`).join('')||'<p class="settings-hint">Checkpoints appear as you save and before restoring a workspace.</p>'}</div><h3>Cloud save history</h3><p class="settings-hint">The last 20 replaced cloud saves, visible only to your account.</p><div id="hq-cloud-history" role="status">Loading cloud history…</div></div></section></div>`;
+        root.querySelectorAll('[data-restore-hq-item]').forEach(button=>button.onclick=()=>restoreRecoveryItem(button.dataset.restoreHqItem));
+        root.querySelectorAll('[data-restore-hq-local]').forEach(button=>button.onclick=async()=>{
+          const item=localRecoveryHistory().find(record=>record.id===button.dataset.restoreHqLocal);if(!item)return;
+          if(!await hqConfirm('Restore this checkpoint?','Your current workspace will get a checkpoint first. This changes this browser and will sync if cloud sync is enabled.','Restore checkpoint'))return;
+          try{window.CreatorHQStorage.replaceWorkspace(item.workspace);window.CreatorHQCloud?.queueSync?.();closeModal();toast('Checkpoint restored.');}catch(error){toast(error.message);}
+        });
+        try{
+          const history=await window.CreatorHQCloud?.listWorkspaceHistory?.();
+          const host=document.getElementById('hq-cloud-history');if(!host)return;
+          host.innerHTML=history?.length?history.map(item=>`<div class="hq-recovery-row"><div><strong>Cloud save</strong><small>${escapeHtml(new Date(item.workspace_updated_at||item.captured_at).toLocaleString())}</small></div><button class="button" type="button" data-restore-hq-cloud="${escapeHtml(item.id)}">Restore</button></div>`).join(''):'<p class="settings-hint">No older cloud saves yet. Enable cloud sync to keep history.</p>';
+          host.querySelectorAll('[data-restore-hq-cloud]').forEach(button=>button.onclick=async()=>{
+            if(!await hqConfirm('Restore this cloud save?','Your current workspace will get a local checkpoint first. Future saves will sync this restored version.','Restore cloud save'))return;
+            try{await window.CreatorHQCloud.restoreWorkspaceHistory(button.dataset.restoreHqCloud);closeModal();toast('Cloud save restored.');}catch(error){toast(error.message);}
+          });
+        }catch(error){const host=document.getElementById('hq-cloud-history');if(host)host.textContent=error.message;}
+      }
+      function hqDialog(title,description,confirmLabel='Continue',input=null){
+        return new Promise(resolve=>{
+          const backdrop=document.createElement('div');backdrop.className='hq-dialog-backdrop';
+          backdrop.innerHTML=`<form class="modal hq-dialog" role="dialog" aria-modal="true" aria-labelledby="hq-dialog-title"><div class="modal-head"><h2 id="hq-dialog-title">${escapeHtml(title)}</h2></div><div class="modal-body"><p>${escapeHtml(description)}</p>${input!==null?`<label class="form-field"><span>${escapeHtml(input.label)}</span><input class="field-control" name="value" required maxlength="120" value="${escapeHtml(input.value||'')}"></label>`:''}</div><div class="modal-actions"><button class="button" type="button" data-hq-cancel>Cancel</button><button class="button primary" type="submit">${escapeHtml(confirmLabel)}</button></div></form>`;
+          const previous=document.activeElement;document.body.append(backdrop);const form=backdrop.querySelector('form');
+          const finish=value=>{backdrop.remove();previous?.focus?.();resolve(value);};
+          form.onsubmit=event=>{event.preventDefault();finish(input!==null?form.elements.value.value.trim():true);};
+          backdrop.querySelector('[data-hq-cancel]').onclick=()=>finish(input!==null?null:false);
+          backdrop.onkeydown=event=>{if(event.key==='Escape'){event.preventDefault();event.stopPropagation();finish(input!==null?null:false);}if(event.key==='Tab'){event.stopPropagation();const controls=[...form.querySelectorAll('button,input')];const first=controls[0],last=controls.at(-1);if(event.shiftKey&&document.activeElement===first){last.focus();event.preventDefault();}else if(!event.shiftKey&&document.activeElement===last){first.focus();event.preventDefault();}}};
+          (form.querySelector('input')||backdrop.querySelector('[data-hq-cancel]')).focus();
+        });
+      }
+      const hqConfirm=(title,description,button)=>hqDialog(title,description,button);
+      const hqPrompt=(title,description,label)=>hqDialog(title,description,'Create folder',{label,value:''});
+      function contentPublishingStatus(item){
+        const posts=Object.values(item.bufferPostStates||{});if(posts.some(post=>post.status==='error'))return 'Needs attention';
+        if(posts.length&&posts.length===(item.bufferPostIds||[]).length&&posts.every(post=>post.status==='sent'))return 'Published';
+        if(posts.some(post=>post.status==='scheduled'||post.status==='sending'))return 'Scheduled';
+        if(posts.some(post=>post.status==='draft'))return 'Buffer draft';if(posts.some(post=>post.status==='sent'))return 'Partly published';return '';
+      }
+      function reconcileContentPosts(posts){
+        let changed=false;
+        for(const item of state.content){
+          const ids=new Set(item.bufferPostIds||[]);if(!ids.size)continue;
+          const previous=JSON.stringify(item.bufferPostStates||{});item.bufferPostStates=item.bufferPostStates||{};
+          posts.filter(post=>ids.has(post.id)).forEach(post=>{item.bufferPostStates[post.id]={id:post.id,status:post.status,dueAt:post.dueAt,channelId:post.channelId,error:post.error?.message||'',externalLink:post.externalLink||''};});
+          if(previous===JSON.stringify(item.bufferPostStates))continue;
+          const known=Object.values(item.bufferPostStates);const status=contentPublishingStatus(item);
+          if(status==='Published'&&known.length===ids.size)item.status='Published';
+          else if(status==='Scheduled')item.status='Scheduled';
+          item.updatedAt=new Date().toISOString();changed=true;
+        }
+        if(changed){saveState();renderContentBoard();renderActionDashboard();}
+      }
+      function renderActionDashboard(){
+        const dashboard=document.getElementById('view-dashboard');if(!dashboard)return;
+        let host=document.getElementById('hq-action-dashboard');if(!host){host=document.createElement('article');host.id='hq-action-dashboard';host.className='panel hq-action-panel';dashboard.querySelector('.overview-grid')?.insertAdjacentElement('afterend',host);}
+        const today=localDateKey(new Date());
+        const posts=state.content.filter(item=>item.status==='Scheduled'&&item.publishDate===today);
+        const ready=state.content.filter(item=>item.status==='Ready to Post');
+        const failures=state.content.filter(item=>contentPublishingStatus(item)==='Needs attention');
+        const overdue=state.tasks.filter(task=>task.status!=='Completed'&&task.dueDate&&task.dueDate<today);
+        const integrationIssues=state.integrationIssues||[];
+        host.innerHTML=`<div class="panel-head"><h2>Today’s next steps</h2><button class="button" type="button" data-hq-refresh-posts>Refresh post status</button></div><div class="panel-body hq-action-grid"><button type="button" data-view="buffer-scheduled"><strong>${posts.length}</strong><span>Content due to publish today</span></button><button type="button" data-view="content"><strong>${ready.length}</strong><span>Ready to turn into posts</span></button><button type="button" data-view="buffer-scheduled"><strong>${failures.length}</strong><span>Content items need attention</span></button><button type="button" data-view="tasks"><strong>${overdue.length}</strong><span>Overdue tasks</span></button></div><div class="hq-next-content">${integrationIssues.map(issue=>`<div class="hq-integration-issue"><span>${escapeHtml(issue.message)}</span><button class="button" type="button" data-view="${escapeHtml(issue.view)}">Review</button></div>`).join('')}${[...failures,...ready].slice(0,3).map(item=>`<div><span>${escapeHtml(item.title)}</span><button class="button" type="button" data-content-send="${escapeHtml(item.id)}">${failures.includes(item)?'Review post':'Prepare post'}</button></div>`).join('')||'<p class="settings-hint">Your content next steps will appear here.</p>'}</div>`;
+        host.querySelector('[data-hq-refresh-posts]').onclick=async event=>{const button=event.currentTarget;button.disabled=true;try{await window.CreatorHQCloud.refreshLinkedContentPosts();toast('Linked post statuses updated.');}catch(error){toast(error.message);}finally{button.disabled=false;}};
+      }
+
       function loadState() {
         try {
           const raw = localStorage.getItem(STORE_KEY);
@@ -1051,6 +1193,9 @@ const defaults = {
             routineChecks: saved.routineChecks && typeof saved.routineChecks === 'object' ? saved.routineChecks : {},
             reflections: saved.reflections && typeof saved.reflections === 'object' ? saved.reflections : {},
             metrics: Array.isArray(saved.metrics) ? saved.metrics : [],
+            integrationIssues: Array.isArray(saved.integrationIssues)?saved.integrationIssues:[],
+            recoveryTrash: Array.isArray(saved.recoveryTrash) ? saved.recoveryTrash : [],
+            bufferDraftLibrary: Array.isArray(saved.bufferDraftLibrary) ? saved.bufferDraftLibrary : [],
             activityLog: Array.isArray(saved.activityLog) ? saved.activityLog : [],
             communityLinks: Array.isArray(saved.communityLinks) ? saved.communityLinks : [],
             communityEvents: Array.isArray(saved.communityEvents) ? saved.communityEvents : [],
@@ -1064,8 +1209,10 @@ const defaults = {
         } catch (error) { console.error('Unable to load Creator HQ data', error); return structuredClone(defaults); }
       }
       function saveState(options = {}) {
-        try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); }
-        catch (error) { console.error('Unable to save Creator HQ data', error); toast('Could not save. Check available browser storage.'); }
+        let previous;
+        try {previous=localStorage.getItem(STORE_KEY);localStorage.setItem(STORE_KEY, JSON.stringify(state));workspaceSaveFailed=false;workspaceSaveStatus('Saved on device','Your latest changes are stored in this browser.');}
+        catch (error) { workspaceSaveFailed=true;workspaceSaveStatus('Save failed','Browser storage is full or unavailable. Export a backup before closing.','error');console.error('Unable to save Creator HQ data', error);toast('Could not save. Export a backup before closing this page.');return false; }
+        if(previous&&Date.now()-lastLocalRecoveryAt>10*60*1000)captureLocalRecovery(previous);
         if (!options.skipCloud) window.CreatorHQCloud?.queueSync?.();
         const publicProfile = profilePublicData();
         const publicProfileSnapshot = JSON.stringify(publicCreatorProfilesData());
@@ -1073,6 +1220,7 @@ const defaults = {
           window.CreatorHQCloud?.queuePublicProfileSync?.(publicCreatorProfilesData());
         }
         lastPublicProfileSnapshot = publicProfileSnapshot;
+        return true;
       }
       function normalizeCreatorProfile(profile) {
         const source = profile && typeof profile === 'object' ? profile : {};
@@ -1241,7 +1389,7 @@ const defaults = {
         const board = document.getElementById('content-board');
         board.innerHTML = CONTENT_STAGES.map(status => {
           const items = state.content.filter(item => item.status === status && (!search || `${item.title} ${item.description} ${item.tags || ''} ${item.category || ''}`.toLowerCase().includes(search)) && (platform === 'all' || item.platform === platform));
-          return `<section class="workflow-column" data-content-status="${escapeHtml(status)}"><div class="column-head"><div class="column-title"><span class="column-dot"></span>${escapeHtml(status)}</div><span class="column-count">${items.length}</span></div><div class="column-cards" data-content-drop="${escapeHtml(status)}">${items.length ? items.map(item => `<article class="workflow-card" draggable="true" data-content-card="${escapeHtml(item.id)}"><h3>${escapeHtml(item.title)}</h3>${item.description ? `<p>${escapeHtml(item.description)}</p>` : ''}<div class="workflow-meta"><span>${item.platform || 'No platform'}</span><span class="priority priority-${escapeHtml((item.priority || 'Medium').toLowerCase())}">${escapeHtml(item.priority || 'Medium')}</span></div>${item.dueDate ? `<div class="workflow-meta" style="justify-content:flex-start;margin-top:7px">Due ${escapeHtml(formatDate(parseLocalDate(item.dueDate), { month: 'short', day: 'numeric' }))}</div>` : ''}${item.tags ? `<div class="workflow-meta" style="justify-content:flex-start;margin-top:7px">${escapeHtml(item.tags.split(',').map(tag => `#${tag.trim()}`).join('  '))}</div>` : ''}${Array.isArray(item.dropboxFiles) && item.dropboxFiles.length ? `<div class="workflow-meta" style="justify-content:flex-start;margin-top:7px">📎 ${item.dropboxFiles.length} Dropbox file${item.dropboxFiles.length > 1 ? 's' : ''}</div>` : ''}<div class="card-actions"><button class="mini-button" data-edit-content="${escapeHtml(item.id)}" aria-label="Edit ${escapeHtml(item.title)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m14 5 5 5M4 20l4-.8L19 8a2.1 2.1 0 0 0-3-3L5 16l-1 4Z"/></svg></button><button class="mini-button delete" data-delete-content="${escapeHtml(item.id)}" aria-label="Delete ${escapeHtml(item.title)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M10 11v6m4-6v6M5 7l1 14h12l1-14M9 7V4h6v3"/></svg></button></div></article>`).join('') : '<div class="column-empty">Drop content here</div>'}</div></section>`;
+          return `<section class="workflow-column" data-content-status="${escapeHtml(status)}"><div class="column-head"><div class="column-title"><span class="column-dot"></span>${escapeHtml(status)}</div><span class="column-count">${items.length}</span></div><div class="column-cards" data-content-drop="${escapeHtml(status)}">${items.length ? items.map(item => `<article class="workflow-card" draggable="true" data-content-card="${escapeHtml(item.id)}"><h3>${escapeHtml(item.title)}</h3>${item.description ? `<p>${escapeHtml(item.description)}</p>` : ''}<div class="workflow-meta"><span>${item.platform || 'No platform'}</span><span class="priority priority-${escapeHtml((item.priority || 'Medium').toLowerCase())}">${escapeHtml(item.priority || 'Medium')}</span></div>${item.dueDate ? `<div class="workflow-meta" style="justify-content:flex-start;margin-top:7px">Due ${escapeHtml(formatDate(parseLocalDate(item.dueDate), { month: 'short', day: 'numeric' }))}</div>` : ''}${item.tags ? `<div class="workflow-meta" style="justify-content:flex-start;margin-top:7px">${escapeHtml(item.tags.split(',').map(tag => `#${tag.trim()}`).join('  '))}</div>` : ''}${Array.isArray(item.dropboxFiles) && item.dropboxFiles.length ? `<div class="workflow-meta" style="justify-content:flex-start;margin-top:7px">📎 ${item.dropboxFiles.length} Dropbox file${item.dropboxFiles.length > 1 ? 's' : ''}</div>` : ''}<div class="hq-content-publishing">${contentPublishingStatus(item) ? `<span class="chip">${escapeHtml(contentPublishingStatus(item))}</span>` : ''}${(item.dropboxFiles||[]).length ? `<span>${item.dropboxFiles.length} linked files</span>` : ''}</div><div class="card-actions"><button class="button" type="button" data-content-send="${escapeHtml(item.id)}">${item.bufferPostIds?.length ? 'Manage posts' : 'Prepare post'}</button><button class="mini-button" data-edit-content="${escapeHtml(item.id)}" aria-label="Edit ${escapeHtml(item.title)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m14 5 5 5M4 20l4-.8L19 8a2.1 2.1 0 0 0-3-3L5 16l-1 4Z"/></svg></button><button class="mini-button delete" data-delete-content="${escapeHtml(item.id)}" aria-label="Delete ${escapeHtml(item.title)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M10 11v6m4-6v6M5 7l1 14h12l1-14M9 7V4h6v3"/></svg></button></div></article>`).join('') : '<div class="column-empty">Drop content here</div>'}</div></section>`;
         }).join('');
       }
       function renderIdeas() {
@@ -1485,7 +1633,7 @@ const defaults = {
           .sort((first, second) => `${first.date}${first.start}`.localeCompare(`${second.date}${second.start}`))
           .slice(0, 6)
           .map(stream => ({ date: formatDate(parseLocalDate(stream.date), { weekday: 'short', month: 'short', day: 'numeric' }), time: stream.start || '', title: stream.title || '', category: stream.category || stream.platform || '' }));
-        return { weekly, sessions };
+        return { weekly, sessions,timezone:state.settings.timezone==='local'?Intl.DateTimeFormat().resolvedOptions().timeZone:state.settings.timezone };
       }
       function profilePublicData() {
         const profile = state.creatorProfile.website;
@@ -1552,7 +1700,7 @@ const defaults = {
       }
       function profilePreviewUrl() {
         const profile = profilePublicData();
-        const pageUrl = new URL(profileShareUrl());
+        const pageUrl = new URL('profile.html',profileShareUrl());
         return `${pageUrl.href}#p=${encodeURIComponent(JSON.stringify(profile))}`;
       }
       function linktreeShareUrl() {
@@ -2113,7 +2261,8 @@ const defaults = {
           }
         });
       }
-      const dropboxState = { path: '', entries: [], connected: false };
+      const dropboxState = { path: '', entries: [], connected: false, cursor:null, hasMore:false, generation:0, uploading:false };
+      let dropboxFailedUploads=[];
       const dropboxStatus = text => { const node = document.getElementById('dropbox-file-status'); if (node) node.textContent = text; };
       const formatDropboxSize = size => !size ? '' : size > 1048576 ? `${(size / 1048576).toFixed(1)} MB` : `${Math.max(1, Math.round(size / 1024))} KB`;
       function renderDropboxBreadcrumb() {
@@ -2127,7 +2276,7 @@ const defaults = {
           crumbs.push(`<button type="button" class="dropbox-name" data-dropbox-path="${escapeHtml(cumulative)}">/ ${escapeHtml(part)}</button>`);
         }
         node.innerHTML = crumbs.join(' ');
-        node.querySelectorAll('[data-dropbox-path]').forEach(button => button.addEventListener('click', () => { dropboxState.path = button.dataset.dropboxPath; loadDropboxFolder(); }));
+        node.querySelectorAll('[data-dropbox-path]').forEach(button => button.addEventListener('click', () => { dropboxState.path = button.dataset.dropboxPath;document.getElementById('dropbox-search').value='';loadDropboxFolder(); }));
       }
       let dropboxPreviewObserver;
       function loadDropboxPreviews(host) {
@@ -2173,17 +2322,21 @@ const defaults = {
       function renderDropboxList() {
         const host = document.getElementById('dropbox-list');
         if (!host) return;
-        if (!dropboxState.entries.length) { host.innerHTML = '<div class="dropbox-empty"><span aria-hidden="true">▱</span><strong>A little room for your next idea</strong><p>Upload images, stream assets, or documents to this folder.</p></div>'; return; }
-        host.innerHTML = `<div class="dropbox-browser-list">${dropboxState.entries.map(entry => {
+        const search=(document.getElementById('dropbox-search')?.value||'').trim().toLowerCase();
+        const sort=document.getElementById('dropbox-sort')?.value||'name';
+        const visible=dropboxState.entries.filter(entry=>entry.name.toLowerCase().includes(search)).sort((a,b)=>Number(b.isFolder)-Number(a.isFolder)||(sort==='modified'?new Date(b.modified||0)-new Date(a.modified||0):sort==='size'?(b.size||0)-(a.size||0):sort==='type'?a.name.split('.').pop().localeCompare(b.name.split('.').pop()):a.name.localeCompare(b.name)));
+        if (!visible.length) { host.innerHTML = '<div class="dropbox-empty"><span aria-hidden="true">▱</span><strong>No files to show</strong><p>Try a different search, load more files, or upload something to this folder.</p></div>'; return; }
+        host.innerHTML = `<div class="dropbox-browser-list">${visible.map(entry => {
           const image = !entry.isFolder && /\.(jpe?g|png|tiff?|gif|webp|ppm|bmp)$/i.test(entry.name);
           const extension = entry.name.includes('.') ? entry.name.split('.').pop().slice(0, 5).toUpperCase() : 'FILE';
           return `<div class="dropbox-row dropbox-browser-row"><input type="checkbox" aria-label="Select ${escapeHtml(entry.name)}" data-dropbox-select="${escapeHtml(entry.path)}" ${entry.isFolder ? 'disabled' : ''}><button type="button" class="dropbox-file-main" data-dropbox-open="${escapeHtml(entry.path)}" data-is-folder="${entry.isFolder}"><span class="dropbox-file-preview ${entry.isFolder ? 'folder' : image ? 'loading' : ''}" ${image ? `data-dropbox-thumbnail="${escapeHtml(entry.path)}"` : ''}>${entry.isFolder ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v10H3Z"/></svg>' : image ? '<span aria-hidden="true">▧</span>' : `<span>${escapeHtml(extension)}</span>`}</span><span class="dropbox-file-copy"><strong>${escapeHtml(entry.name)}</strong><span class="dropbox-meta">${entry.isFolder ? 'Folder' : `${image ? 'Image · ' : ''}${formatDropboxSize(entry.size)}`}${entry.modified ? ` · ${escapeHtml(new Date(entry.modified).toLocaleDateString(undefined, {month:'short',day:'numeric',year:'numeric'}))}` : ''}</span></span></button><div class="dropbox-file-actions">${entry.isFolder ? '' : `<button type="button" class="button ghost" data-dropbox-download="${escapeHtml(entry.path)}">Download</button>`}<button type="button" class="button ghost" data-dropbox-move="${escapeHtml(entry.path)}">Move</button><button type="button" class="mini-button delete" data-dropbox-delete="${escapeHtml(entry.path)}" aria-label="Delete ${escapeHtml(entry.name)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M10 11v6m4-6v6M5 7l1 14h12l1-14M9 7V4h6v3"/></svg></button></div></div>`;
         }).join('')}</div>`;
         loadDropboxPreviews(host);
         host.querySelectorAll('[data-dropbox-open]').forEach(button => button.addEventListener('click', async () => {
-          if (button.dataset.isFolder === 'true') { dropboxState.path = button.dataset.dropboxOpen; loadDropboxFolder(); return; }
-          const link = await window.CreatorHQCloud.dropbox.downloadLink(button.dataset.dropboxOpen);
-          if (link?.link) window.open(link.link, '_blank', 'noopener');
+          if (button.dataset.isFolder === 'true') { dropboxState.path = button.dataset.dropboxOpen;document.getElementById('dropbox-search').value='';loadDropboxFolder(); return; }
+          const entry=dropboxState.entries.find(item=>item.path===button.dataset.dropboxOpen);
+          if(entry&&/\.(jpe?g|png|tiff?|gif|webp|bmp)$/i.test(entry.name)){openDropboxImage(entry);return;}
+          try{const link=await window.CreatorHQCloud.dropbox.downloadLink(button.dataset.dropboxOpen);if(link?.link)window.open(link.link,'_blank','noopener');}catch(error){dropboxStatus(error.message);}
         }));
         host.querySelectorAll('[data-dropbox-download]').forEach(button => button.addEventListener('click', async () => {
           button.disabled = true;
@@ -2194,7 +2347,7 @@ const defaults = {
         host.querySelectorAll('[data-dropbox-move]').forEach(button => button.addEventListener('click', () => moveDropboxModal(button.dataset.dropboxMove)));
         host.querySelectorAll('[data-dropbox-delete]').forEach(button => button.addEventListener('click', async () => {
           const entry = dropboxState.entries.find(item => item.path === button.dataset.dropboxDelete);
-          if (!window.confirm(`Delete ${entry?.name || 'this item'} from Dropbox?`)) return;
+          if(!await hqConfirm('Delete this Dropbox item?',`${entry?.name||'This item'} will be removed from Dropbox. Use Dropbox’s deleted-files recovery to restore it.`,'Delete item'))return;
           try { await window.CreatorHQCloud.dropbox.remove(button.dataset.dropboxDelete); logActivity('Dropbox', 'Deleted item', button.dataset.dropboxDelete); dropboxStatus('Deleted.'); await loadDropboxFolder(); }
           catch (error) { dropboxStatus(error.message); }
         }));
@@ -2216,21 +2369,52 @@ const defaults = {
           } catch (error) { status.textContent = error.message; }
         });
       }
-      async function loadDropboxFolder() {
-        const api = window.CreatorHQCloud?.dropbox;
-        if (!api || !dropboxState.connected) return;
-        const listNode = document.getElementById('dropbox-list');
-        dropboxStatus('Loading…');
-        try {
-          const data = await api.list(dropboxState.path || '');
-          dropboxState.entries = data.entries || [];
-          renderDropboxBreadcrumb();
-          renderDropboxList();
-          dropboxStatus(dropboxState.entries.length ? `${dropboxState.entries.length} items.` : 'Folder loaded.');
-        } catch (error) {
-          if (listNode) listNode.innerHTML = `<p class="settings-hint" style="margin:0">${escapeHtml(error.message)}</p>`;
-          dropboxStatus('');
-        }
+      async function loadDropboxFolder({append=false}={}) {
+        const api=window.CreatorHQCloud?.dropbox;if(!api||!dropboxState.connected)return;
+        const generation=++dropboxState.generation;const path=dropboxState.path==='/'?'':dropboxState.path;
+        const more=document.getElementById('dropbox-load-more');if(more)more.disabled=true;
+        dropboxStatus('Loading files…');
+        try{
+          const data=await api.list(path,append?dropboxState.cursor:undefined);
+          if(generation!==dropboxState.generation)return;
+          dropboxState.entries=append?[...dropboxState.entries,...(data.entries||[])]:data.entries||[];
+          dropboxState.cursor=data.cursor;dropboxState.hasMore=Boolean(data.hasMore);renderDropboxBreadcrumb();renderDropboxList();
+          if(more)more.hidden=!dropboxState.hasMore;
+          dropboxStatus(`${dropboxState.entries.length} items loaded${dropboxState.hasMore?' · More files available':''}.`);
+        }catch(error){if(generation===dropboxState.generation)dropboxStatus(error.message||'Could not load files. Use Refresh to try again.');}
+        finally{if(more&&generation===dropboxState.generation)more.disabled=false;}
+      }
+      function openDropboxImage(entry){
+        const root=document.getElementById('modal-root');root.innerHTML=`<div class="modal-backdrop" data-backdrop><section class="modal hq-image-modal" role="dialog" aria-modal="true" aria-labelledby="dropbox-image-title"><div class="modal-head"><h2 id="dropbox-image-title">${escapeHtml(entry.name)}</h2><button class="mini-button" type="button" data-close-modal aria-label="Close">×</button></div><div class="modal-body"><p role="status" id="dropbox-image-status">Loading image…</p><img id="dropbox-large-image" alt="${escapeHtml(entry.name)}" hidden></div></section></div>`;
+        window.CreatorHQCloud.dropbox.downloadLink(entry.path).then(result=>{
+          const image=document.getElementById('dropbox-large-image');if(!image||!/^https:\/\//i.test(result.link||''))return;
+          image.onload=()=>{const status=document.getElementById('dropbox-image-status');if(status)status.textContent='';};
+          image.onerror=()=>{const status=document.getElementById('dropbox-image-status');if(status)status.textContent='Preview could not load. Download the file to view it.';};
+          image.src=result.link;image.hidden=false;
+        }).catch(error=>{const status=document.getElementById('dropbox-image-status');if(status)status.textContent=error.message;});
+      }
+      async function uploadDropboxFiles(files){
+        if(dropboxState.uploading)return;
+        if(!dropboxState.connected){dropboxStatus('Connect Dropbox before uploading files.');return;}
+        dropboxState.uploading=true;const input=document.getElementById('dropbox-upload-input');input.disabled=true;
+        const retry=document.getElementById('dropbox-retry-upload');retry.hidden=true;
+        const failed=[];let succeeded=0;
+        const base=dropboxState.path==='/'?'':dropboxState.path;
+        const replace=document.getElementById('dropbox-conflict').value==='replace';
+        const progress=document.getElementById('dropbox-upload-progress');progress.hidden=false;
+        try{
+          for(let i=0;i<files.length;i++){
+            const file=files[i];progress.value=0;
+            dropboxStatus(`Uploading ${i+1} of ${files.length}: ${file.name}…`);
+            try{
+              const result=await window.CreatorHQCloud.dropbox.upload(`${base}/${file.name}`,file,{replace,onProgress:percent=>{progress.value=percent;dropboxStatus(`${file.name} · ${percent}% sent${percent===100?' · Finishing in Dropbox…':''}`);}});
+              succeeded++;logActivity('Dropbox','Uploaded file',result.path||`${base}/${file.name}`);
+            }catch(error){failed.push({file,message:error.message});}
+          }
+          await loadDropboxFolder();dropboxFailedUploads=failed.map(item=>item.file);retry.hidden=!failed.length;
+          window.CreatorHQStorage.reportIssue('dropbox-upload',failed.length?`${failed.length} Dropbox uploads need a retry.`:'','dropbox');
+          dropboxStatus(`${succeeded} uploaded${failed.length?`; ${failed.length} failed. ${failed.map(item=>`${item.file.name}: ${item.message}`).join(' ')}`:'.'}`);
+        }finally{dropboxState.uploading=false;input.disabled=false;progress.hidden=true;}
       }
       async function refreshDropboxStatus() {
         const callback = new URLSearchParams(location.hash.slice(1));
@@ -2261,6 +2445,12 @@ const defaults = {
         }
       }
       function initDropboxView() {
+        document.getElementById('dropbox-breadcrumb').insertAdjacentHTML('afterend',`<div class="hq-dropbox-toolbar"><label class="form-field"><span>Search loaded files</span><input class="field-control" id="dropbox-search" type="search" placeholder="Search filenames…"></label><label class="form-field"><span>Sort</span><select class="field-control" id="dropbox-sort"><option value="name">Name A–Z</option><option value="modified">Newest first</option><option value="size">Largest first</option><option value="type">File type</option></select></label><label class="form-field"><span>Matching filenames</span><select class="field-control" id="dropbox-conflict"><option value="keep">Keep both files</option><option value="replace">Replace matching file</option></select></label></div><div class="hq-dropzone" id="dropbox-dropzone">Drop files here to upload to this folder, or choose Upload files above.</div><progress id="dropbox-upload-progress" max="100" value="0" hidden aria-label="Upload progress"></progress><button class="button" id="dropbox-retry-upload" type="button" hidden>Retry failed uploads</button>`);
+        document.getElementById('dropbox-list').insertAdjacentHTML('afterend','<button class="button" type="button" id="dropbox-load-more" hidden>Load more files</button>');
+        document.getElementById('dropbox-search').oninput=renderDropboxList;document.getElementById('dropbox-sort').onchange=renderDropboxList;
+        document.getElementById('dropbox-load-more').onclick=()=>loadDropboxFolder({append:true});
+        document.getElementById('dropbox-retry-upload').onclick=()=>uploadDropboxFiles(dropboxFailedUploads);
+        const zone=document.getElementById('dropbox-dropzone');zone.ondragover=event=>{event.preventDefault();zone.classList.add('dragging');};zone.ondragleave=()=>zone.classList.remove('dragging');zone.ondrop=event=>{event.preventDefault();zone.classList.remove('dragging');const files=[...(event.dataTransfer?.files||[])];if(files.length)uploadDropboxFiles(files);};
         document.getElementById('dropbox-refresh')?.addEventListener('click', () => loadDropboxFolder());
         document.getElementById('dropbox-connect')?.addEventListener('click', async () => {
           const button = document.getElementById('dropbox-connect');
@@ -2277,12 +2467,12 @@ const defaults = {
           finally { button.disabled = false; }
         });
         document.getElementById('dropbox-disconnect')?.addEventListener('click', async () => {
-          if (!window.confirm('Disconnect Dropbox from Creator HQ?')) return;
+          if(!await hqConfirm('Disconnect Dropbox?','Your files stay in Dropbox. You can reconnect later.','Disconnect'))return;
           try { await window.CreatorHQCloud.dropbox.disconnect(); dropboxState.entries = []; await refreshDropboxStatus(); }
           catch (error) { dropboxStatus(error.message); }
         });
         document.getElementById('dropbox-new-folder')?.addEventListener('click', async () => {
-          const name = window.prompt('New folder name (inside the current folder):');
+          const name=await hqPrompt('Create a folder','The new folder will be inside the current Dropbox folder.','Folder name');
           if (!name) return;
           try {
             await window.CreatorHQCloud.dropbox.createFolder(`${dropboxState.path === '/' ? '' : dropboxState.path}/${name.trim().replace(/^\/+/, '')}`);
@@ -2291,19 +2481,8 @@ const defaults = {
             await loadDropboxFolder();
           } catch (error) { dropboxStatus(error.message); }
         });
-        document.getElementById('dropbox-upload-input')?.addEventListener('change', async event => {
-          const files = [...(event.target.files || [])];
-          event.target.value = '';
-          if (!files.length) return;
-          const base = dropboxState.path === '/' ? '' : dropboxState.path;
-          for (const file of files) {
-            dropboxStatus(`Uploading ${file.name}…`);
-            try { await window.CreatorHQCloud.dropbox.upload(`${base}/${file.name}`, file); logActivity('Dropbox', 'Uploaded file', `${base}/${file.name}`); }
-            catch (error) { dropboxStatus(`Upload failed for ${file.name}: ${error.message}`); return; }
-          }
-          dropboxStatus(`Uploaded ${files.length} file${files.length > 1 ? 's' : ''}.`);
-          await loadDropboxFolder();
-        });
+        document.getElementById('dropbox-upload-input')?.addEventListener('change',event=>{const files=[...(event.target.files||[])];event.target.value='';if(files.length)uploadDropboxFiles(files);});
+
       }
       function dropboxPickerModal(onPick) {
         let pickerPath = '/';
@@ -2349,9 +2528,26 @@ const defaults = {
           status.textContent = error?.message || 'Could not create the account.';
         }
       });
-      function renderAll() { applyAccent(); renderProfile(); renderDashboard(); renderTaskBoard(); renderSchedule(); renderContentBoard(); renderIdeas(); renderGoals(); renderRoutines(); renderAssets(); renderAnalytics(); renderCommunity(); renderNotifications(); renderCrm(); renderSettings(); renderCreatorProfile(); renderLinktree(); renderStaff(); }
+      function renderWebsiteReadiness(){
+        const view=document.getElementById('view-website');if(!view)return;
+        let host=document.getElementById('hq-website-readiness');if(!host){host=document.createElement('article');host.id='hq-website-readiness';host.className='panel';view.append(host);}
+        const publicData=publicCreatorProfilesData().website||{};const site=publicData.website||publicData;const issues=[];
+        const valid=value=>{try{const url=new URL(value);return ['http:','https:'].includes(url.protocol);}catch{return false;}};
+        if(!site.twitchUrl)issues.push('Add your Twitch link so visitors can find the stream.');else if(!valid(site.twitchUrl))issues.push('Your Twitch link needs a complete web address.');
+        for(const item of site.featured||[])if(!valid(item.url))issues.push(`Add a watch link for “${item.title||'Untitled highlight'}”.`);
+        const links=publicData.links||site.links||[];const seen=new Set();
+        for(const link of links){if(!valid(link.url))issues.push(`Check the address for “${link.label||'Untitled link'}”.`);if(seen.has(link.url))issues.push(`“${link.label||link.url}” repeats another link.`);seen.add(link.url);}
+        host.innerHTML=`<div class="panel-head"><h2>Website readiness</h2><span class="chip">${issues.length?issues.length+' things to check':'Links look ready'}</span></div><div class="panel-body">${issues.length?`<ul>${issues.map(issue=>`<li>${escapeHtml(issue)}</li>`).join('')}</ul>`:'<p class="settings-hint">Your configured links have valid addresses. Preview the site to check your content and layout.</p>'}<p class="settings-hint">This checks missing, repeated, and invalid addresses. It does not verify that other websites are online.</p></div>`;
+      }
+      function renderAll() { applyAccent(); renderProfile(); renderDashboard(); renderTaskBoard(); renderSchedule(); renderContentBoard(); renderIdeas(); renderGoals(); renderRoutines(); renderAssets(); renderAnalytics(); renderCommunity(); renderNotifications(); renderCrm(); renderSettings(); renderCreatorProfile(); renderLinktree(); renderStaff(); renderActionDashboard(); renderWebsiteReadiness(); }
+      window.CreatorHQDialogs={confirm:hqConfirm,prompt:hqPrompt};
       window.CreatorHQStorage = {
-        getWorkspace: () => structuredClone(state),
+        getWorkspace: () => structuredClone({...state,bufferDraftLibrary:window.CreatorHQCloud?.getDraftLibrary?.()||state.bufferDraftLibrary||[]}),
+        reportIssue:(id,message,view)=>{state.integrationIssues=(state.integrationIssues||[]).filter(item=>item.id!==id);if(message)state.integrationIssues.unshift({id,message,view,at:new Date().toISOString()});saveState();renderActionDashboard();},
+        getSavedBufferDrafts:()=>structuredClone(state.bufferDraftLibrary||[]),
+        bufferDraftsChanged: drafts=>{state.bufferDraftLibrary=structuredClone(drafts);saveState();},
+        reconcileBufferPosts:reconcileContentPosts,
+        showRecovery:openRecoveryCenter,
         getPublicCreatorProfile: () => profilePublicData(),
         getPublicCreatorProfiles: () => publicCreatorProfilesData(),
         restorePublicCreatorProfiles: savedProfiles => {
@@ -2439,7 +2635,10 @@ const defaults = {
           const item = state.content.find(record => record.id === contentId);
           if (!item) return;
           const scheduledPosts = Array.isArray(posts) ? posts : [posts];
-          item.status = 'Scheduled';
+          if(scheduledPosts.some(post=>['scheduled','sending'].includes(post.status)))item.status='Scheduled';
+          else if(scheduledPosts.every(post=>post.status==='draft'))item.status='Ready to Post';
+          item.bufferPostStates=item.bufferPostStates||{};
+          scheduledPosts.forEach(post=>{item.bufferPostStates[post.id]={id:post.id,status:post.status,dueAt:post.dueAt,channelId:post.channelId};});
           item.bufferPostIds = [...new Set([...(item.bufferPostIds || []), ...scheduledPosts.map(post => post.id).filter(Boolean)])];
           const dates = scheduledPosts.map(post => post.dueAt).filter(Boolean).sort();
           if (dates.length) item.publishDate = localDateKey(new Date(dates[0]));
@@ -2447,15 +2646,22 @@ const defaults = {
           saveState(); renderAll();
         },
         replaceWorkspace: workspace => {
+          const previousState=structuredClone(state);
+          captureLocalRecovery(state,'Before workspace restore');
+          const localAssets=new Map([...state.assets,...(state.recoveryTrash||[]).filter(item=>item.collection==='assets').map(item=>item.record)].map(asset=>[asset.id,asset]));
           const source = workspace && typeof workspace === 'object' ? workspace : {};
           state = { ...structuredClone(defaults), ...source, settings: { ...defaults.settings, ...(source.settings || {}) }, creatorProfile: normalizeCreatorProfile(source.creatorProfile) };
-          for (const key of ['tasks', 'streams', 'content', 'ideas', 'goals', 'assets', 'metrics', 'communityLinks', 'communityEvents', 'communityFeedback', 'crm', 'notificationDismissed']) if (!Array.isArray(state[key])) state[key] = [];
+          for (const key of ['tasks', 'streams', 'content', 'ideas', 'goals', 'assets', 'metrics', 'communityLinks', 'communityEvents', 'communityFeedback', 'crm', 'notificationDismissed', 'recoveryTrash', 'bufferDraftLibrary', 'integrationIssues']) if (!Array.isArray(state[key])) state[key] = [];
           if (!state.routineChecks || typeof state.routineChecks !== 'object') state.routineChecks = {};
           if (!state.reflections || typeof state.reflections !== 'object') state.reflections = {};
           state.notificationPreferences = { ...defaults.notificationPreferences, ...(source.notificationPreferences || {}) };
           state.announcementDrafts = { ...ANNOUNCEMENT_TEMPLATES, ...(source.announcementDrafts || {}) };
           state.analyticsRevenue = Boolean(source.analyticsRevenue);
-          saveState({ skipCloud: true }); renderAll();
+          if(!Array.isArray(state.settings.days))state.settings.days=[...defaults.settings.days];
+          state.assets=state.assets.map(asset=>localAssets.get(asset.id)?.dataUrl ? {...asset,dataUrl:localAssets.get(asset.id).dataUrl,mimeType:localAssets.get(asset.id).mimeType} : asset);
+          let saved=false;try{window.CreatorHQCloud?.restoreDraftLibrary?.(state.bufferDraftLibrary);saved=saveState({skipCloud:true});}catch{}
+          if(!saved){state=previousState;try{window.CreatorHQCloud?.restoreDraftLibrary?.(state.bufferDraftLibrary||[]);}catch{}renderAll();throw new Error('Could not save the restored workspace. Your current workspace was kept. Free browser space or export a backup.');}
+          renderAll();return true;
         }
       };
       window.CreatorHQCloudUI = {
@@ -2471,7 +2677,7 @@ const defaults = {
           document.getElementById('cloud-password').hidden = Boolean(email);
           document.getElementById('cloud-sync-section').hidden = !email;
         },
-        setSyncStatus: message => { document.getElementById('cloud-sync-status').textContent = message; },
+        setSyncStatus: message => { document.getElementById('cloud-sync-status').textContent = message;const error=/error|failed|could not/i.test(message);const busy=/queued|syncing/i.test(message);workspaceSaveStatus(error?'Sync needs attention':busy?'Syncing…':/^Synced|restored and sync/i.test(message)?'Synced':'Saved on device',message,error?'error':busy?'syncing':'saved'); },
         notify: toast
       };
       function activateShopTab(name) {
@@ -2494,7 +2700,7 @@ const defaults = {
         document.querySelectorAll('.view').forEach(view => { view.hidden = view.id !== `view-${name}`; });
         document.querySelectorAll('.nav-button[data-view]').forEach(button => button.classList.toggle('active', button.dataset.view === name && (!button.dataset.shopTab || button.dataset.shopTab === activeShopTab)));
         document.querySelector(`.nav-button[data-view="${name}"]`)?.closest('.nav-group')?.setAttribute('open', '');
-        document.getElementById('breadcrumb-current').textContent = ({ dashboard: 'Creator HQ', tasks: 'Tasks', schedule: 'Stream schedule', 'buffer-compose': 'Compose', 'buffer-scheduled': 'Scheduled', content: 'Content pipeline', ideas: 'Ideas vault', goals: 'Goals & review', routines: 'Routines', assets: 'Asset library', analytics: 'Analytics', community: 'Community hub', notifications: 'Reminders', crm: 'Collaborations', website: 'Twitch website', shop: 'Shop', linktree: 'Linktree', cloud: 'Cloud sync', settings: 'Settings' })[name] || 'Creator HQ';
+        document.getElementById('breadcrumb-current').textContent = ({ dashboard: 'Creator HQ', dropbox:'Dropbox',staff:'Staff',activity:'Activity log', tasks: 'Tasks', schedule: 'Stream schedule', 'buffer-compose': 'Compose', 'buffer-scheduled': 'Publishing planner', content: 'Content pipeline', ideas: 'Ideas vault', goals: 'Goals & review', routines: 'Routines', assets: 'Asset library', analytics: 'Analytics', community: 'Community hub', notifications: 'Reminders', crm: 'Collaborations', website: 'Twitch website', shop: 'Shop', linktree: 'Linktree', cloud: 'Cloud sync', settings: 'Settings' })[name] || 'Creator HQ';
         document.getElementById('sidebar').classList.remove('mobile-open');
         if (name === 'tasks') renderTaskBoard();
         if (name === 'website') renderCreatorProfile();
@@ -2617,16 +2823,7 @@ const defaults = {
         const initialTitle = record.title || idea?.title || '';
         const initialDescription = record.description || idea?.notes || '';
         const platformOptions = ['YouTube', 'YouTube Shorts', 'TikTok', 'Instagram Reels', 'Other'];
-        document.getElementById('modal-root').innerHTML = `<div class="modal-backdrop" data-backdrop><form class="modal" id="content-form"><div class="modal-head"><h2>${edit ? 'Edit content' : 'Plan content'}</h2><button type="button" class="mini-button" data-close-modal aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div><div class="modal-body"><div class="form-field"><label for="content-title">Title</label><input id="content-title" name="title" maxlength="120" required value="${escapeHtml(initialTitle)}" placeholder="What are you making?"></div><div class="form-field"><label for="content-description">Description / notes</label><textarea id="content-description" name="description" maxlength="1200" placeholder="Hook, brief, or next steps...">${escapeHtml(initialDescription)}</textarea></div><div class="form-grid"><div class="form-field"><label for="content-platform">Platform</label><select id="content-platform" name="platform">${platformOptions.map(platform => `<option ${record.platform === platform ? 'selected' : ''}>${platform}</option>`).join('')}</select></div><div class="form-field"><label for="content-type">Content type</label><select id="content-type" name="type">${['Video', 'Short', 'Clip', 'Live stream', 'Post', 'Other'].map(type => `<option ${record.type === type ? 'selected' : ''}>${type}</option>`).join('')}</select></div><div class="form-field"><label for="content-stage">Stage</label><select id="content-stage" name="status">${CONTENT_STAGES.map(stage => `<option ${record.status === stage || (!record.status && stage === 'Planning') ? 'selected' : ''}>${escapeHtml(stage)}</option>`).join('')}</select></div><div class="form-field"><label for="content-priority">Priority</label><select id="content-priority" name="priority">${['Low', 'Medium', 'High', 'Critical'].map(priority => `<option ${record.priority === priority || (!record.priority && priority === 'Medium') ? 'selected' : ''}>${priority}</option>`).join('')}</select></div><div class="form-field"><label for="content-due">Due date</label><input id="content-due" name="dueDate" type="date" value="${escapeHtml(record.dueDate || '')}"></div><div class="form-field"><label for="content-publish">Scheduled publish date</label><input id="content-publish" name="publishDate" type="date" value="${escapeHtml(record.publishDate || '')}"></div><div class="form-field"><label for="content-source">Start from planned content</label><select id="buffer-content-source" class="field-control"><option value="">Write a new post</option></select></div><div class="form-field full"><label for="content-url">Published URL</label><input id="content-url" name="url" type="url" maxlength="500" value="${escapeHtml(record.url || '')}" placeholder="https://..."></div><div class="form-field full"><label>Dropbox files</label><div id="content-dropbox-list" class="dropbox-list" style="max-height:190px;overflow:auto"></div><button type="button" class="button" id="content-link-dropbox" style="margin-top:8px">Link Dropbox file</button></div></div><div class="modal-actions"><button type="button" class="button" data-close-modal>Cancel</button><button class="button primary" type="submit">${edit ? 'Save content' : 'Add to pipeline'}</button></div></div></form></div>`;
-        const contentSource = document.querySelector('#content-form #buffer-content-source');
-        if (contentSource) {
-          contentSource.id = 'content-source';
-          contentSource.className = '';
-          contentSource.name = 'sourceStream';
-          contentSource.innerHTML = '<option value="">No linked stream</option>' + state.streams.map(stream => `<option value="${escapeHtml(stream.id)}" ${record.sourceStream === stream.id ? 'selected' : ''}>${escapeHtml(stream.title)} · ${escapeHtml(stream.date)}</option>`).join('');
-          contentSource.labels[0].htmlFor = 'content-source';
-          contentSource.labels[0].textContent = 'Source stream';
-        }
+        document.getElementById('modal-root').innerHTML = `<div class="modal-backdrop" data-backdrop><form class="modal" id="content-form"><div class="modal-head"><h2>${edit ? 'Edit content' : 'Plan content'}</h2><button type="button" class="mini-button" data-close-modal aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div><div class="modal-body"><div class="form-field"><label for="content-title">Title</label><input id="content-title" name="title" maxlength="120" required value="${escapeHtml(initialTitle)}" placeholder="What are you making?"></div><div class="form-field"><label for="content-description">Description / notes</label><textarea id="content-description" name="description" maxlength="1200" placeholder="Hook, brief, or next steps...">${escapeHtml(initialDescription)}</textarea></div><div class="form-grid"><div class="form-field"><label for="content-platform">Platform</label><select id="content-platform" name="platform">${platformOptions.map(platform => `<option ${record.platform === platform ? 'selected' : ''}>${platform}</option>`).join('')}</select></div><div class="form-field"><label for="content-type">Content type</label><select id="content-type" name="type">${['Video', 'Short', 'Clip', 'Live stream', 'Post', 'Other'].map(type => `<option ${record.type === type ? 'selected' : ''}>${type}</option>`).join('')}</select></div><div class="form-field"><label for="content-stage">Stage</label><select id="content-stage" name="status">${CONTENT_STAGES.map(stage => `<option ${record.status === stage || (!record.status && stage === 'Planning') ? 'selected' : ''}>${escapeHtml(stage)}</option>`).join('')}</select></div><div class="form-field"><label for="content-priority">Priority</label><select id="content-priority" name="priority">${['Low', 'Medium', 'High', 'Critical'].map(priority => `<option ${record.priority === priority || (!record.priority && priority === 'Medium') ? 'selected' : ''}>${priority}</option>`).join('')}</select></div><div class="form-field"><label for="content-due">Due date</label><input id="content-due" name="dueDate" type="date" value="${escapeHtml(record.dueDate || '')}"></div><div class="form-field"><label for="content-publish">Scheduled publish date</label><input id="content-publish" name="publishDate" type="date" value="${escapeHtml(record.publishDate || '')}"></div><div class="form-field full"><label for="content-url">Published URL</label><input id="content-url" name="url" type="url" maxlength="500" value="${escapeHtml(record.url || '')}" placeholder="https://..."></div><div class="form-field full"><label>Dropbox files</label><div id="content-dropbox-list" class="dropbox-list" style="max-height:190px;overflow:auto"></div><button type="button" class="button" id="content-link-dropbox" style="margin-top:8px">Link Dropbox file</button></div></div><div class="modal-actions"><button type="button" class="button" data-close-modal>Cancel</button><button class="button primary" type="submit">${edit ? 'Save content' : 'Add to pipeline'}</button></div></div></form></div>`;
         const linkedFiles = [...(record.dropboxFiles || [])];
         const renderLinkedFiles = () => {
           const host = document.getElementById('content-dropbox-list');
@@ -2778,27 +2975,14 @@ const defaults = {
         const body = events.map(event => `BEGIN:VEVENT\nUID:${crypto.randomUUID()}@creator-hq\nDTSTAMP:${toIcs(new Date())}\nDTSTART:${toIcs(event.start)}\nDTEND:${toIcs(event.end)}\nSUMMARY:${icsEscape(event.title)}\nDESCRIPTION:${icsEscape(event.description)}\nEND:VEVENT`).join('\n');
         downloadBlob(`BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//Creator HQ//Stream Schedule//EN\nCALSCALE:GREGORIAN\n${body}\nEND:VCALENDAR`, 'text/calendar', 'creator-hq-schedule.ics'); toast('Calendar file exported');
       }
-      function importBackup(file) {
-        const reader = new FileReader();
-        reader.onerror = () => toast('Could not read that backup file');
-        reader.onload = () => {
-          try {
-            const data = JSON.parse(String(reader.result));
-            if (!data || !data.settings || !Array.isArray(data.tasks) || !Array.isArray(data.streams)) throw new Error('Invalid backup');
-            state = { ...structuredClone(defaults), ...data, settings: { ...defaults.settings, ...data.settings } };
-            state.creatorProfile = normalizeCreatorProfile(data.creatorProfile);
-            for (const key of ['content', 'ideas', 'goals', 'assets']) if (!Array.isArray(state[key])) state[key] = [];
-            if (!Array.isArray(state.settings.days)) state.settings.days = [...defaults.settings.days];
-            if (!state.routineChecks || typeof state.routineChecks !== 'object') state.routineChecks = {};
-            if (!state.reflections || typeof state.reflections !== 'object') state.reflections = {};
-            for (const key of ['metrics', 'communityLinks', 'communityEvents', 'communityFeedback', 'crm', 'notificationDismissed']) if (!Array.isArray(state[key])) state[key] = [];
-            state.notificationPreferences = { ...defaults.notificationPreferences, ...(state.notificationPreferences || {}) };
-            state.announcementDrafts = { ...ANNOUNCEMENT_TEMPLATES, ...(state.announcementDrafts || {}) };
-            state.analyticsRevenue = Boolean(state.analyticsRevenue);
-            saveState(); renderAll(); showAuth('Backup imported. Sign in again to continue.'); toast('Backup imported');
-          } catch (error) { toast('That file is not a valid Creator HQ backup'); }
-        };
-        reader.readAsText(file);
+      function importBackup(file){
+        const reader=new FileReader();reader.onerror=()=>toast('Could not read that backup file.');
+        reader.onload=async()=>{
+          try{const data=JSON.parse(String(reader.result));if(!data?.settings||!Array.isArray(data.tasks)||!Array.isArray(data.streams))throw new Error('Choose a valid Creator HQ backup file.');
+            if(!await hqConfirm('Import this workspace backup?','Your current workspace will get a local checkpoint before it is replaced. Imported changes will sync if automatic sync is enabled.','Import backup'))return;
+            window.CreatorHQStorage.replaceWorkspace(data);window.CreatorHQCloud?.queueSync?.();showAuth('Backup imported. Sign in to continue.');toast('Backup imported.');
+          }catch(error){toast(error.message||'Could not import this backup.');}
+        };reader.readAsText(file);
       }
       function toggleTask(id) {
         const task = state.tasks.find(item => item.id === id); if (!task) return;
@@ -2820,11 +3004,16 @@ const defaults = {
         }
         state.tasks.unshift({ ...task, id: crypto.randomUUID(), status: 'To Do', dueDate: localDateKey(nextDate), completedAt: undefined, createdAt: new Date().toISOString() });
       }
-      function deleteTask(id) {
-        const task = state.tasks.find(item => item.id === id); if (!task || !window.confirm(`Delete “${task.title}”?`)) return;
-        state.tasks = state.tasks.filter(item => item.id !== id); saveState(); renderAll(); toast('Task deleted');
-      }
+      function deleteTask(id) { moveToRecovery('tasks',id); }
       function routeClick(event) {
+        const sendContent=event.target.closest('[data-content-send]');
+        if(sendContent){
+          if(!userHasAccess('buffer-compose')){toast('Your account does not have publishing access.');return;}
+          const item=state.content.find(record=>record.id===sendContent.dataset.contentSend);
+          if(item?.bufferPostIds?.length){setView('buffer-scheduled');window.CreatorHQCloud?.showContentPosts?.(item.id);}
+          else if(item){setView('buffer-compose');window.CreatorHQCloud?.startContentPost?.(item.id);}
+          return;
+        }
         const viewButton = event.target.closest('[data-view]');
         if (viewButton) {
           if (viewButton.dataset.shopTab) activateShopTab(viewButton.dataset.shopTab);
@@ -2848,29 +3037,28 @@ const defaults = {
         const complete = event.target.closest('[data-complete]'); if (complete) toggleTask(complete.dataset.complete);
         const edit = event.target.closest('[data-edit-task]'); if (edit) { const task = state.tasks.find(item => item.id === edit.dataset.editTask); if (task) taskModal(task); }
         const remove = event.target.closest('[data-delete-task]'); if (remove) deleteTask(remove.dataset.deleteTask);
-        const deleteStream = event.target.closest('[data-delete-stream]');
-        if (deleteStream) { const stream = state.streams.find(item => item.id === deleteStream.dataset.deleteStream); if (stream && window.confirm(`Delete “${stream.title}”?`)) { state.streams = state.streams.filter(item => item.id !== stream.id); saveState(); renderAll(); toast('Stream session deleted'); } }
+        const deleteStream = event.target.closest('[data-delete-stream]'); if(deleteStream)moveToRecovery('streams',deleteStream.dataset.deleteStream);
         const completeStream = event.target.closest('[data-complete-stream]');
         if (completeStream) { const stream = state.streams.find(item => item.id === completeStream.dataset.completeStream); if (stream) { stream.status = 'Completed'; stream.completedAt = new Date().toISOString(); saveState(); renderAll(); toast('Stream marked completed'); } }
         const editContent = event.target.closest('[data-edit-content]'); if (editContent) { const item = state.content.find(record => record.id === editContent.dataset.editContent); if (item) contentModal(item); }
-        const deleteContent = event.target.closest('[data-delete-content]'); if (deleteContent) { const item = state.content.find(record => record.id === deleteContent.dataset.deleteContent); if (item && window.confirm(`Delete “${item.title}”?`)) { state.content = state.content.filter(record => record.id !== item.id); logActivity('Content pipeline', 'Deleted content', item.title); saveState(); renderAll(); toast('Content removed'); } }
+        const deleteContent=event.target.closest('[data-delete-content]');if(deleteContent)moveToRecovery('content',deleteContent.dataset.deleteContent);
         const editIdea = event.target.closest('[data-edit-idea]'); if (editIdea) { const idea = state.ideas.find(record => record.id === editIdea.dataset.editIdea); if (idea) ideaModal(idea); }
         const convertIdea = event.target.closest('[data-convert-idea]'); if (convertIdea) { const idea = state.ideas.find(record => record.id === convertIdea.dataset.convertIdea); if (idea) contentModal(null, idea); }
-        const deleteIdea = event.target.closest('[data-delete-idea]'); if (deleteIdea) { const idea = state.ideas.find(record => record.id === deleteIdea.dataset.deleteIdea); if (idea && window.confirm(`Delete “${idea.title}”?`)) { state.ideas = state.ideas.filter(record => record.id !== idea.id); saveState(); renderAll(); toast('Idea deleted'); } }
+        const deleteIdea=event.target.closest('[data-delete-idea]');if(deleteIdea)moveToRecovery('ideas',deleteIdea.dataset.deleteIdea);
         const editGoal = event.target.closest('[data-edit-goal]'); if (editGoal) { const goal = state.goals.find(record => record.id === editGoal.dataset.editGoal); if (goal) goalModal(goal); }
         const incrementGoal = event.target.closest('[data-goal-increment]'); if (incrementGoal) { const goal = state.goals.find(record => record.id === incrementGoal.dataset.goalIncrement); if (goal) { goal.current = Math.min(goal.target, Number(goal.current) + 1); goal.updatedAt = new Date().toISOString(); saveState(); renderAll(); toast('Goal progress updated'); } }
-        const deleteGoal = event.target.closest('[data-delete-goal]'); if (deleteGoal) { const goal = state.goals.find(record => record.id === deleteGoal.dataset.deleteGoal); if (goal && window.confirm(`Delete “${goal.title}”?`)) { state.goals = state.goals.filter(record => record.id !== goal.id); saveState(); renderAll(); toast('Goal deleted'); } }
+        const deleteGoal=event.target.closest('[data-delete-goal]');if(deleteGoal)moveToRecovery('goals',deleteGoal.dataset.deleteGoal);
         const editAsset = event.target.closest('[data-edit-asset]'); if (editAsset) { const asset = state.assets.find(record => record.id === editAsset.dataset.editAsset); if (asset) assetModal(asset); }
-        const deleteAsset = event.target.closest('[data-delete-asset]'); if (deleteAsset) { const asset = state.assets.find(record => record.id === deleteAsset.dataset.deleteAsset); if (asset && window.confirm(`Delete “${asset.title}”?`)) { state.assets = state.assets.filter(record => record.id !== asset.id); saveState(); renderAll(); toast('Asset removed'); } }
+        const deleteAsset=event.target.closest('[data-delete-asset]');if(deleteAsset)moveToRecovery('assets',deleteAsset.dataset.deleteAsset);
         const deleteMetric = event.target.closest('[data-delete-metric]'); if (deleteMetric) { state.metrics = state.metrics.filter(record => record.id !== deleteMetric.dataset.deleteMetric); saveState(); renderAll(); toast('Metric entry deleted'); }
         const dismissReminder = event.target.closest('[data-dismiss-reminder]'); if (dismissReminder) { state.notificationDismissed.push(dismissReminder.dataset.dismissReminder); saveState(); renderAll(); }
         const completeCommunity = event.target.closest('[data-complete-community]'); if (completeCommunity) { const item = state.communityEvents.find(record => record.id === completeCommunity.dataset.completeCommunity); if (item) { item.status = 'Completed'; saveState(); renderAll(); toast('Community event completed'); } }
-        const deleteCommunity = event.target.closest('[data-delete-community]'); if (deleteCommunity) { state.communityEvents = state.communityEvents.filter(record => record.id !== deleteCommunity.dataset.deleteCommunity); saveState(); renderAll(); }
-        const deleteCommunityLink = event.target.closest('[data-delete-community-link]'); if (deleteCommunityLink) { state.communityLinks = state.communityLinks.filter(record => record.id !== deleteCommunityLink.dataset.deleteCommunityLink); saveState(); renderAll(); }
+        const deleteCommunity=event.target.closest('[data-delete-community]');if(deleteCommunity)moveToRecovery('communityEvents',deleteCommunity.dataset.deleteCommunity);
+        const deleteCommunityLink=event.target.closest('[data-delete-community-link]');if(deleteCommunityLink)moveToRecovery('communityLinks',deleteCommunityLink.dataset.deleteCommunityLink);
         const toggleFeedback = event.target.closest('[data-toggle-feedback]'); if (toggleFeedback) { const item = state.communityFeedback.find(record => record.id === toggleFeedback.dataset.toggleFeedback); if (item) { item.status = item.status === 'Open' ? 'Resolved' : 'Open'; saveState(); renderAll(); } }
-        const deleteFeedback = event.target.closest('[data-delete-feedback]'); if (deleteFeedback) { state.communityFeedback = state.communityFeedback.filter(record => record.id !== deleteFeedback.dataset.deleteFeedback); saveState(); renderAll(); }
+        const deleteFeedback=event.target.closest('[data-delete-feedback]');if(deleteFeedback)moveToRecovery('communityFeedback',deleteFeedback.dataset.deleteFeedback);
         const editCrm = event.target.closest('[data-edit-crm]'); if (editCrm) { const record = state.crm.find(item => item.id === editCrm.dataset.editCrm); if (record) crmModal(record); }
-        const deleteCrm = event.target.closest('[data-delete-crm]'); if (deleteCrm) { const record = state.crm.find(item => item.id === deleteCrm.dataset.deleteCrm); if (record && window.confirm(`Delete “${record.company}”?`)) { state.crm = state.crm.filter(item => item.id !== record.id); saveState(); renderAll(); toast('Collaboration removed'); } }
+        const deleteCrm=event.target.closest('[data-delete-crm]');if(deleteCrm)moveToRecovery('crm',deleteCrm.dataset.deleteCrm);
         const template = event.target.closest('[data-template]');
         if (template) { document.querySelectorAll('.template-tab').forEach(tab => tab.classList.toggle('active', tab === template)); document.getElementById('community-template').value = state.announcementDrafts[template.dataset.template] || ''; }
         if (event.target.closest('[data-close-modal]') || event.target.matches('[data-backdrop]')) closeModal();
@@ -3154,9 +3342,11 @@ const defaults = {
       document.getElementById('mobile-menu').addEventListener('click', () => document.getElementById('sidebar').classList.toggle('mobile-open'));
       document.getElementById('import-button').addEventListener('click', () => document.getElementById('import-file').click());
       document.getElementById('import-file').addEventListener('change', event => { const file = event.target.files?.[0]; if (file) importBackup(file); event.target.value = ''; });
-      document.getElementById('reset-profile').addEventListener('click', () => {
-        if (!window.confirm('Reset this local profile? Your tasks, stream sessions, and settings will be removed from this browser. Export a backup first if you want to keep them.')) return;
-        state = structuredClone(defaults); saveState(); renderAll(); showAuth('Workspace reset. Sign in again to continue.');
+      document.getElementById('reset-profile').addEventListener('click', async () => {
+        if(!await hqConfirm('Reset this browser workspace?','A local checkpoint will be kept for recovery. Tasks, sessions, and settings in this browser will reset.','Reset local workspace'))return;
+        const previous=structuredClone(state);captureLocalRecovery(state,'Before local reset');state=structuredClone(defaults);
+        if(!saveState({skipCloud:true,skipPublicProfile:true})){state=previous;return;}
+        renderAll();showAuth('Local workspace reset. Sign in to continue.');
       });
       document.getElementById('kanban').addEventListener('dragstart', event => {
         const card = event.target.closest('[data-task-card]'); if (!card) return;
@@ -3189,7 +3379,7 @@ const defaults = {
         item.status = dropzone.dataset.contentDrop; item.updatedAt = new Date().toISOString(); saveState(); renderAll();
       });
       document.addEventListener('keydown', event => {
-        const dialog = document.querySelector('#modal-root [role="dialog"]');
+        const dialog = document.querySelector('.hq-dialog') || document.querySelector('#modal-root [role="dialog"]');
         if (event.key === 'Escape' && dialog) { event.preventDefault(); closeModal(); return; }
         if (event.key !== 'Tab' || !dialog) return;
         const focusable = [...dialog.querySelectorAll('a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])')].filter(element => element.getClientRects().length);
@@ -3201,6 +3391,7 @@ const defaults = {
       const cloudInstructions = document.getElementById('view-cloud');
       cloudInstructions.innerHTML = cloudInstructions.innerHTML.replace('https://zgqcufmsykxvxajrupgi.supabase.co/auth/v1/callback', 'https://asqszzgunsrdclunbxfq.supabase.co/auth/v1/callback');
       initDropboxView();
+      workspaceSaveStatus('Saved on device','Open recovery and save history.');
       document.getElementById('activity-filter')?.addEventListener('change', renderActivity);
       window.addEventListener('hashchange', () => { if (location.hash.startsWith('#dropbox-connected') || location.hash.startsWith('#dropbox-error')) refreshDropboxStatus(); });
       renderAll(); secureGate();

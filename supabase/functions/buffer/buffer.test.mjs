@@ -10,7 +10,7 @@ globalThis.Deno={env:{get:key=>env[key]},serve:fn=>handler=fn};
 globalThis.__bufferClient=()=>({auth:{getUser:async()=>({data:{user:signedIn?{id:userId}:null},error:null})},storage:{getBucket:async()=>missingBucket ? {data:null,error:{statusCode:'404'}} : ({data:{public:true},error:null}),createBucket:async(name,options)=>{assert.equal(options.public,true);createdBucket=true;missingBucket=false;return {error:null};},from:()=>({upload:async(path,bytes,options)=>{assert.ok(path.startsWith('owner/'));assert.equal(bytes.byteLength,4);assert.equal(options.contentType,'image/png');uploaded=true;return {error:null};},getPublicUrl:path=>({data:{publicUrl:`https://project.example/storage/v1/object/public/creatorhq-buffer-media/${path}`}})})}});
 globalThis.fetch=async(url,options)=>{
  const {query}=JSON.parse(options.body);lastQuery=query;
- const data=query.includes('account { organizations')?{account:{organizations:[{id:'org'}]}}:query.includes('createPost(')?{createPost:{post:{id:'new-post',status:'draft'}}}:query.includes('editPost(')?{editPost:{post:{id:'edited'}}}:query.includes('posts(')?{posts:{edges:[],pageInfo:{hasNextPage:false}}}: {channels};
+ const data=query.includes('post(input:')?{post:query.includes('missing')?null:{id:'linked',status:'sent',channelId:'fb'}}:query.includes('account { organizations')?{account:{organizations:[{id:'org'}]}}:query.includes('createPost(')?{createPost:{post:{id:'new-post',status:'draft'}}}:query.includes('editPost(')?{editPost:{post:{id:'edited'}}}:query.includes('posts(')?{posts:{edges:[],pageInfo:{hasNextPage:false}}}: {channels};
  return new Response(JSON.stringify({data}),{status:200});
 };
 let source=await readFile(new URL('./index.ts',import.meta.url),'utf8');
@@ -75,4 +75,9 @@ test('does not store or publish files until the owner explicitly enables media u
  env.BUFFER_MEDIA_UPLOADS_ENABLED='false';uploaded=false;createdBucket=false;
  const response=await handler(new Request('https://project.example/functions/v1/buffer?action=uploadMedia',{method:'POST',headers:{Origin:origin,Authorization:'Bearer test','Content-Type':'image/png'},body:new Uint8Array([1,2,3,4])}));
  assert.equal(response.status,503);assert.equal(uploaded,false);assert.equal(createdBucket,false);env.BUFFER_MEDIA_UPLOADS_ENABLED='true';
+});
+
+test('reconciles linked posts without discarding successes when one is unavailable',async()=>{
+ const response=await handler(request({action:'contentPosts',ids:['linked','missing']}));assert.equal(response.status,200);const data=await response.json();assert.equal(data.posts[0].status,'sent');assert.equal(data.unresolved,1);
+ assert.equal((await handler(request({action:'contentPosts',ids:Array(21).fill('post')}))).status,400);
 });

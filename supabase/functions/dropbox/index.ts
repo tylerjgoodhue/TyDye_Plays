@@ -233,8 +233,10 @@ Deno.serve(async request => {
 
     // File upload streams through the content endpoint with raw bytes.
     if (action === "upload") {
-      const dropboxArg = request.headers.get("Dropbox-API-Arg") || "";
-      if (!dropboxArg) return json({ error: "Missing upload target." }, 400, origin);
+      let args;
+      try{args=JSON.parse(request.headers.get("Dropbox-API-Arg")||"");}catch{return json({error:"Missing upload target."},400,origin);}
+      if(typeof args.path!=="string"||!args.path.startsWith("/")||args.path.length>2000)return json({error:"Choose a valid upload folder."},400,origin);
+      const dropboxArg=JSON.stringify({path:args.path,mode:args.mode==="overwrite"?"overwrite":"add",autorename:args.mode!=="overwrite",mute:false}).replace(/[\u007f-\uffff]/g,character=>"\\u"+character.charCodeAt(0).toString(16).padStart(4,"0"));
       const response = await fetch("https://content.dropboxapi.com/2/files/upload", {
         method: "POST",
         headers: { "Authorization": `Bearer ${accessToken}`, "Dropbox-API-Arg": dropboxArg, "Content-Type": "application/octet-stream" },
@@ -265,6 +267,17 @@ Deno.serve(async request => {
       if (!response.ok) return json({ error: "Image previews are temporarily unavailable." }, 400, origin);
       const data = await response.json();
       return json({ thumbnails: (data.entries || []).map((entry: { ".tag": string; thumbnail?: string }, index: number) => ({ path: paths[index], thumbnail: entry[".tag"] === "success" ? entry.thumbnail : null })) }, 200, origin);
+    }
+
+    if(action === "download-file") {
+      const path=typeof body.path==="string"?body.path:"";
+      if(!path.startsWith("/")||path.length>2000)return json({error:"Choose a valid Dropbox file."},400,origin);
+      const response=await fetch("https://content.dropboxapi.com/2/files/download",{method:"POST",headers:{Authorization:`Bearer ${accessToken}`,"Dropbox-API-Arg":JSON.stringify({path}).replace(/[\u007f-\uffff]/g,character=>"\\u"+character.charCodeAt(0).toString(16).padStart(4,"0"))}});
+      if(!response.ok)return json({error:"The linked file could not be read from Dropbox."},400,origin);
+      const max=50*1024*1024;
+      if(Number(response.headers.get("Content-Length"))>max){await response.body?.cancel();return json({error:"Choose a file under 50 MB for publishing."},413,origin);}
+      let bytes=0;const bounded=response.body?.pipeThrough(new TransformStream({transform(chunk,controller){bytes+=chunk.byteLength;if(bytes>max){controller.error(new Error("File exceeds publishing limit"));return;}controller.enqueue(chunk);}}));
+      return new Response(bounded,{headers:{"Content-Type":response.headers.get("Content-Type")||"application/octet-stream","Cache-Control":"no-store","Access-Control-Allow-Origin":origin,Vary:"Origin"}});
     }
 
     if (action === "list") {
