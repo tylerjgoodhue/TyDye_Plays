@@ -564,6 +564,17 @@ a[hidden] { display:none!important; }
 .site-section:nth-of-type(even) .site-section-sparkles i:nth-child(1) { left:auto;right:9%;animation-delay:-3s; }
 .site-section:nth-of-type(even) .site-section-sparkles i:nth-child(2) { right:auto;left:5%;animation-delay:-1s; }
 @media(max-width:760px) { .site-section-sparkles i:nth-child(1) { top:16px; }.site-section-sparkles i:nth-child(2) { bottom:12px;width:8px;height:8px; } }
+/* Tiny constellations stay in the section gutters, away from the content. */
+.site-section-sparkles i:nth-child(3) { left:1.5%;right:auto;top:56%;width:6px;height:6px; }
+.site-section-sparkles i:nth-child(4) { left:auto;right:2%;bottom:30%;width:5px;height:5px; }
+.site-constellation { position:absolute;right:2%;top:12px;width:clamp(80px,10vw,140px);height:auto;overflow:visible;opacity:.55; }
+.constellation-lines { fill:none;stroke:#cfa9ff;stroke-width:.65;stroke-opacity:.42; }
+.constellation-stars { fill:#f5b7ed;animation:constellation-shimmer 7s ease-in-out infinite; }
+.site-section:nth-of-type(even) .site-constellation { right:auto;left:1%;top:auto;bottom:10px;transform:rotate(12deg); }
+.site-section:nth-of-type(even) .constellation-stars { animation-delay:-3.5s; }
+@keyframes constellation-shimmer { 0%,100% { opacity:.55; } 50% { opacity:1; } }
+@media(max-width:760px) { .site-constellation { width:76px;top:4px;right:3%;opacity:.4; }.site-section:nth-of-type(even) .site-constellation { bottom:4px; } }
+@media(prefers-reduced-motion:reduce) { .constellation-stars { animation:none; } }
 @keyframes hero-sparkle { 0%,100% { opacity:.25;transform:scale(.75) rotate(0deg); } 50% { opacity:.85;transform:scale(1.12) rotate(15deg); } }
 @media(prefers-reduced-motion:reduce) { :is(.site-hero-sparkles,.site-section-sparkles) i { animation:none;opacity:.55; } }
 .public-polished .site-identity-copy .site-eyebrow { max-width:100%; }
@@ -855,7 +866,13 @@ a[hidden] { display:none!important; }
         const glitter = document.createElement('span');
         glitter.className = 'site-section-sparkles';
         glitter.setAttribute('aria-hidden', 'true');
-        for (let i = 0; i < 2; i++) glitter.append(document.createElement('i'));
+        for (let i = 0; i < 4; i++) glitter.append(document.createElement('i'));
+        const constellation = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        constellation.setAttribute('class', 'site-constellation');
+        constellation.setAttribute('viewBox', '0 0 160 90');
+        constellation.setAttribute('focusable', 'false');
+        constellation.innerHTML = '<path class="constellation-lines" d="M12 63 42 25 82 43 119 12 148 58 82 43 105 79"/><g class="constellation-stars"><circle cx="12" cy="63" r="1.8"/><circle cx="42" cy="25" r="2.4"/><circle cx="82" cy="43" r="2.5"/><circle cx="119" cy="12" r="1.8"/><circle cx="148" cy="58" r="2"/><circle cx="105" cy="79" r="1.6"/><path d="M42 18 43.5 23.5 49 25 43.5 26.5 42 32 40.5 26.5 35 25 40.5 23.5Z"/></g>';
+        glitter.append(constellation);
         section.append(glitter);
       });
       if (!tagline) document.querySelector('.site-hero-tagline')?.remove();
