@@ -551,15 +551,21 @@ a[hidden] { display:none!important; }
 .public-polished .site-identity-copy { width:100%;min-width:0;display:flex;flex-direction:column;align-items:center; }
 /* A small, decorative shimmer around the hero branding. */
 .public-polished .site-identity-copy { position:relative;isolation:isolate; }
-.site-hero-sparkles { position:absolute;inset:0;pointer-events:none; }
-.site-hero-sparkles i { position:absolute;width:12px;height:12px;background:#f5b7ed;clip-path:polygon(50% 0,61% 38%,100% 50%,61% 62%,50% 100%,39% 62%,0 50%,39% 38%);opacity:.65;animation:hero-sparkle 5s ease-in-out infinite; }
-.site-hero-sparkles i:nth-child(1) { left:5%;top:24%; }
-.site-hero-sparkles i:nth-child(2) { right:8%;top:10%;width:9px;height:9px;background:#cfa9ff;animation-delay:-2s; }
-.site-hero-sparkles i:nth-child(3) { right:2%;top:66%;width:15px;height:15px;animation-delay:-3.6s; }
-.site-hero-sparkles i:nth-child(4) { left:16%;bottom:0;width:7px;height:7px;background:#cfa9ff;animation-delay:-1.2s; }
-.site-hero-sparkles i:nth-child(5) { right:24%;bottom:3%;width:6px;height:6px;animation-delay:-4.2s; }
+:is(.site-hero-sparkles,.site-section-sparkles) { position:absolute;inset:0;pointer-events:none; }
+:is(.site-hero-sparkles,.site-section-sparkles) i { position:absolute;width:12px;height:12px;background:#f5b7ed;clip-path:polygon(50% 0,61% 38%,100% 50%,61% 62%,50% 100%,39% 62%,0 50%,39% 38%);opacity:.65;animation:hero-sparkle 5s ease-in-out infinite; }
+:is(.site-hero-sparkles,.site-section-sparkles) i:nth-child(1) { left:5%;top:24%; }
+:is(.site-hero-sparkles,.site-section-sparkles) i:nth-child(2) { right:8%;top:10%;width:9px;height:9px;background:#cfa9ff;animation-delay:-2s; }
+:is(.site-hero-sparkles,.site-section-sparkles) i:nth-child(3) { right:2%;top:66%;width:15px;height:15px;animation-delay:-3.6s; }
+:is(.site-hero-sparkles,.site-section-sparkles) i:nth-child(4) { left:16%;bottom:0;width:7px;height:7px;background:#cfa9ff;animation-delay:-1.2s; }
+:is(.site-hero-sparkles,.site-section-sparkles) i:nth-child(5) { right:24%;bottom:3%;width:6px;height:6px;animation-delay:-4.2s; }
+.public-polished .site-section { position:relative; }
+.site-section-sparkles i:nth-child(1) { left:3%;top:32px;width:9px;height:9px; }
+.site-section-sparkles i:nth-child(2) { right:4%;top:auto;bottom:28px;width:12px;height:12px; }
+.site-section:nth-of-type(even) .site-section-sparkles i:nth-child(1) { left:auto;right:9%;animation-delay:-3s; }
+.site-section:nth-of-type(even) .site-section-sparkles i:nth-child(2) { right:auto;left:5%;animation-delay:-1s; }
+@media(max-width:760px) { .site-section-sparkles i:nth-child(1) { top:16px; }.site-section-sparkles i:nth-child(2) { bottom:12px;width:8px;height:8px; } }
 @keyframes hero-sparkle { 0%,100% { opacity:.25;transform:scale(.75) rotate(0deg); } 50% { opacity:.85;transform:scale(1.12) rotate(15deg); } }
-@media(prefers-reduced-motion:reduce) { .site-hero-sparkles i { animation:none;opacity:.55; } }
+@media(prefers-reduced-motion:reduce) { :is(.site-hero-sparkles,.site-section-sparkles) i { animation:none;opacity:.55; } }
 .public-polished .site-identity-copy .site-eyebrow { max-width:100%; }
 .public-polished .site-identity-copy h1 { width:100%;margin-inline:auto; }
 .public-polished .site-hero .site-hero-title-image { width:min(100%,640px);height:auto;max-height:320px;margin:0 auto;object-position:center; }
@@ -845,6 +851,13 @@ a[hidden] { display:none!important; }
       const mobileNav=document.createElement('nav');mobileNav.className='site-mobile-actions';mobileNav.setAttribute('aria-label','Quick actions');
       mobileNav.innerHTML=`${twitchUrl?`<a href="${escapeHtml(twitchUrl)}" target="_blank" rel="noopener noreferrer" data-mobile-live>${live?'Watch live':'Watch on Twitch'}</a>`:''}<a href="#stream-schedule">Schedule</a>${featured.length?'<a href="#highlights">Highlights</a>':'<a href="#community">Community</a>'}`;
       root.append(mobileNav);
+      root.querySelectorAll('.site-section').forEach(section => {
+        const glitter = document.createElement('span');
+        glitter.className = 'site-section-sparkles';
+        glitter.setAttribute('aria-hidden', 'true');
+        for (let i = 0; i < 2; i++) glitter.append(document.createElement('i'));
+        section.append(glitter);
+      });
       if (!tagline) document.querySelector('.site-hero-tagline')?.remove();
       const heroCopy = document.querySelector('.site-hero-copy');
       const statusBadge = heroCopy.querySelector('[data-live-status]');
