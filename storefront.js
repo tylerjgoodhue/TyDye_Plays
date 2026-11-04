@@ -376,7 +376,7 @@
       await load();
     }
     async function renderPage(root) {
-      root.innerHTML = `${header()}<main class="fw-page" data-fw-page></main>${footer()}`;
+      root.innerHTML = `${header()}<div class="fw-page" data-fw-page></div>${footer()}`;
       const host = root.querySelector('[data-fw-page]');
       attachNav();
       if (location.pathname.endsWith('/cart.html')) await renderCart(host);

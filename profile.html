@@ -1001,6 +1001,12 @@ a[hidden] { display:none!important; }
           status.className = 'site-contact-status error';
           return;
         }
+        if (!contactForm.checkValidity()) {
+          status.textContent = 'Enter a valid email address so I can reply.';
+          status.className = 'site-contact-status error';
+          contactForm.reportValidity();
+          return;
+        }
         const mailto = `mailto:Contact@TyDyePlays.com?subject=${encodeURIComponent(`[${subject}] ${name}`)}&body=${encodeURIComponent(`${message}\n\n— ${name}\n${from}`)}`;
         status.textContent = 'Opening your email app with the message ready to send…';
         status.className = 'site-contact-status ok';
