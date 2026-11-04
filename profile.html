@@ -545,16 +545,20 @@ a[hidden] { display:none!important; }
 .public-polished .site-hero::after { background:linear-gradient(90deg,#090d0bf2 0%,#0c100de3 40%,#0b0e0ba3 100%),linear-gradient(0deg,var(--site-bg),transparent 30%); }
 .public-polished .site-hero-image { opacity:.65; }
 .public-polished .site-hero-grid { width:100%;max-width:1440px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1.25fr) minmax(320px,.75fr);gap:clamp(28px,5vw,88px);align-items:center; }
-.public-polished .site-hero-copy { width:100%;max-width:760px;margin:0; }
+.public-polished .site-hero-copy { width:100%;max-width:760px;margin:0;text-align:center; }
 .public-polished .site-hero-copy::before { display:none; }
-.public-polished .site-identity { align-items:center;gap:22px; }
+.public-polished .site-identity { width:100%;justify-content:center; }
+.public-polished .site-identity-copy { width:100%;min-width:0;display:flex;flex-direction:column;align-items:center; }
+.public-polished .site-identity-copy .site-eyebrow { max-width:100%; }
+.public-polished .site-identity-copy h1 { width:100%;margin-inline:auto; }
+.public-polished .site-hero .site-hero-title-image { width:min(100%,640px);height:auto;max-height:320px;margin:0 auto;object-position:center; }
 .public-polished .site-hero-logo { width:104px;height:104px;flex:0 0 104px;border-radius:24px;border:1px solid #ffffff30;padding:6px;background:#ffffff07;box-shadow:0 16px 48px #0005; }
 .public-polished .site-hero-logo img { border-radius:18px;object-fit:contain; }
 .public-polished .site-hero h1 { font-size:clamp(40px,4.9vw,74px);line-height:1.02;letter-spacing:-.045em;max-width:100%; }
 .public-polished .site-eyebrow { letter-spacing:.14em;font-size:10px;margin-bottom:13px; }
 .public-polished .site-status { margin-bottom:28px;border-color:#ffffff21;background:#ffffff06;letter-spacing:.05em; }
-.public-polished .site-hero-tagline { max-width:540px;font-size:18px;line-height:1.75;color:#c5cec1;margin-top:26px; }
-.public-polished .site-hero-actions { margin-top:28px;gap:12px; }
+.public-polished .site-hero-tagline { max-width:540px;font-size:18px;line-height:1.75;color:#c5cec1;margin:26px auto 0; }
+.public-polished .site-hero-actions { margin-top:28px;gap:12px;justify-content:center; }
 .public-polished .site-hero-actions .site-button { min-height:50px;padding:0 21px;font-size:12px; }
 .public-polished .site-hero-actions .site-button.outline { border-color:#ffffff30; }
 .public-polished .site-hero-socials { top:22px;right:max(5vw,24px);gap:7px; }
@@ -845,22 +849,10 @@ a[hidden] { display:none!important; }
       }
       const identity = document.createElement('div');
       const identityCopy = document.createElement('div');
-      const logo = document.createElement('div');
       identity.className = 'site-identity';
       identityCopy.className = 'site-identity-copy';
-      logo.className = 'site-hero-logo';
-      if (avatar) {
-        const logoImage = document.createElement('img');
-        logoImage.src = avatar;
-        logoImage.alt = `${name} logo`;
-        logoImage.loading = 'eager';
-        logo.append(logoImage);
-      } else {
-        logo.textContent = initials || 'C';
-        logo.setAttribute('aria-hidden', 'true');
-      }
       identityCopy.append(handleLabel, creatorName);
-      identity.append(logo, identityCopy);
+      identity.append(identityCopy);
       statusBadge.after(identity);
       if (socialIconMarkup) {
         const socialNav = document.createElement('nav');
