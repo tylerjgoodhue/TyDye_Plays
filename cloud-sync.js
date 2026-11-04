@@ -820,6 +820,17 @@ function ensureBufferQueueViews() {
       if (post) openBufferPost(post);
       return;
     }
+    const composeDay = event.target.closest('[data-buffer-compose-day]');
+    if (composeDay) {
+      const date = new Date(`${composeDay.dataset.bufferComposeDay}T12:00:00`);
+      if (date <= new Date()) { ui()?.notify('Choose a future day to plan a new post.'); return; }
+      document.getElementById('buffer-schedule-mode').value = 'custom';
+      document.getElementById('buffer-due-at').value = bufferLocalDateTime(date);
+      document.getElementById('buffer-due-field').hidden = false;
+      renderBufferComposerPreview(); updateBufferBatchLabel();
+      document.querySelector('.nav-button[data-view="buffer-compose"]')?.click();
+      return;
+    }
     const moreButton = event.target.closest('[data-buffer-day]');
     if (moreButton) {
       const dayPosts = bufferPosts.filter(post => matchesBufferSearch(post) && post.dueAt && new Date(post.dueAt).toLocaleDateString('en-CA') === moreButton.dataset.bufferDay);
@@ -873,7 +884,7 @@ function ensureBufferComposerLayout() {
         scheduledView.className = 'view buffer-scheduled-view';
         scheduledView.id = 'view-buffer-scheduled';
         scheduledView.hidden = true;
-        scheduledView.innerHTML = `<div class="page-heading"><div><div class="eyebrow">Social Media Management</div><h1>Scheduled</h1><p class="subtitle">Review your Buffer queue in a list or calendar, and edit posts when plans change.</p></div><div class="button-row"><span class="chip" id="buffer-scheduled-connection">Checking Buffer</span><button class="button primary" type="button" data-view="buffer-compose">Compose post</button></div></div>`;
+        scheduledView.innerHTML = `<div class="page-heading"><div><div class="eyebrow">Social Media Management</div><h1>Publishing planner</h1><p class="subtitle">Plan drafts, manage your queue, and follow posts from idea to published.</p></div><div class="button-row"><span class="chip" id="buffer-scheduled-connection">Checking Buffer</span><button class="button primary" type="button" data-view="buffer-compose">Compose post</button></div></div>`;
         document.getElementById('view-buffer-compose')?.insertAdjacentElement('afterend', scheduledView);
       }
       if (scheduledView) scheduledView.append(queuePanel);
@@ -968,52 +979,45 @@ function renderBufferComposerPreview() {
     dueAt: dueAt && !Number.isNaN(dueAt.getTime()) ? dueAt.toISOString() : '',
     previewSchedule: custom
       ? dueAt && !Number.isNaN(dueAt.getTime()) ? `Scheduled ${dueAt.toLocaleString()}` : 'Choose a date and time.'
-      : 'Added to next available queue slot.'
+      : document.getElementById('buffer-schedule-mode')?.value === 'draft' ? 'Saved in Buffer as a draft. Will not publish.' : 'Added to next available queue slot.'
   };
   host.innerHTML = bufferPreviewMarkup(post, channel, 'buffer-compose-preview');
 }
 
 function openBufferPost(post) {
-  const organization = selectedBufferOrganization();
-  const channel = organization?.channels?.find(item => item.id === post.channelId);
-  const modalRoot = document.getElementById('modal-root');
-  if (!modalRoot) return;
-  modalRoot.innerHTML = `<div class="modal-backdrop" data-backdrop><form class="modal buffer-editor-modal" id="buffer-post-edit-form" role="dialog" aria-modal="true" aria-labelledby="buffer-post-title"><div class="modal-head"><div><p class="buffer-editor-kicker">SCHEDULED CONTENT</p><h2 id="buffer-post-title">Edit scheduled post</h2><p class="buffer-editor-channel">${bufferHtml(channel?.name || 'Buffer channel')} · ${bufferHtml(channel?.service || 'Social')}</p></div><button type="button" class="mini-button" data-close-modal aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div><div class="buffer-editor-layout"><div class="buffer-editor-fields"><div class="buffer-editor-section"><div class="buffer-editor-section-heading"><span class="buffer-editor-step">01</span><div><h3>Post copy</h3><p>Shape the message your audience will see.</p></div></div><div class="form-field"><label class="sr-only" for="buffer-edit-text">Post copy</label><textarea id="buffer-edit-text" name="text" maxlength="5000" required>${bufferHtml(post.text || '')}</textarea><div class="workflow-meta"><span id="buffer-edit-character-count">${(post.text || '').length.toLocaleString()} / 5,000</span><span>${bufferHtml(post.status || 'Scheduled')}</span></div></div></div><div class="buffer-editor-section"><div class="buffer-editor-section-heading"><span class="buffer-editor-step">02</span><div><h3>Publishing time</h3><p>All times are shown in your local time zone.</p></div></div><div class="form-field"><label for="buffer-edit-due">Schedule date and time</label><input id="buffer-edit-due" name="dueAt" type="datetime-local" value="${bufferLocalDateTime(post.dueAt)}" required></div></div><p class="buffer-editor-note">Existing media and channel settings will be preserved.</p></div><aside class="buffer-editor-preview"><div class="buffer-preview-heading"><div><p class="buffer-editor-kicker">LIVE PREVIEW</p><h3>How it will appear</h3></div><span class="buffer-preview-live"><span></span>Preview</span></div><div id="buffer-post-preview">${bufferPreviewMarkup(post, channel)}</div></aside></div><div class="modal-actions"><span class="buffer-editor-save-note">Changes save directly to Buffer.</span><div><button type="button" class="button" data-close-modal>Cancel</button><button class="button primary" type="submit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m5 12 4 4L19 6"/></svg>Save changes</button></div></div></form></div>`;
+  const channel = selectedBufferOrganization()?.channels?.find(item => item.id === post.channelId);
+  const modal = document.getElementById('modal-root');
+  const readOnly = ['sent', 'sending', 'needs_approval'].includes(post.status) || (Array.isArray(post.allowedActions) && !post.allowedActions.includes('updatePost'));
+  modal.innerHTML = `<div class="modal-backdrop" data-backdrop><form class="modal buffer-editor-modal" id="buffer-post-edit-form" role="dialog" aria-modal="true" aria-labelledby="buffer-post-title"><div class="modal-head"><div><p class="buffer-editor-kicker">${bufferHtml(post.status)}</p><h2 id="buffer-post-title">${readOnly ? 'Post details' : 'Edit post'}</h2><p>${bufferHtml(channel?.name || 'Channel')} · ${bufferHtml(channel?.service || '')}</p></div><button type="button" class="mini-button" data-close-modal aria-label="Close">×</button></div><div class="buffer-editor-layout"><div class="buffer-editor-fields"><label class="form-field"><span>Post copy</span><textarea name="text" maxlength="5000" required ${readOnly ? 'readonly' : ''}>${bufferHtml(post.text)}</textarea></label>${readOnly ? '<p class="settings-hint">Reuse this post to create a new version. Approval and delivery stay managed by Buffer.</p>' : `<label class="form-field"><span>What should happen?</span><select class="field-control" name="mode"><option value="">Keep current schedule / draft</option><option value="addToQueue">Add to next queue slot</option><option value="customScheduled">Choose a new publishing time</option><option value="draft">Save as draft (remove from queue)</option></select></label><label class="form-field" id="buffer-edit-date-field" hidden><span>Publishing time (this device’s timezone)</span><input class="field-control" name="dueAt" type="datetime-local" value="${post.dueAt ? bufferLocalDateTime(post.dueAt) : ''}"></label><p class="settings-hint">Existing media and platform settings are preserved. Keeping the schedule only updates the copy.</p>`}${post.error?.message ? `<p class="buffer-post-failure">${bufferHtml(post.error.message)}</p>` : ''}${/^https:\/\//.test(post.externalLink || '') ? `<a class="button" target="_blank" rel="noopener noreferrer" href="${bufferHtml(post.externalLink)}">View published post ↗</a>` : ''}<p role="status" id="buffer-edit-error" class="settings-hint"></p></div><aside class="buffer-editor-preview" id="buffer-edit-live">${bufferPreviewMarkup(post,channel)}</aside></div><div class="modal-actions"><button class="button" type="button" id="buffer-reuse">Reuse in composer</button>${readOnly ? '' : '<button class="button primary" type="submit">Save changes</button>'}</div></form></div>`;
   const form = document.getElementById('buffer-post-edit-form');
-  const updatePreview = () => {
-    const previewText = document.getElementById('buffer-preview-text');
-    const characterCount = document.getElementById('buffer-edit-character-count');
-    if (previewText) previewText.textContent = form.elements.text.value;
-    if (characterCount) characterCount.textContent = `${form.elements.text.value.length.toLocaleString()} / 5,000`;
+  form.elements.text.oninput = () => { document.getElementById('buffer-edit-live').innerHTML = bufferPreviewMarkup({...post,text:form.elements.text.value},channel); };
+  if (!readOnly) form.elements.mode.onchange = () => { document.getElementById('buffer-edit-date-field').hidden = form.elements.mode.value !== 'customScheduled'; };
+  document.getElementById('buffer-reuse').onclick = () => {
+    if (document.getElementById('buffer-post-text').value.trim() && !confirm('Replace the current composer with this post? Save a draft first if you want to keep it.')) return;
+    document.getElementById('buffer-post-text').value = form.elements.text.value;
+    const asset = post.assets?.[0];
+    document.getElementById('buffer-media-type').value = asset ? (String(asset.type).toLowerCase().includes('video') ? 'video' : 'image') : '';
+    document.getElementById('buffer-media-url').value = asset?.source || '';
+    document.getElementById('buffer-media-url').disabled = !asset;
+    document.querySelectorAll('[data-buffer-target]').forEach(input => { input.checked = input.value === post.channelId; });
+    document.getElementById('buffer-channel-customizations').innerHTML = ''; bufferCustomizations.clear(); renderBufferTargetCustomizations();
+    document.getElementById('buffer-schedule-mode').value = 'queue'; document.getElementById('buffer-due-field').hidden = true;
+    document.getElementById('buffer-post-text').dispatchEvent(new Event('input',{bubbles:true}));
+    modal.innerHTML = '';
+    document.querySelector('.nav-button[data-view="buffer-compose"]')?.click();
   };
-  const updateSchedulePreview = () => {
-    const schedule = document.getElementById('buffer-preview-schedule');
-    const dueAt = new Date(form.elements.dueAt.value);
-    if (schedule && !Number.isNaN(dueAt.getTime())) schedule.textContent = `Scheduled ${dueAt.toLocaleString()}`;
-  };
-  form.elements.text.addEventListener('input', updatePreview);
-  form.elements.dueAt.addEventListener('input', updateSchedulePreview);
-  form.addEventListener('submit', async event => {
-    event.preventDefault();
-    const submit = form.querySelector('[type="submit"]');
-    const values = new FormData(form);
-    const text = String(values.get('text') || '').trim();
-    const dueAtDate = new Date(String(values.get('dueAt') || ''));
-    if (!text || Number.isNaN(dueAtDate.getTime()) || dueAtDate.getTime() <= Date.now()) { ui()?.notify('Enter post copy and a future schedule time.'); return; }
-    const dueAt = dueAtDate.toISOString();
-    submit.disabled = true;
-    submit.textContent = 'Saving…';
+  form.onsubmit = async event => {
+    event.preventDefault(); if (readOnly) return;
+    const button = form.querySelector('[type="submit"]'); button.disabled = true;
     try {
-      await callBuffer('editPost', { id: post.id, text, dueAt });
-      modalRoot.innerHTML = '';
-      await loadBufferPosts();
-      ui()?.notify('Scheduled post updated in Buffer.');
-    } catch (error) {
-      ui()?.notify(error.message || 'Could not update the scheduled post.');
-      submit.disabled = false;
-      submit.textContent = 'Save changes';
-    }
-  });
+      const mode = form.elements.mode.value;
+      const due = new Date(form.elements.dueAt.value);
+      if (mode === 'customScheduled' && (!Number.isFinite(due.getTime()) || due <= new Date())) throw new Error('Choose a future publishing time.');
+      await callBuffer('editPost',{id:post.id,text:form.elements.text.value.trim(),mode:mode || undefined,dueAt:mode === 'customScheduled' ? due.toISOString() : undefined});
+      modal.innerHTML = ''; await loadBufferPosts(); ui()?.notify('Post updated in Buffer.');
+    } catch(error) { document.getElementById('buffer-edit-error').textContent = error.message; }
+    finally { button.disabled = false; }
+  };
 }
 
 function openBufferPostList(posts) {
@@ -1059,7 +1063,7 @@ function renderBufferCalendar() {
       return `<button type="button" class="buffer-calendar-post" data-buffer-post="${bufferHtml(post.id)}" aria-label="Preview and edit scheduled post for ${bufferHtml(channel?.name || 'Buffer channel')}" title="${bufferHtml(post.text)}">${bufferHtml(time)} · ${bufferHtml(channel?.name || post.text || 'Post')}</button>`;
     }).join('');
     const more = dayPosts.length > 3 ? `<button type="button" class="buffer-calendar-post buffer-calendar-post-more" data-buffer-day="${bufferHtml(key)}">+${dayPosts.length - 3} more</button>` : '';
-    return `<div class="buffer-calendar-day ${day.getMonth() !== month ? 'outside' : ''} ${key === todayKey ? 'today' : ''}"><div class="buffer-calendar-number">${day.getDate()}</div>${items}${more}</div>`;
+    return `<div class="buffer-calendar-day ${day.getMonth() !== month ? 'outside' : ''} ${key === todayKey ? 'today' : ''}"><button type="button" class="buffer-calendar-number" data-buffer-compose-day="${bufferHtml(key)}" aria-label="Plan a post for ${bufferHtml(key)}">${day.getDate()}</button>${items}${more}</div>`;
   }).join('');
   calendar.innerHTML = `<div class="buffer-calendar"><div class="buffer-calendar-head">Sun</div><div class="buffer-calendar-head">Mon</div><div class="buffer-calendar-head">Tue</div><div class="buffer-calendar-head">Wed</div><div class="buffer-calendar-head">Thu</div><div class="buffer-calendar-head">Fri</div><div class="buffer-calendar-head">Sat</div>${days}</div><p class="settings-hint" style="margin:10px 0 0">Showing ${bufferPosts.length}${bufferPostsHasNext ? '+ loaded' : ''} scheduled posts. Use “Load next 50” to extend the calendar. Buffer remains the source of truth for queue status.</p>`;
 }
@@ -1093,7 +1097,7 @@ function renderBufferTargetChoices() {
 function updateBufferBatchLabel() {
   const count = document.querySelectorAll('#buffer-channel-targets [data-buffer-target]:checked').length;
   const button = document.getElementById('buffer-schedule-submit');
-  if (button) button.textContent = document.getElementById('buffer-schedule-mode').value === 'custom' ? `Schedule ${count || ''} post${count === 1 ? '' : 's'}` : `Add ${count || ''} post${count === 1 ? '' : 's'} to queue`;
+  if (button) button.textContent = document.getElementById('buffer-schedule-mode').value === 'draft' ? `Save ${count || ''} Buffer draft${count === 1 ? '' : 's'}` : document.getElementById('buffer-schedule-mode').value === 'custom' ? `Schedule ${count || ''} post${count === 1 ? '' : 's'}` : `Add ${count || ''} post${count === 1 ? '' : 's'} to queue`;
   updateBufferReadiness();
 }
 
@@ -1165,6 +1169,10 @@ async function loadBufferWorkspace() {
   renderBufferContentSources();
   try {
     const result = await callBuffer('workspace');
+    const upload = document.getElementById('buffer-media-file');
+    if (upload) upload.disabled = result.mediaUploadsEnabled !== true;
+    const uploadNote = document.getElementById('buffer-upload-status');
+    if (uploadNote) uploadNote.textContent = result.mediaUploadsEnabled ? 'Publishing uploads are enabled.' : 'Device uploads need the site owner’s approval for public publishing links. Use a media link below in the meantime.';
     bufferOrganizations = Array.isArray(result.organizations) ? result.organizations : [];
     const selector = document.getElementById('buffer-organization');
     const previousOrganization = selector.value;
@@ -1173,6 +1181,8 @@ async function loadBufferWorkspace() {
       : '<option value="">No Buffer organizations found</option>';
     if (bufferOrganizations.some(org => org.id === previousOrganization)) selector.value = previousOrganization;
     renderBufferChannels();
+    renderBufferPlannerSummary();
+    renderBufferDraftLibrary();
     setBufferStatus(bufferOrganizations.length ? `Connected to Buffer account ${result.account?.email || ''}. Your channels are ready.` : 'Buffer is connected, but this account has no organizations or channels yet.', true);
     if (bufferOrganizations.length) await loadBufferPosts();
   } catch (error) {
@@ -1192,6 +1202,7 @@ async function loadBufferWorkspace() {
 async function loadBufferPosts({ append = false } = {}) {
   const organization = selectedBufferOrganization();
   if (!organization) return;
+  const generation = ++bufferLoadGeneration;
   const channelId = document.getElementById('buffer-channel-filter').value;
   if (!append) {
     bufferPosts = [];
@@ -1202,8 +1213,10 @@ async function loadBufferPosts({ append = false } = {}) {
   const loadMoreButton = document.getElementById('buffer-load-more');
   if (append && loadMoreButton) { loadMoreButton.disabled = true; loadMoreButton.textContent = 'Loading…'; }
   try {
-    const result = await callBuffer('posts', { organizationId: organization.id, channelId: channelId === 'all' ? '' : channelId, after: append ? bufferPostsCursor : '' });
+    const result = await callBuffer('posts', { organizationId: organization.id, channelId: channelId === 'all' ? '' : channelId, after: append ? bufferPostsCursor : '', status: document.getElementById('buffer-status-filter')?.value || 'scheduled' });
+    if (generation !== bufferLoadGeneration) return;
     const pagePosts = Array.isArray(result.posts) ? result.posts : [];
+    pagePosts.sort((a,b) => new Date(a.dueAt || 0) - new Date(b.dueAt || 0));
     bufferPosts = append ? [...bufferPosts, ...pagePosts] : pagePosts;
     if (!append) lastBufferRefresh = Date.now();
     bufferPostsCursor = result.endCursor || null;
@@ -1212,9 +1225,11 @@ async function loadBufferPosts({ append = false } = {}) {
     document.getElementById('buffer-queue-count').textContent = `${bufferPosts.length}${bufferPostsHasNext ? '+' : ''} posts`;
     document.getElementById('buffer-queue').innerHTML = bufferPosts.length ? bufferPosts.map(post => {
       const channel = channels.find(item => item.id === post.channelId);
-      const date = post.dueAt ? new Date(post.dueAt) : null;
-      return `<button type="button" class="data-entry-row buffer-post-row" data-buffer-post="${bufferHtml(post.id)}" aria-label="Preview and edit scheduled post for ${bufferHtml(channel?.name || 'Buffer channel')}"><span class="buffer-post-row-copy"><strong>${bufferHtml(channel?.name || 'Buffer channel')}</strong><span>${bufferHtml(post.text || '')}</span><span>${bufferHtml(post.status || 'Scheduled')}${date ? ` · ${bufferHtml(date.toLocaleString())}` : ''}</span></span><span class="chip">${bufferHtml(channel?.service || 'Buffer')}</span></button>`;
-    }).join('') : '<div class="empty-state"><div><div class="empty-icon">✓</div><strong>No queued posts found</strong><span>Schedule a new post here or use Add to queue in the composer.</span></div></div>';
+      const date = post.sentAt || post.dueAt ? new Date(post.sentAt || post.dueAt) : null;
+      const thumbnail = post.assets?.[0]?.thumbnail || (String(post.assets?.[0]?.type).toLowerCase().includes('image') ? post.assets?.[0]?.source : '');
+      const thumbMarkup = /^https:\/\//i.test(thumbnail || '') ? `<img class="buffer-queue-thumb" loading="lazy" src="${bufferHtml(thumbnail)}" alt="">` : '';
+      return `<button type="button" class="data-entry-row buffer-post-row" data-buffer-post="${bufferHtml(post.id)}" aria-label="Open post for ${bufferHtml(channel?.name || 'Buffer channel')}">${thumbMarkup}<span class="buffer-post-row-copy"><strong>${bufferHtml(channel?.name || 'Buffer channel')}</strong><span>${bufferHtml(post.text || '')}</span>${post.error?.message ? `<span class="buffer-post-failure">${bufferHtml(post.error.message)}</span>` : ''}<span>${bufferHtml(post.status || 'Scheduled')}${date ? ` · ${bufferHtml(date.toLocaleString())}` : ''}</span></span><span class="chip">${bufferHtml(channel?.service || 'Buffer')}</span></button>`;
+    }).join('') : '<div class="empty-state"><div><div class="empty-icon">✓</div><strong>No posts in this view</strong><span>Choose another status or compose a new post.</span></div></div>';
     ensureBufferQueueViews();
     document.getElementById('buffer-load-more').hidden = !bufferPostsHasNext;
     document.getElementById('buffer-load-more').disabled = false;
@@ -1222,8 +1237,10 @@ async function loadBufferPosts({ append = false } = {}) {
     document.getElementById('buffer-queue').hidden = bufferQueueView !== 'list';
     document.getElementById('buffer-calendar').hidden = bufferQueueView !== 'calendar';
     applyBufferSearch();
+    renderBufferPlannerSummary();
     renderBufferCalendar();
   } catch (error) {
+    if (generation !== bufferLoadGeneration) return;
     if (append) {
       document.getElementById('buffer-load-more').disabled = false;
       ui()?.notify(error.message || 'Could not load more Buffer posts.');
@@ -1252,20 +1269,21 @@ async function scheduleBufferPost() {
     const mediaMode = document.querySelector(`[data-target-media="${CSS.escape(channelId)}"]`)?.value || 'inherit';
     const targetMediaType = mediaMode === 'inherit' ? sharedAssetType : mediaMode === 'none' ? '' : mediaMode;
     const targetMediaUrl = mediaMode === 'inherit' ? sharedAssetUrl : document.querySelector(`[data-target-url="${CSS.escape(channelId)}"]`)?.value.trim() || '';
-    return { channelId, text: override || sharedText, assetType: targetMediaType, assetUrl: targetMediaUrl };
+    return { channelId, text: override || sharedText, assetType: targetMediaType, assetUrl: targetMediaUrl, postType: document.getElementById('buffer-post-type').value, videoTitle: document.getElementById('buffer-video-title').value, categoryId: document.getElementById('buffer-video-category').value, madeForKids: document.getElementById('buffer-video-kids').checked, boardId: document.getElementById('buffer-board-id').value };
   });
   const issues = bufferReadiness();
   if (issues.length) throw new Error(issues.join(' '));
   const result = await callBuffer('schedule', {
     targets,
-    mode: custom ? 'customScheduled' : 'addToQueue',
+    organizationId: selectedBufferOrganization()?.id,
+    mode: custom ? 'customScheduled' : document.getElementById('buffer-schedule-mode').value === 'draft' ? 'draft' : 'addToQueue',
     dueAt: custom ? new Date(localDateTime).toISOString() : undefined
   });
   const successes = (result.results || []).filter(entry => entry.post);
   const failures = (result.results || []).filter(entry => entry.error);
   if (contentId && successes.length) storage()?.markContentScheduled?.(contentId, successes.map(entry => entry.post));
   const channelNames = new Map(channels.map(channel => [channel.id, channel.name]));
-  const summary = `${successes.length} of ${targets.length} channel${targets.length === 1 ? '' : 's'} ${custom ? 'scheduled' : 'added to queue'}.`;
+  const summary = `${successes.length} of ${targets.length} channel${targets.length === 1 ? '' : 's'} ${document.getElementById('buffer-schedule-mode').value === 'draft' ? 'saved as Buffer drafts' : custom ? 'scheduled' : 'added to queue'}.`;
   document.getElementById('buffer-batch-result').innerHTML = `<strong>${bufferHtml(summary)}</strong>${failures.length ? `<ul>${failures.map(item => `<li>${bufferHtml(channelNames.get(item.channelId) || 'Channel')}: ${bufferHtml(item.error)}</li>`).join('')}</ul>` : ''}`;
   document.getElementById('buffer-batch-result').hidden = false;
   if (!successes.length) throw new Error(failures.map(item => item.error).join('; ') || 'Buffer did not schedule any posts.');
@@ -1302,6 +1320,7 @@ function rememberBufferCustomizations() {
 
 function bufferReadiness() {
   const issues = [];
+  if (bufferMediaUploading) issues.push('Wait for the media upload to finish.');
   const targets = [...document.querySelectorAll('[data-buffer-target]:checked')];
   if (!targets.length) issues.push('Choose at least one channel.');
   if (targets.length > 10) issues.push('Choose up to 10 channels.');
@@ -1317,6 +1336,10 @@ function bufferReadiness() {
     const mode = document.querySelector(`[data-target-media="${CSS.escape(id)}"]`)?.value || 'inherit';
     const type = mode === 'inherit' ? document.getElementById('buffer-media-type').value : mode === 'none' ? '' : mode;
     const url = mode === 'inherit' ? document.getElementById('buffer-media-url').value.trim() : document.querySelector(`[data-target-url="${CSS.escape(id)}"]`)?.value.trim();
+    if (channel?.isDisconnected || channel?.isLocked) issues.push(`${channel.name} needs attention in Buffer.`);
+    if (['instagram','tiktok','pinterest'].includes(channel?.service) && !type) issues.push(`${channel.name} needs media.`);
+    if (channel?.service === 'youtube' && (type !== 'video' || !document.getElementById('buffer-video-title')?.value.trim())) issues.push('YouTube needs a video and a title in Platform settings.');
+    if (channel?.service === 'pinterest' && !document.getElementById('buffer-board-id')?.value.trim()) issues.push('Pinterest needs a board ID in Platform settings.');
     if (type) {
       try { const parsed = new URL(url); if (parsed.protocol !== 'https:' || parsed.username || parsed.password) throw new Error(); }
       catch { issues.push(`${channel?.name || 'Channel'} needs a public HTTPS media URL.`); }
@@ -1347,6 +1370,82 @@ function applyBufferSearch() {
   if (note) note.textContent = `${visible} of ${bufferPosts.length} loaded posts shown${bufferPostsHasNext ? ' · Load more to search older posts' : ''}`;
 }
 
+let bufferLoadGeneration = 0;
+let bufferMediaUploading = false;
+function bufferLibraryKey() { return `creator-hq-buffer-library-v1:${session?.user?.id || 'local'}`; }
+function bufferLibrary() {
+  try {
+    const list = JSON.parse(localStorage.getItem(bufferLibraryKey()) || '[]');
+    return Array.isArray(list) ? list : [];
+  } catch { return []; }
+}
+function saveBufferLibraryDraft(draft) {
+  const list = bufferLibrary();
+  const id = crypto.randomUUID();
+  list.unshift({...draft,id,title:(draft.values['buffer-post-text'] || 'Untitled draft').split('\n')[0].slice(0,90)});
+  if (list.length > 50) throw new Error('Your draft library is full. Remove an old draft before saving another.');
+  localStorage.setItem(bufferLibraryKey(),JSON.stringify(list));
+}
+function renderBufferDraftLibrary() {
+  const host = document.getElementById('buffer-draft-library'); if (!host) return;
+  const list = bufferLibrary();
+  host.innerHTML = `<div class="buffer-library-heading"><h3>Saved drafts <span class="chip">${list.length}</span></h3><span class="settings-hint">This account · this browser</span></div>${list.length ? list.map(draft=>`<article class="buffer-library-row"><div><strong>${bufferHtml(draft.title)}</strong><p>${bufferHtml(new Date(draft.savedAt).toLocaleString())} · ${(draft.targets || []).length} channels</p></div><button class="button" type="button" data-load-buffer-draft="${bufferHtml(draft.id)}">Continue</button><button class="mini-button" type="button" data-remove-buffer-draft="${bufferHtml(draft.id)}" aria-label="Remove draft ${bufferHtml(draft.title)}">×</button></article>`).join('') : '<p class="settings-hint">Save several posts here while you plan. Use “Save as Buffer draft” to keep a draft in your Buffer account across devices.</p>'}`;
+  host.querySelectorAll('[data-load-buffer-draft]').forEach(button=>button.onclick=()=>{
+    const draft = list.find(item=>item.id===button.dataset.loadBufferDraft);
+    if (!draft) return;
+    if (document.getElementById('buffer-post-text').value.trim() && !confirm('Replace the current composer with this saved draft?')) return;
+    try {
+      localStorage.setItem(`creator-hq-buffer-draft-v1:${session?.user?.id || 'local'}`,JSON.stringify(draft));
+      document.getElementById('buffer-load-draft').click();
+      document.querySelector('.nav-button[data-view="buffer-compose"]')?.click();
+    } catch { ui()?.notify('Could not restore this draft.'); }
+  });
+  host.querySelectorAll('[data-remove-buffer-draft]').forEach(button=>button.onclick=()=>{
+    if (!confirm('Remove this saved browser draft? This does not change posts in Buffer.')) return;
+    try { localStorage.setItem(bufferLibraryKey(),JSON.stringify(list.filter(item=>item.id!==button.dataset.removeBufferDraft))); renderBufferDraftLibrary(); }
+    catch { ui()?.notify('Could not remove the draft.'); }
+  });
+}
+function renderBufferPlannerSummary() {
+  const host = document.getElementById('buffer-planner-summary'); if (!host) return;
+  const channels = selectedBufferOrganization()?.channels || [];
+  const status = document.getElementById('buffer-status-filter')?.value || 'scheduled';
+  const upcoming = bufferPosts.filter(post=>post.dueAt && new Date(post.dueAt)>new Date()).sort((a,b)=>new Date(a.dueAt)-new Date(b.dueAt))[0];
+  host.innerHTML = `<div class="buffer-planner-stats"><div><span>Connected channels</span><strong>${channels.length}</strong></div><div><span>${bufferHtml(status.replace('_',' '))} · loaded</span><strong>${bufferPosts.length}${bufferPostsHasNext ? '+' : ''}</strong></div><div><span>Next loaded post</span><strong class="buffer-small-stat">${upcoming ? bufferHtml(new Date(upcoming.dueAt).toLocaleString([], {month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})) : 'No upcoming time'}</strong></div></div><div class="buffer-channel-health">${channels.map(channel=>`<div><span class="buffer-health-dot ${channel.isDisconnected || channel.isLocked ? 'needs-attention' : ''}"></span><strong>${bufferHtml(channel.name)}</strong><span>${bufferHtml(channel.service)} · ${bufferHtml(channel.timezone || '')}</span><span class="chip">${channel.isDisconnected ? 'Reconnect in Buffer' : channel.isLocked ? 'Locked in Buffer' : channel.isQueuePaused ? 'Queue paused' : 'Ready'}</span></div>`).join('')}</div>`;
+}
+function ensureBufferPlanner() {
+  const schedule = document.getElementById('buffer-schedule-mode');
+  schedule.insertAdjacentHTML('beforeend','<option value="draft">Save as Buffer draft — do not publish</option>');
+  const media = document.getElementById('buffer-media-controls');
+  media.insertAdjacentHTML('beforebegin',`<div class="buffer-upload-box"><strong>Start with a photo or clip</strong><p>Upload a file for publishing, or use a direct media link below. Uploaded media gets a public link that stays available for scheduled posts. Keep private files in Dropbox.</p><label class="button" for="buffer-media-file">Choose image or video<input hidden type="file" id="buffer-media-file" accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/quicktime,video/webm"></label><span class="settings-hint">Up to 50 MB per file</span><p id="buffer-upload-status" role="status"></p></div>`);
+  media.insertAdjacentHTML('afterend',`<details class="buffer-platform-options"><summary>Platform settings · post format and video details</summary><div class="form-grid"><label class="form-field"><span>Instagram / Facebook format</span><select class="field-control" id="buffer-post-type"><option value="post">Feed post</option><option value="reel">Reel</option><option value="story">Story</option></select></label><label class="form-field"><span>YouTube video title</span><input class="field-control" id="buffer-video-title" maxlength="100" placeholder="Title for YouTube posts"></label><label class="form-field"><span>YouTube category</span><select class="field-control" id="buffer-video-category"><option value="20">Gaming</option><option value="22">People & Blogs</option><option value="24">Entertainment</option><option value="27">Education</option><option value="28">Science & Technology</option></select></label><label class="form-field"><span>Pinterest board ID</span><input class="field-control" id="buffer-board-id" placeholder="Required for Pinterest"></label></div><label><input type="checkbox" id="buffer-video-kids"> This YouTube video is made for kids</label></details>`);
+  const queue = document.getElementById('buffer-queue');
+  queue.closest('.panel').insertAdjacentHTML('beforebegin','<div id="buffer-planner-summary"></div>');
+  queue.insertAdjacentHTML('beforebegin',`<div class="buffer-status-toolbar"><label class="form-field"><span>Show posts</span><select class="field-control" id="buffer-status-filter"><option value="scheduled">Scheduled queue</option><option value="draft">Buffer drafts</option><option value="error">Failed posts</option><option value="sent">Published posts</option><option value="needs_approval">Awaiting approval</option></select></label><p class="settings-hint">Open a post to edit, change its timing, move it to drafts, or reuse its copy and media.</p></div>`);
+  queue.closest('.panel').insertAdjacentHTML('afterend','<article class="panel buffer-library-panel"><div class="panel-body" id="buffer-draft-library"></div></article>');
+  document.getElementById('buffer-status-filter').onchange = () => { document.querySelector('[data-buffer-view="list"]')?.click(); loadBufferPosts(); };
+  document.getElementById('buffer-media-file').onchange = async event => {
+    const file = event.target.files?.[0]; event.target.value=''; if (!file) return;
+    const note = document.getElementById('buffer-upload-status');
+    if (file.size > 50*1024*1024) { note.textContent='Choose a file under 50 MB.'; return; }
+    event.target.disabled = true; bufferMediaUploading = true; updateBufferReadiness(); note.textContent=`Uploading ${file.name} for publishing…`;
+    try {
+      if (!session?.access_token || !client) throw new Error('Sign in to Creator HQ before uploading publishing media.');
+      const config=readConfig();
+      const response = await fetch(`${config.url}/functions/v1/buffer?action=uploadMedia`,{method:'POST',headers:{Authorization:`Bearer ${session.access_token}`,apikey:config.anonKey,'Content-Type':file.type},body:file});
+      const result=await response.json().catch(()=>({}));
+      if (!response.ok) throw new Error(result.error || `Upload failed (${response.status}).`);
+      document.getElementById('buffer-media-type').value=result.type;
+      document.getElementById('buffer-media-url').value=result.url;
+      document.getElementById('buffer-media-url').disabled=false;
+      renderBufferComposerPreview(); updateBufferReadiness();
+      note.textContent=`${file.name} attached. Its public publishing link is ready.`;
+    } catch(error) { note.textContent=error.message || 'Media upload failed. Try again.'; }
+    finally { event.target.disabled=false; bufferMediaUploading=false; updateBufferReadiness(); }
+  };
+  renderBufferPlannerSummary();
+}
+
 function ensureBufferConveniences() {
   const fields = document.getElementById('buffer-composer-fields');
   const preview = document.querySelector('.buffer-composer-preview');
@@ -1354,11 +1453,11 @@ function ensureBufferConveniences() {
   fields.insertAdjacentHTML('afterbegin', `<div class="buffer-draft-tools"><div class="button-row"><button type="button" class="button" id="buffer-save-draft">Save draft</button><button type="button" class="button" id="buffer-load-draft">Restore draft</button></div><p class="settings-hint" id="buffer-draft-note" role="status">Drafts stay in this browser and are never published automatically.</p><label class="form-field"><span>Quick start</span><select class="field-control" id="buffer-quick-start"><option value="">Choose a starting point…</option><option value="live">Stream announcement</option><option value="clip">Share a clip</option><option value="vod">New video / VOD</option><option value="community">Community question</option></select></label></div>`);
   preview.insertAdjacentHTML('beforeend', '<div id="buffer-readiness" class="buffer-readiness" aria-live="polite"></div>');
   const draftKey = () => `creator-hq-buffer-draft-v1:${session?.user?.id || 'local'}`;
-  const ids = ['buffer-post-text', 'buffer-media-type', 'buffer-media-url', 'buffer-schedule-mode', 'buffer-due-at', 'buffer-content-source'];
+  const ids = ['buffer-post-type', 'buffer-video-title', 'buffer-video-category', 'buffer-board-id', 'buffer-post-text', 'buffer-media-type', 'buffer-media-url', 'buffer-schedule-mode', 'buffer-due-at', 'buffer-content-source'];
   document.getElementById('buffer-save-draft').onclick = () => {
     rememberBufferCustomizations();
-    const draft = { organization: document.getElementById('buffer-organization').value, values: Object.fromEntries(ids.map(id => [id, document.getElementById(id).value])), targets: [...document.querySelectorAll('[data-buffer-target]:checked')].map(input => input.value), overrides: [...bufferCustomizations], savedAt: new Date().toISOString() };
-    try { localStorage.setItem(draftKey(), JSON.stringify(draft)); document.getElementById('buffer-draft-note').textContent = `Draft saved in this browser at ${new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}.`; }
+    const draft = { madeForKids: document.getElementById('buffer-video-kids').checked, organization: document.getElementById('buffer-organization').value, values: Object.fromEntries(ids.map(id => [id, document.getElementById(id).value])), targets: [...document.querySelectorAll('[data-buffer-target]:checked')].map(input => input.value), overrides: [...bufferCustomizations], savedAt: new Date().toISOString() };
+    try { localStorage.setItem(draftKey(), JSON.stringify(draft)); saveBufferLibraryDraft(draft); renderBufferDraftLibrary(); document.getElementById('buffer-draft-note').textContent = `Draft saved in this browser at ${new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}.`; }
     catch { ui()?.notify('Could not save the draft. Browser storage may be full.'); }
   };
   document.getElementById('buffer-load-draft').onclick = () => {
@@ -1366,6 +1465,7 @@ function ensureBufferConveniences() {
       const draft = JSON.parse(localStorage.getItem(draftKey()) || 'null');
       if (!draft) return ui()?.notify('No saved draft for this account in this browser yet.');
       if (draft.organization && draft.organization !== document.getElementById('buffer-organization').value) return ui()?.notify('Choose the draft’s Buffer organization in Scheduled first, then restore it.');
+      document.getElementById('buffer-video-kids').checked = draft.madeForKids === true;
       ids.forEach(id => { if (typeof draft.values?.[id] === 'string') document.getElementById(id).value = draft.values[id]; });
       document.querySelectorAll('[data-buffer-target]').forEach(input => { input.checked = draft.targets?.includes(input.value); });
       document.querySelectorAll('[data-target-text]').forEach(input => input.value = '');
@@ -1389,6 +1489,8 @@ function ensureBufferConveniences() {
     input.dispatchEvent(new Event('input', { bubbles: true }));
     input.focus();
   };
+  document.querySelector('.buffer-draft-tools .button-row').insertAdjacentHTML('beforeend','<button class="button" type="button" id="buffer-browse-drafts">Browse saved drafts</button>');
+  document.getElementById('buffer-browse-drafts').onclick = () => { document.querySelector('.nav-button[data-view="buffer-scheduled"]')?.click(); document.getElementById('buffer-draft-library').scrollIntoView({behavior:'smooth',block:'start'}); };
   fields.addEventListener('input', updateBufferReadiness);
   fields.addEventListener('change', () => { updateBufferBatchLabel(); });
   const queue = document.getElementById('buffer-queue');
@@ -1407,7 +1509,9 @@ ensureBufferMediaControls();
 ensureBufferComposerLayout();
 ensureBufferTargetPicker();
 ensureBufferComposerSections();
+ensureBufferPlanner();
 ensureBufferConveniences();
+renderBufferDraftLibrary();
 document.getElementById('buffer-content-source').addEventListener('change', event => {
   const item = (storage()?.getWorkspace()?.content || []).find(content => content.id === event.target.value);
   if (!item) return;

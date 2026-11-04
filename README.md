@@ -134,7 +134,7 @@ Creator HQ calls Buffer's official GraphQL API (`https://api.buffer.com`) throug
 
 6. Reload Creator HQ while signed in, then open **Social Media Management → Compose** to create posts or **Scheduled** to review the queue in list or month-calendar view. Use **Load next 50** to page older scheduled entries into the calendar.
 
-The composer can post to up to ten selected channels in one batch, with shared copy and optional per-channel copy and image/video URL overrides. Each channel is a separate Buffer post; partial success is reported per channel and failed channel drafts remain in the form. Posts can go to the next Buffer queue slot or to an exact time. The calendar/list includes scheduled posts and can page through the queue. Buffer supports YouTube and several social networks, but not Twitch livestream publishing. Use **Stream schedule** for Twitch streams; use Buffer for stream announcements, clips and VOD promotions. Buffer's API requires media to be hosted at a public, stable HTTPS URL; private/local asset uploads are not attached yet. Some networks may require native reminder publishing, which Buffer reports per channel/post.
+The composer can post to up to ten selected channels in one batch, with shared copy and optional per-channel copy and image/video URL overrides. Each channel is a separate Buffer post; partial success is reported per channel and failed channel drafts remain in the form. Posts can go to the next Buffer queue slot or to an exact time. The calendar/list includes scheduled posts and can page through the queue. Buffer supports YouTube and several social networks, but not Twitch livestream publishing. Use **Stream schedule** for Twitch streams; use Buffer for stream announcements, clips and VOD promotions. Buffer's API requires media to be hosted at a public, stable HTTPS URL; local publishing media can now be uploaded from the composer (see Buffer publishing planner below). Some networks may require native reminder publishing, which Buffer reports per channel/post.
 
 ## Configure Twitch live status
 
@@ -277,8 +277,22 @@ The deployed API allowlist includes `https://tydyeplays.com` and `https://www.ty
 
 ## Buffer usability update
 
-The composer supports one saved draft per signed-in account in this browser (and a separate local draft when signed out). Save and restore includes copy, channel selections, per-channel overrides, media, and publishing time. Saving never schedules a post. Drafts are separate from workspace backups and cloud sync. Quick starts cover stream announcements, clips, videos, and community questions.
+The composer supports an account-specific saved-draft library in this browser, plus remote Buffer drafts. Save and restore includes copy, channel selections, per-channel overrides, media, and publishing time. Saving never schedules a post. Drafts are separate from workspace backups and cloud sync. Quick starts cover stream announcements, clips, videos, and community questions.
 
 The preflight checklist catches missing copy, channel selections, invalid HTTPS media links, and past publishing times. Buffer still validates network-specific requirements. Scheduled search covers loaded posts in both list and calendar views; load additional pages for older posts. Refresh retrieves the current Buffer queue. Per-channel customizations survive selection changes, and partial-success retries leave only unsuccessful channels selected.
 
 Live Buffer verification requires the signed-in application and deployed Buffer function.
+
+## Buffer publishing planner
+
+Creator HQ now includes Scheduled, Buffer drafts, Failed, Published, and Awaiting approval views with search, list/calendar navigation, channel connection health, paused-queue indicators, and per-channel timezones. Counts describe loaded posts; use Load next 50 to include more. Select a future calendar date to start a scheduled post. Failed posts show Buffer’s reported error. Published posts can be opened at the network when Buffer supplies a URL.
+
+The editor preserves media and platform metadata. Copy-only edits keep the queue slot; choose a scheduling action explicitly to requeue, set a new time, or move a post to drafts. Reuse opens a new copy in the composer and does not republish automatically. Buffer enforces allowed actions.
+
+Save draft adds snapshots to an account-specific browser library (up to 50 drafts). Browse saved drafts opens this library in the planner. Browser drafts do not sync between devices or participate in workspace backup. Save as Buffer draft creates actual channel drafts in Buffer without publishing. The old single-draft Restore option remains available.
+
+Direct publishing uploads remain disabled unless the owner explicitly approves public hosting and sets the server secret `BUFFER_MEDIA_UPLOADS_ENABLED=true`. Until then the UI disables file selection and existing public media links remain usable. Once enabled, upload publishing media directly from the composer: JPG, PNG, GIF, WebP, MP4, MOV, or WebM, up to 50 MB, one shared attachment with optional per-channel overrides. The owner-authenticated server lazily creates the public `creatorhq-buffer-media` storage bucket and stores each upload at a unique path. Public media links must remain available until Buffer publishes; do not upload private documents or delete media while a scheduled post still uses it. This bucket has no public write policy. Only the configured Buffer owner can upload through the function. Existing media URL input remains available. Larger files and advanced carousel/thread workflows still use Buffer or a separate stable media host.
+
+Platform settings support Facebook/Instagram post, reel and story, YouTube title/category/audience, and Pinterest board ID. Media and channel checks run before scheduling, then Buffer validates network-specific details. No posts publish automatically on opening the planner.
+
+Validation: with Node 22.13 or newer, run `node --test supabase/functions/buffer/buffer.test.mjs`. Deploy server changes with `supabase functions deploy buffer`; GitHub Pages only deploys the client.
