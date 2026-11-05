@@ -86,6 +86,11 @@
     .site-scroll-cue { position: absolute; right: max(5vw,24px); bottom: 47px; display: flex; align-items: center; gap: 10px; color: #d5ddd1; font-size: 9px; text-transform: uppercase; writing-mode: vertical-rl; }
     .site-scroll-cue::after { width: 1px; height: 42px; background: var(--site-accent); content: ''; }
     .site-section { padding: 100px max(8vw,24px); scroll-margin-top: 74px; }
+    .site-section.blog-home-section{box-sizing:border-box;min-height:96px;padding:18px max(8vw,24px);display:flex;align-items:center;gap:28px;border-top:1px solid #c084fc26;border-bottom:1px solid #c084fc26;background:linear-gradient(110deg,#a855f714,#d946ef08);}
+    .blog-home-section .blog-banner-copy{flex-shrink:0}.blog-home-section .site-kicker{margin:0 0 5px;font-size:9px;letter-spacing:.16em}.public-polished .blog-home-section h2{margin:0;font-size:22px;line-height:1.2;letter-spacing:-.025em}.blog-home-section .blog-banner-note{margin:0;color:var(--site-muted);font-size:12px;line-height:1.5}.blog-home-section .blog-link-button{margin-left:auto;flex-shrink:0;white-space:nowrap;}
+    @media(max-width:760px){.site-section.blog-home-section{gap:16px;min-height:96px;padding:18px 24px}.blog-home-section .blog-banner-note{display:none}.public-polished .blog-home-section h2{font-size:19px}.blog-home-section .blog-link-button{font-size:11px;padding:9px 12px}}
+    @media(max-width:380px){.site-section.blog-home-section{gap:10px;padding:16px}.public-polished .blog-home-section h2{font-size:16px}.blog-home-section .blog-link-button{font-size:10px;padding:8px 10px}}
+
     .site-section-head { max-width: 680px; margin-bottom: 35px; }
     .site-kicker { margin: 0 0 11px; color: var(--site-accent); font-size: 10px; font-weight: 700; text-transform: uppercase; }
     .site-section h2 { margin: 0; font: 600 38px/1.12 'Space Grotesk',sans-serif; letter-spacing: 0; }
