@@ -987,6 +987,7 @@ button.buffer-calendar-number:hover { background:var(--accent);color:#172015; }
           <div class="page-heading"><div><div class="eyebrow">Make it yours</div><h1>Workspace settings</h1><p class="subtitle">Your identity, schedule, and workspace preferences.</p></div><button class="button primary" id="save-settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 12 10 17 20 7"/></svg>Save changes</button></div>
           <div class="settings-grid"><div class="panel"><section class="settings-section"><h3>Creator profile</h3><p class="settings-hint">A name that makes this workspace feel like yours.</p><div class="form-grid"><div class="form-field"><label for="setting-name">Your name</label><input id="setting-name" maxlength="50" placeholder="Creator name"></div><div class="form-field"><label for="setting-handle">Creator / channel name</label><input id="setting-handle" maxlength="50" placeholder="Channel name"></div><div class="form-field"><label for="setting-timezone">Time zone</label><select id="setting-timezone"><option value="local">Device time zone</option><option value="UTC">UTC</option><option value="America/Los_Angeles">Pacific Time</option><option value="America/Denver">Mountain Time</option><option value="America/Chicago">Central Time</option><option value="America/New_York">Eastern Time</option><option value="Europe/London">London</option><option value="Europe/Paris">Central European Time</option><option value="Australia/Sydney">Sydney</option></select></div><div class="form-field"><label for="setting-accent">Accent color</label><select id="setting-accent"><option value="lime">Studio lime</option><option value="blue">Electric blue</option><option value="purple">Signal purple</option><option value="red">Live red</option><option value="green">Creator green</option></select></div></div></section>
           <section class="settings-section"><div class="analytics-settings-heading" style="margin-top:0;padding-top:0;border-top:0"><h3>Connected platform accounts</h3><p class="settings-hint">Manage authorization here. Metrics refresh automatically and appear in Creator analytics.</p></div><div class="button-row" style="margin:10px 0"><span class="nav-count" id="social-platform-status">Authorization needed</span></div><div id="social-platform-connections" class="social-platform-connections"></div><p class="settings-hint platform-metrics-note">Only read-only profile and performance data is requested. Provider app review may apply.</p></section>
+          <section class="settings-section" id="account-security"><h3>Two-factor authentication</h3><p class="settings-hint">Open Settings while signed in to manage your authenticator app.</p></section>
           <section class="settings-section"><h3>Weekly stream rhythm</h3><p class="settings-hint">Choose your regular nights. Rest days are left unscheduled.</p><div class="days-picker" id="settings-days"></div><div class="form-grid" style="margin-top:13px"><div class="form-field"><label for="setting-start">Usual start time</label><input id="setting-start" type="time"></div><div class="form-field"><label for="setting-duration">Session length</label><select id="setting-duration"><option value="1">1 hour</option><option value="2">2 hours</option><option value="3">3 hours</option><option value="4">4 hours</option><option value="5">5 hours</option><option value="6">6 hours</option></select></div></div></section>
           <section class="settings-section"><h3>Dashboard layout</h3><p class="settings-hint">Choose which overview widgets stay in view.</p><div id="widget-toggles"></div></section>
           <section class="settings-section"><button class="button" id="save-settings-bottom">Save settings</button></section></div>
@@ -2709,6 +2710,7 @@ const defaults = {
         if (name === 'activity') renderActivity();
         if (name === 'shop') renderShop();
         if (name === 'linktree') renderLinktree();
+        if (name === 'settings') window.CreatorHQCloud?.authGate?.showSecuritySettings();
         if (name === 'analytics' || name === 'settings') window.CreatorHQCloud?.refreshAnalyticsData?.();
         if (name === 'buffer-compose' || name === 'buffer-scheduled') window.CreatorHQCloud?.refreshBufferData?.();
       }
@@ -2759,10 +2761,37 @@ const defaults = {
         document.getElementById('login-form').addEventListener('submit', event => { event.preventDefault(); submit('signIn'); });
         document.getElementById('login-forgot').addEventListener('click', () => submit('forgot'));
       }
+      function showMfa(user) {
+        lockWorkspace();
+        const root = document.getElementById('auth-root');
+        // Preserve a code being typed during background token refreshes.
+        if (root.querySelector('#mfa-login-form')) return;
+        root.innerHTML = `<div class="auth-screen"><form class="auth-box" id="mfa-login-form"><h1>Check your authenticator</h1><p>Enter the current six-digit code for CreatorHQ to finish signing in.</p><div class="form-field"><label for="mfa-login-factor">Authenticator</label><select id="mfa-login-factor">${(user.mfaFactors || []).map((factor,index)=>`<option value="${escapeHtml(factor.id)}">Authenticator ${index+1}</option>`).join('')}</select></div><div class="form-field" style="margin-top:12px"><label for="mfa-login-code">Six-digit code</label><input id="mfa-login-code" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" required autofocus></div><button class="button primary" style="width:100%;margin-top:16px" type="submit">Verify and sign in</button><button class="button ghost" style="margin-top:12px" type="button" id="mfa-login-cancel">Sign out</button><p class="settings-hint" id="mfa-login-status" role="status"></p><details class="settings-hint"><summary>Lost access to your authenticator?</summary><p>Try your backup authenticator. Otherwise, contact the workspace owner for a verified authenticator reset. Resetting your password does not bypass this check.</p></details></form></div>`;
+        root.querySelector('#mfa-login-code').focus();
+        root.querySelector('#mfa-login-form').addEventListener('submit', async event => {
+          event.preventDefault();
+          const button = event.currentTarget.querySelector('[type="submit"]');
+          const status = root.querySelector('#mfa-login-status');
+          button.disabled = true; status.textContent = 'Checking your code…';
+          try {
+            await window.CreatorHQCloud.authGate.verifyMfa(root.querySelector('#mfa-login-factor').value,root.querySelector('#mfa-login-code').value);
+            await enterWorkspace();
+          } catch (error) {
+            status.textContent = error.message || 'That code did not work. Try the next code from your app.';
+            root.querySelector('#mfa-login-code').value = '';
+            root.querySelector('#mfa-login-code').focus();
+          } finally { button.disabled = false; }
+        });
+        root.querySelector('#mfa-login-cancel').addEventListener('click', async () => {
+          try { await window.CreatorHQCloud.authGate.signOut(); showAuth(); }
+          catch (error) { root.querySelector('#mfa-login-status').textContent = error.message; }
+        });
+      }
       async function enterWorkspace() {
         const gate = window.CreatorHQCloud?.authGate;
         const user = gate ? await gate.user() : null;
         if (!user) { showAuth('Sign in to open your workspace.'); return; }
+        if (user.mfaRequired) { showMfa(user); return; }
         currentUserAccess = { role: user.role || '', permissions: Array.isArray(user.permissions) ? user.permissions : [], full: user.role === 'owner' || (!user.role && !(user.permissions || []).length) };
         signedInEmail = user.email || '';
         applyPermissions();
@@ -2782,7 +2811,9 @@ const defaults = {
         const gate = window.CreatorHQCloud?.authGate;
         if (!gate) { showAuth('Authentication could not load. Check your connection and reload.'); return; }
         gate.onChange((event, user) => {
-          if (!user) showAuth('You have been signed out.');
+          if (!user) showAuth(event === 'AUTH_CHECK_FAILED' ? 'Account verification failed. Check your connection and sign in again.' : 'You have been signed out.');
+          else if (user.mfaRequired) showMfa(user);
+          else if (document.body.classList.contains('auth-locked')) enterWorkspace().catch(error => showAuth(error.message));
         });
         const user = await gate.user();
         if (user) await enterWorkspace();
@@ -3394,9 +3425,9 @@ const defaults = {
       workspaceSaveStatus('Saved on device','Open recovery and save history.');
       document.getElementById('activity-filter')?.addEventListener('change', renderActivity);
       window.addEventListener('hashchange', () => { if (location.hash.startsWith('#dropbox-connected') || location.hash.startsWith('#dropbox-error')) refreshDropboxStatus(); });
-      renderAll(); secureGate();
+      renderAll(); secureGate().catch(error => showAuth(error.message || 'Could not verify your account. Try again.'));
     })();
   </script>
-  <script type="module" src="./cloud-sync.js?v=20261026-profile-preview-v2"></script>
+  <script type="module" src="./cloud-sync.js?v=20261105-authenticator-mfa"></script>
 </body>
 </html>

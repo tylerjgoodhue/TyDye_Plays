@@ -1,3 +1,4 @@
+import { createMfa, renderSecurity } from './auth-mfa.mjs';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2?bundle';
 
 const CONFIG_KEY = 'creator-hq-cloud-config-v1';
@@ -39,6 +40,28 @@ let publicProfileCheckPromise = null;
 let bufferCalendarMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
 let bufferQueueView = 'list';
 let authListeners = [];
+let mfaReady = false;
+let authRevision = 0;
+const mfa = createMfa(() => client);
+async function checkedGateUser() {
+  if (!session?.user) { mfaReady = false; return null; }
+  const checkingSession = session;
+  mfaReady = false;
+  const status = await mfa.status();
+  if (session?.user?.id !== checkingSession.user.id || session?.access_token !== checkingSession.access_token) return null;
+  mfaReady = !status.required;
+  return { ...gateUser(session), mfaRequired: status.required, mfaFactors: status.factors.map(f => ({ id:f.id })) };
+}
+async function updateSecurity() {
+  const { data, error } = await client.auth.getSession();
+  if (error) throw error;
+  session = data.session;
+  await checkedGateUser();
+  setAccountState();
+}
+async function showSecuritySettings() {
+  await renderSecurity(document.getElementById('account-security'), mfa, updateSecurity);
+}
 
 const ui = () => window.CreatorHQCloudUI;
 const storage = () => window.CreatorHQStorage;
@@ -75,6 +98,7 @@ function setAccountState() {
   document.getElementById('cloud-forgot-password').hidden = Boolean(email) || recoveryMode;
   document.getElementById('cloud-recovery-section').hidden = !recoveryMode;
   ui()?.setSyncStatus(readConfig().syncEnabled ? 'Automatic sync is enabled for this browser.' : 'Automatic sync is paused.');
+  if (session?.user && !mfaReady) return;
   if (session?.user && bufferLoadedForUser !== session.user.id) {
     bufferLoadedForUser = session.user.id;
     loadBufferWorkspace();
@@ -110,6 +134,7 @@ async function currentUser() {
   const { data, error } = await client.auth.getUser();
   if (error) throw error;
   if (!data.user) throw new Error('Sign in before syncing your workspace.');
+  if (!mfaReady) throw new Error('Verify your authenticator code before accessing your workspace.');
   return data.user;
 }
 
@@ -175,7 +200,7 @@ async function pullWorkspace() {
 
 async function flushSync() {
   if (syncing) { syncPending = true; return; }
-  if (!client || !session?.user || !readConfig().syncEnabled) return;
+  if (!client || !session?.user || !mfaReady || !readConfig().syncEnabled) return;
   syncing = true;
   ui()?.setSyncStatus('Syncing workspace…');
   try {
@@ -189,7 +214,7 @@ async function flushSync() {
 }
 
 function queueSync() {
-  if (!readConfig().syncEnabled || !session?.user) return;
+  if (!readConfig().syncEnabled || !session?.user || !mfaReady) return;
   clearTimeout(syncTimer);
   ui()?.setSyncStatus('Local changes saved. Cloud sync queued…');
   syncTimer = setTimeout(flushSync, 700);
@@ -431,21 +456,21 @@ const authGate = {
     const { data, error } = await client.auth.getSession();
     if (error) return null;
     session = data.session;
-    return gateUser(session);
+    return checkedGateUser();
   },
   async signIn(email, password) {
     if (!(await ensureProject())) throw new Error('Connect the Supabase project to sign in.');
     const { data, error } = await client.auth.signInWithPassword({ email: String(email || '').trim(), password: String(password || '') });
     if (error) throw error;
     session = data.session;
-    return gateUser(session);
+    return checkedGateUser();
   },
   async signUp(email, password) {
     if (!(await ensureProject())) throw new Error('Connect the Supabase project to create an account.');
     const { data, error } = await client.auth.signUp({ email: String(email || '').trim(), password: String(password || '') });
     if (error) throw error;
     session = data.session;
-    return { user: gateUser(session), needsConfirmation: !session && !error };
+    return { user: await checkedGateUser(), needsConfirmation: !session && !error };
   },
   async requestPasswordReset(email) {
     if (!(await ensureProject())) throw new Error('Connect the Supabase project first.');
@@ -453,9 +478,15 @@ const authGate = {
     if (error) throw error;
   },
   async signOut() {
-    if (client) await client.auth.signOut();
-    session = null;
+    if (client) { const { error } = await client.auth.signOut(); if (error) throw error; }
+    session = null; mfaReady = false; mfa.reset();
   },
+  async verifyMfa(factorId, code) {
+    await mfa.verify(factorId, code);
+    await updateSecurity();
+    return checkedGateUser();
+  },
+  showSecuritySettings,
   onChange(listener) { if (typeof listener === 'function') authListeners.push(listener); }
 };
 
@@ -734,13 +765,31 @@ async function connectProject(urlValue, keyValue) {
   const { data, error } = await client.auth.getSession();
   if (error) throw error;
   session = data.session;
+  await checkedGateUser();
   setAccountState();
   client.auth.onAuthStateChange((event, nextSession) => {
+    const revision = ++authRevision;
     session = nextSession;
+    mfaReady = false;
+    clearTimeout(syncTimer); clearTimeout(publicProfileSyncTimer);
+    if (!nextSession) {
+      mfa.reset();
+      document.getElementById('account-security')?.replaceChildren();
+    }
     if (event === 'PASSWORD_RECOVERY') recoveryMode = true;
-    setAccountState();
-    const user = nextSession?.user ? { id: nextSession.user.id, email: nextSession.user.email || '' } : null;
-    authListeners.forEach(listener => { try { listener(event, user); } catch {} });
+    // Supabase auth callbacks hold the auth lock: do subsequent API calls outside it.
+    setTimeout(async () => {
+      try {
+        const user = await checkedGateUser();
+        if (revision !== authRevision) return;
+        setAccountState();
+        authListeners.forEach(listener => { try { listener(event, user); } catch {} });
+      } catch {
+        if (revision !== authRevision) return;
+        mfaReady = false;
+        authListeners.forEach(listener => { try { listener('AUTH_CHECK_FAILED', null); } catch {} });
+      }
+    }, 0);
   });
 }
 
@@ -1627,9 +1676,7 @@ document.getElementById('cloud-sign-in').addEventListener('click', async () => {
     if (!client) throw new Error('Connect a Supabase project first.');
     const email = document.getElementById('cloud-email').value.trim();
     const password = document.getElementById('cloud-password').value;
-    const { data, error } = await client.auth.signInWithPassword({ email, password });
-    if (error) throw error;
-    session = data.session;
+    await authGate.signIn(email, password);
     setAccountState();
   } catch (error) { reportError(error); }
 });
@@ -1724,7 +1771,7 @@ try {
     document.getElementById('cloud-anon-key').value = projectKey;
     await connectProject(projectUrl, projectKey);
     storage()?.refreshSocialLinks?.();
-    if (config.syncEnabled && session?.user) queueSync();
+    if (config.syncEnabled && session?.user && mfaReady) queueSync();
   }
 } catch (error) {
   ui()?.setConnection(false, `Could not initialize Supabase: ${message(error)}`);

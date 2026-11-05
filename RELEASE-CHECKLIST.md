@@ -2,14 +2,14 @@
 
 ## Automatic publishing checks
 
-GitHub Pages now runs all 49 tests before building. It then validates the seven
+GitHub Pages now runs all 62 tests before building. It then validates the seven
 built HTML pages, inline and external JavaScript syntax, local script/style assets,
 and public JSON configuration before uploading anything for deployment.
 
 Run locally with Node.js 22.13 or newer:
 
 ```sh
-node --test scripts/contact-form.test.cjs scripts/public-site.test.cjs scripts/workflow.test.mjs supabase/functions/buffer/buffer.test.mjs supabase/functions/dropbox/handler.test.mjs supabase/functions/dropbox/oauth.test.mjs
+node --test scripts/mfa.test.mjs scripts/contact-form.test.cjs scripts/public-site.test.cjs scripts/workflow.test.mjs supabase/functions/buffer/buffer.test.mjs supabase/functions/dropbox/handler.test.mjs supabase/functions/dropbox/oauth.test.mjs
 node scripts/build-site.mjs
 node scripts/check-release.mjs
 ```
@@ -46,3 +46,5 @@ upload files, send email, or place orders. They do not replace a live walkthroug
 Social destination URLs were inspected, but third-party channel pages and a
 completed purchase were not validated. Repeat a quick check on the deployed
 custom domain after pushing; local checks cannot verify GitHub's actual deployment.
+
+Authenticator setup and recovery instructions: [AUTHENTICATOR-SETUP.md](AUTHENTICATOR-SETUP.md).

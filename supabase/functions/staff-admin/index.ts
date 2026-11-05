@@ -1,3 +1,4 @@
+import { requireMfa } from "../_shared/mfa.mjs";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -52,6 +53,7 @@ async function authenticatedUser(request: Request) {
   const client = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
   const { data, error } = await client.auth.getUser(token);
   if (error || !data.user) throw new Error("Your Creator HQ session expired. Sign in again.");
+  requireMfa(data.user, token);
   return data.user;
 }
 
@@ -172,6 +174,6 @@ Deno.serve(async request => {
 
     return json({ error: "Unknown action." }, 400, origin);
   } catch (error) {
-    return json({ error: (error as Error)?.message || "Staff management request failed." }, 400, origin);
+    return json({ error: (error as Error)?.message || "Staff management request failed." }, error?.status === 403 ? 403 : 400, origin);
   }
 });

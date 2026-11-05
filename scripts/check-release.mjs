@@ -27,8 +27,8 @@ for (const page of pages) {
     if (!(await stat(asset)).isFile()) throw new Error(`Missing asset in ${page}: ${reference}`);
   }
 }
-for (const script of ['storefront.js', 'public-site-utils.js', 'CreatorHQ/cloud-sync.js']) {
-  syntax(await readFile(path.join(output, script), 'utf8'), script.endsWith('cloud-sync.js'), script);
+for (const script of ['storefront.js', 'public-site-utils.js', 'CreatorHQ/cloud-sync.js', 'CreatorHQ/auth-mfa.mjs']) {
+  syntax(await readFile(path.join(output, script), 'utf8'), script.endsWith('cloud-sync.js') || script.endsWith('.mjs'), script);
 }
 for (const config of ['public-profile.json', 'storefront-config.json']) JSON.parse(await readFile(path.join(output, config), 'utf8'));
 console.log(`Release check passed: ${pages.length} pages, ${checked} scripts, local assets, and public configuration.`);

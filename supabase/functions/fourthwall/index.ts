@@ -1,3 +1,4 @@
+import { requireMfa } from "../_shared/mfa.mjs";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const FOURTHWALL_API = "https://api.fourthwall.com/open-api/v1.0";
@@ -180,6 +181,8 @@ Deno.serve(async (request) => {
   const supabase = createClient(supabaseUrl, supabaseKey, { auth: { persistSession: false, autoRefreshToken: false } });
   const { data: authData, error: authError } = await supabase.auth.getUser(accessToken);
   if (authError || !authData.user) return json({ error: "Your Creator HQ session expired. Sign in again." }, 401, origin);
+  try { requireMfa(authData.user, accessToken); }
+  catch (error) { return json({ error: error.message }, 403, origin); }
   if (authData.user.id !== allowedUserId) return json({ error: "Fourthwall management is not enabled for this Creator HQ account." }, 403, origin);
 
   const declaredLength = Number(request.headers.get("Content-Length") || 0);

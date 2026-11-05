@@ -1,3 +1,4 @@
+import { requireMfa } from "../_shared/mfa.mjs";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 import { authorizationUrl, createState, verifyState } from "./oauth.mjs";
@@ -54,6 +55,7 @@ async function authenticatedUser(request: Request) {
   const client = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
   const { data, error } = await client.auth.getUser(token);
   if (error || !data.user) throw new Error("Your Creator HQ session expired. Sign in again.");
+  requireMfa(data.user, token);
   return data.user;
 }
 
@@ -357,6 +359,6 @@ Deno.serve(async request => {
 
     return json({ error: "Unknown action." }, 400, origin);
   } catch (error) {
-    return json({ error: (error as Error)?.message || "Dropbox request failed." }, 400, origin);
+    return json({ error: (error as Error)?.message || "Dropbox request failed." }, error?.status === 403 ? 403 : 400, origin);
   }
 });

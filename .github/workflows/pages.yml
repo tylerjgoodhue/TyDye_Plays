@@ -27,7 +27,7 @@ jobs:
         with:
           node-version: 22
       - name: Run release tests
-        run: node --test scripts/contact-form.test.cjs scripts/public-site.test.cjs scripts/workflow.test.mjs supabase/functions/buffer/buffer.test.mjs supabase/functions/dropbox/handler.test.mjs supabase/functions/dropbox/oauth.test.mjs
+        run: node --test scripts/mfa.test.mjs scripts/contact-form.test.cjs scripts/public-site.test.cjs scripts/workflow.test.mjs supabase/functions/buffer/buffer.test.mjs supabase/functions/dropbox/handler.test.mjs supabase/functions/dropbox/oauth.test.mjs
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
       - name: Build site

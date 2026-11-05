@@ -1,3 +1,4 @@
+import { requireMfa } from "../_shared/mfa.mjs";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 type Provider = "twitch" | "youtube" | "instagram" | "tiktok";
@@ -54,6 +55,7 @@ async function authenticatedUser(request: Request) {
   const client = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
   const { data, error } = await client.auth.getUser(token);
   if (error || !data.user) throw new Error("Your Creator HQ session expired. Sign in again.");
+  requireMfa(data.user, token);
   return data.user;
 }
 
@@ -453,7 +455,7 @@ Deno.serve(async request => {
     return json({ error: "Unknown platform account action." }, 400, origin);
   } catch (error) {
     const message = error instanceof Error ? error.message : "Platform account request failed.";
-    const status = message.includes("Sign in") || message.includes("session expired") ? 401 : message.includes("credentials are not configured") || message.includes("ENCRYPTION_KEY") ? 503 : 502;
+    const status = error?.status === 403 ? 403 : message.includes("Sign in") || message.includes("session expired") ? 401 : message.includes("credentials are not configured") || message.includes("ENCRYPTION_KEY") ? 503 : 502;
     return json({ error: message }, status, origin);
   }
 });

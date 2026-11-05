@@ -39,5 +39,6 @@ const configuredAppHtml = appHtml.replace(
 );
 await writeFile(path.join(creatorHq, 'index.html'), configuredAppHtml);
 await cp(path.join(root, 'cloud-sync.js'), path.join(creatorHq, 'cloud-sync.js'));
+await cp(path.join(root, 'auth-mfa.mjs'), path.join(creatorHq, 'auth-mfa.mjs'));
 
 console.log(`Built public creator site at ${publicBasePath} and Creator HQ at ${publicBasePath}CreatorHQ/.`);
