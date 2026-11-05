@@ -1,3 +1,4 @@
+import { resolveWorkplace, requireWorkplacePermission } from "../_shared/workspace.mjs";
 import { requireMfa } from "../_shared/mfa.mjs";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
@@ -48,7 +49,8 @@ async function authenticatedUser(request: Request) {
   const { data, error } = await client.auth.getUser(token);
   if (error || !data.user) throw new Error("Your Creator HQ session expired. Sign in again.");
   requireMfa(data.user, token);
-  return data.user;
+  const workplace = await resolveWorkplace(data.user, token, url, key, ['analytics','social','settings','website','linktree']);
+  return { ...data.user, id: workplace.owner_id, actorId: data.user.id, workplace };
 }
 
 function allowClick(ip: string) {
@@ -102,6 +104,7 @@ Deno.serve(async request => {
 
     const user = await authenticatedUser(request);
     if (payload.action === "register") {
+      requireWorkplacePermission(user.workplace,["settings","website","linktree"]);
       const inputLinks = Array.isArray(payload.links) ? payload.links : [];
       if (inputLinks.length > 30) return json({ error: "A maximum of 30 social links can be tracked." }, 400, origin);
       const links = inputLinks.map((link: Record<string, unknown>) => {

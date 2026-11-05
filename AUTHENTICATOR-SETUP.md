@@ -2,7 +2,7 @@
 
 ## Enable it on your account
 
-After publishing the app changes, sign in to CreatorHQ and open **Settings →
+After publishing the app changes, sign in to CreatorHQ and open **User settings →
 Two-factor authentication → Set up authenticator app**. Scan the QR code in a
 TOTP authenticator, or expand the manual setup key. Enter the app's current
 six-digit code and choose **Verify and enable**.
@@ -10,7 +10,8 @@ six-digit code and choose **Verify and enable**.
 Two-factor authentication starts only after the first code is verified. Future
 password sign-ins stop at the code screen until a valid authenticator code is
 entered. An already verified session can remain signed in through normal token
-refresh; refreshing the page does not force another code.
+refresh while the page remains open. Sessions are memory-only; refreshing the page
+requires signing in and verifying the authenticator again.
 
 Add a backup authenticator or enable your authenticator app's secure backup
 before relying on one device. Removing an authenticator requires a fresh code

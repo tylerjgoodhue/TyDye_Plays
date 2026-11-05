@@ -1,7 +1,12 @@
+import { createCloudPersistence } from './cloud-persistence.mjs';
+import { createBlogAdmin } from './blog-admin.mjs';
 import { createMfa, renderSecurity } from './auth-mfa.mjs';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2?bundle';
 
-const CONFIG_KEY = 'creator-hq-cloud-config-v1';
+let memoryConfig = {syncEnabled:true};
+let memoryBufferDrafts = [];
+let currentBufferDraft = null;
+let pendingWorkspaceSave = Promise.resolve();
 const MAX_SNAPSHOT_BYTES = 1_500_000;
 const SOCIAL_ANALYTICS_REFRESH_MS = 60_000;
 const PLATFORM_METRICS_REFRESH_MS = 15 * 60_000;
@@ -40,17 +45,74 @@ let publicProfileCheckPromise = null;
 let bufferCalendarMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
 let bufferQueueView = 'list';
 let authListeners = [];
+let workspaceContext = null;
+let workspaceRevision = null;
+let workspaceDirty = false;
+let workspaceChangeCount = 0;
+let preparedForUser = null;
+let preparingWorkplace = null;
+let workplacePoll = null;
 let mfaReady = false;
+const workplaceOwner = () => workspaceContext?.owner_id;
+const workplaceCan = permission => workspaceContext?.role === 'owner' || workspaceContext?.permissions?.includes(permission);
+async function loadWorkplaceContext() {
+  const {data,error}=await client.rpc('creator_workspace_context');
+  if(error || !data?.owner_id)throw new Error(error?.message || 'Ask the owner to add your account to this workplace in Staff.');
+  workspaceContext=data;
+  return data;
+}
+async function prepareWorkplace() {
+  if(preparedForUser===session?.user?.id)return;
+  if(preparingWorkplace)return preparingWorkplace;
+  preparingWorkplace=(async()=>{
+    if(!mfaReady)throw new Error('Verify your authenticator first.');
+    await loadWorkplaceContext();
+    const actor=session.user.id;
+    const {data,error}=await client.rpc('load_creator_workspace');
+    if(error)throw error;
+    if(session?.user?.id!==actor)throw new Error('Your account changed. Sign in again.');
+    const legacyPreferences=await cloudPersistence.migrateLegacy();
+    storage()?.setPersonalPreferences?.(await cloudPersistence.loadPreferences(legacyPreferences));
+    if(data?.workspace_data)storage().replaceWorkspace(await cloudPersistence.hydrateAssets(data.workspace_data));
+    else if(workspaceContext.role!=='owner')throw new Error('The owner needs to create the shared workplace first.');
+    workspaceRevision=data?.revision ?? null;workspaceDirty=false;preparedForUser=actor;
+    writeConfig({...readConfig(),syncEnabled:true});
+    setAccountState();
+    clearInterval(workplacePoll);
+    workplacePoll=setInterval(refreshSharedWorkplace,15000);
+  })().finally(()=>{preparingWorkplace=null;});
+  return preparingWorkplace;
+}
+async function refreshSharedWorkplace() {
+  if(!session?.user || !mfaReady || !preparedForUser || workspaceDirty || syncing || document.hidden)return;
+  // A form can contain unsaved edits before it reaches state/queueSync.
+  const editing=()=>{
+    if(document.querySelector?.('.modal-backdrop'))return true;
+    const view=document.querySelector?.('.view:not([hidden])')?.id;
+    return ['view-settings','view-website','view-linktree','view-buffer-compose','view-account'].includes(view) || Boolean(document.activeElement?.matches?.('input,textarea,select,[contenteditable="true"]'));
+  };
+  if(editing())return;
+  const at=workspaceChangeCount,actor=session.user.id,baseRevision=workspaceRevision;
+  try {
+    const {data,error}=await client.rpc('load_creator_workspace');
+    if(error)throw error;
+    if(session?.user?.id!==actor || workspaceDirty || syncing || at!==workspaceChangeCount || workspaceRevision!==baseRevision || editing())return;
+    if(data?.workspace_data && data.revision!==workspaceRevision){storage().replaceWorkspace(await cloudPersistence.hydrateAssets(data.workspace_data));workspaceRevision=data.revision;ui()?.setSyncStatus('Shared workplace updated from your team.');}
+  }catch(error){ui()?.setSyncStatus(`Team updates paused: ${message(error)}`);}
+}
 let authRevision = 0;
 const mfa = createMfa(() => client);
+const cloudPersistence = createCloudPersistence({getClient:()=>client,getUser:()=>session?.user,getContext:()=>workspaceContext,getUrl:()=>readConfig().url,getWorkspace:()=>storage()?.getWorkspace(),patchAsset:(...args)=>storage()?.patchCloudAsset?.(...args)});
+const blogAdmin = createBlogAdmin({getClient:()=>client,getContext:()=>workspaceContext,getName:()=>storage()?.getPublicCreatorProfile?.()?.name});
 async function checkedGateUser() {
   if (!session?.user) { mfaReady = false; return null; }
   const checkingSession = session;
   mfaReady = false;
   const status = await mfa.status();
   if (session?.user?.id !== checkingSession.user.id || session?.access_token !== checkingSession.access_token) return null;
+  if (!status.required) await loadWorkplaceContext();
   mfaReady = !status.required;
-  return { ...gateUser(session), mfaRequired: status.required, mfaFactors: status.factors.map(f => ({ id:f.id })) };
+  return { ...gateUser(session), ...(workspaceContext && !status.required ? {role:workspaceContext.role,permissions:workspaceContext.permissions} : {}), mfaRequired: status.required, mfaFactors: status.factors.map(f => ({ id:f.id })) };
 }
 async function updateSecurity() {
   const { data, error } = await client.auth.getSession();
@@ -66,14 +128,8 @@ async function showSecuritySettings() {
 const ui = () => window.CreatorHQCloudUI;
 const storage = () => window.CreatorHQStorage;
 
-function readConfig() {
-  try { return JSON.parse(localStorage.getItem(CONFIG_KEY) || '{}'); }
-  catch { return {}; }
-}
-
-function writeConfig(config) {
-  localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
-}
+function readConfig() { return memoryConfig; }
+function writeConfig(config) { memoryConfig={...config}; }
 
 function appRedirectUrl() {
   return `${window.location.origin}${window.location.pathname}`;
@@ -98,8 +154,8 @@ function setAccountState() {
   document.getElementById('cloud-forgot-password').hidden = Boolean(email) || recoveryMode;
   document.getElementById('cloud-recovery-section').hidden = !recoveryMode;
   ui()?.setSyncStatus(readConfig().syncEnabled ? 'Automatic sync is enabled for this browser.' : 'Automatic sync is paused.');
-  if (session?.user && !mfaReady) return;
-  if (session?.user && bufferLoadedForUser !== session.user.id) {
+  if (session?.user && (!mfaReady || preparedForUser!==session.user.id)) return;
+  if (session?.user && workplaceCan('social') && bufferLoadedForUser !== session.user.id) {
     bufferLoadedForUser = session.user.id;
     loadBufferWorkspace();
   } else if (!session?.user) {
@@ -108,8 +164,8 @@ function setAccountState() {
   }
   if (session?.user && socialLinksSyncedForUser !== session.user.id) {
     socialLinksSyncedForUser = session.user.id;
-    syncSocialLinks().catch(error => setSocialAnalyticsStatus(error.message || 'Could not register social links.'));
-    loadPlatformAccounts().catch(error => setPlatformAccountsStatus(error.message || 'Could not load platform accounts.'));
+    if(workplaceCan('website') || workplaceCan('linktree') || workplaceCan('settings')) syncSocialLinks().catch(error => setSocialAnalyticsStatus(error.message || 'Could not register social links.'));
+    if(workplaceCan('analytics') || workplaceCan('social') || workplaceCan('settings'))loadPlatformAccounts().catch(error => setPlatformAccountsStatus(error.message || 'Could not load platform accounts.'));
     initializePublicProfile();
   } else if (!session?.user) {
     socialLinksSyncedForUser = null;
@@ -122,11 +178,8 @@ function setAccountState() {
 }
 
 function withoutLocalImageBytes(workspace) {
-  return {
-    ...workspace,
-    assets: (workspace.assets || []).map(asset => ({ ...asset, dataUrl: '', mimeType: '' })),
-    recoveryTrash:(workspace.recoveryTrash||[]).map(item=>({...item,record:{...item.record,dataUrl:'',mimeType:''}}))
-  };
+  const cleanAsset=asset=>{const {previewUrl,downloadUrl,...record}=asset;return {...record,dataUrl:'',mimeType:record.storagePath?record.mimeType:''};};
+  return {...workspace,assets:(workspace.assets||[]).map(cleanAsset),recoveryTrash:(workspace.recoveryTrash||[]).map(item=>({...item,record:item.collection==='assets'?cleanAsset(item.record):item.record}))};
 }
 
 async function currentUser() {
@@ -135,29 +188,28 @@ async function currentUser() {
   if (error) throw error;
   if (!data.user) throw new Error('Sign in before syncing your workspace.');
   if (!mfaReady) throw new Error('Verify your authenticator code before accessing your workspace.');
-  return data.user;
+  if(!workspaceContext)await loadWorkplaceContext();
+  return {...data.user,id:workplaceOwner(),actorId:data.user.id};
 }
 
-async function uploadWorkspace({ confirmOverwrite = false } = {}) {
-  const user = await currentUser();
-  const existing = await client.from('creator_workspaces').select('user_id').eq('user_id', user.id).maybeSingle();
-  if (existing.error) throw existing.error;
-  if (confirmOverwrite && existing.data && !await window.CreatorHQDialogs.confirm('Replace the cloud workspace?', 'This browser’s workspace will become the current cloud version. The previous version will be kept in cloud save history.', 'Upload this workspace')) return;
-
-  const snapshot = withoutLocalImageBytes(storage().getWorkspace());
-  const snapshotText = JSON.stringify(snapshot);
-  if (new TextEncoder().encode(snapshotText).byteLength > MAX_SNAPSHOT_BYTES) {
-    throw new Error('Workspace snapshot exceeds 1.5 MB. Remove large text or asset metadata before syncing.');
-  }
-  const { error } = await client.from('creator_workspaces').upsert({
-    user_id: user.id,
-    schema_version: 1,
-    workspace_data: snapshot,
-    updated_at: new Date().toISOString()
-  }, { onConflict: 'user_id' });
-  if (error) throw error;
-  writeConfig({ ...readConfig(), syncEnabled: true });
-  ui()?.setSyncStatus(`Synced at ${new Date().toLocaleTimeString()}. Local image bytes remain on this device.`);
+async function uploadWorkspace(options={}) {
+  clearTimeout(syncTimer);
+  const operation=pendingWorkspaceSave.catch(()=>{}).then(()=>performWorkspaceSave(options));
+  pendingWorkspaceSave=operation;return operation;
+}
+async function performWorkspaceSave({confirmOverwrite=false}={}) {
+  await currentUser();
+  if(preparedForUser!==session.user.id)throw new Error('Load the shared workplace before saving.');
+  if(confirmOverwrite && !await window.CreatorHQDialogs.confirm('Save this shared workplace?', 'Your changes will update the workplace your editors use. Newer team changes will never be overwritten silently.', 'Save shared workplace'))return;
+  const at=workspaceChangeCount;
+  const snapshot=withoutLocalImageBytes(await cloudPersistence.persistAssets(storage().getWorkspace()));
+  if(new TextEncoder().encode(JSON.stringify(snapshot)).byteLength>MAX_SNAPSHOT_BYTES)throw new Error('Workspace snapshot exceeds 1.5 MB.');
+  const {data,error}=await client.rpc('save_creator_workspace',{snapshot,expected_revision:workspaceRevision});
+  if(error){const failure=new Error(error.message || 'Could not save the shared workplace. Your changes remain in this open page.');failure.code=error.code;throw failure;}
+  workspaceRevision=data.revision;
+  if(at===workspaceChangeCount)workspaceDirty=false;
+  writeConfig({...readConfig(),syncEnabled:true});
+  ui()?.setSyncStatus(`Shared workplace saved at ${new Date().toLocaleTimeString()}.`);
 }
 
 async function listWorkspaceHistory(){
@@ -174,28 +226,15 @@ async function restoreWorkspaceHistory(id){
 }
 
 async function pullWorkspace() {
-  const user = await currentUser();
-  const { data, error } = await client.from('creator_workspaces')
-    .select('workspace_data, updated_at, schema_version')
-    .eq('user_id', user.id)
-    .maybeSingle();
-  if (error) throw error;
-  if (!data) {
-    ui()?.setSyncStatus('No cloud workspace exists yet. Upload this browser workspace to create one.');
-    return;
-  }
-  if (!await window.CreatorHQDialogs.confirm('Restore the cloud workspace?', `Load the cloud save from ${new Date(data.updated_at).toLocaleString()}? Your current workspace will get a local checkpoint first.`, 'Restore workspace')) return;
-  const localAssets = new Map((storage().getWorkspace().assets || []).map(asset => [asset.id, asset]));
-  const restored = {
-    ...data.workspace_data,
-    assets: (data.workspace_data.assets || []).map(asset => {
-      const local = localAssets.get(asset.id);
-      return local?.dataUrl ? { ...asset, dataUrl: local.dataUrl, mimeType: local.mimeType, fileName: local.fileName } : asset;
-    })
-  };
-  storage().replaceWorkspace(restored);
-  writeConfig({ ...readConfig(), syncEnabled: true });
-  ui()?.setSyncStatus(`Cloud workspace restored and sync enabled. Last cloud update: ${new Date(data.updated_at).toLocaleString()}.`);
+  await currentUser();
+  if(!await window.CreatorHQDialogs.confirm('Load the shared workplace?', 'Your current changes will be kept in a private Supabase recovery checkpoint before loading the team’s latest version.', 'Load shared workplace'))return;
+  const {data,error}=await client.rpc('load_creator_workspace');
+  if(error)throw error;
+  if(!data?.workspace_data)throw new Error('No shared workplace has been saved yet.');
+  storage().replaceWorkspace(await cloudPersistence.hydrateAssets(data.workspace_data));
+  workspaceRevision=data.revision;workspaceDirty=false;
+  writeConfig({...readConfig(),syncEnabled:true});
+  ui()?.setSyncStatus('Loaded the latest shared workplace.');
 }
 
 async function flushSync() {
@@ -206,6 +245,7 @@ async function flushSync() {
   try {
     await uploadWorkspace();
   } catch (error) {
+    if(error.code==='40001'){writeConfig({...readConfig(),syncEnabled:false});ui()?.notify('Someone else saved newer team changes. Your edits remain in this open page. Use Load team changes to keep a recovery checkpoint and load the latest version.');}
     ui()?.setSyncStatus(`Sync paused after an error: ${message(error)}`);
   } finally {
     syncing = false;
@@ -214,9 +254,11 @@ async function flushSync() {
 }
 
 function queueSync() {
-  if (!readConfig().syncEnabled || !session?.user || !mfaReady) return;
+  if (!session?.user || !mfaReady || preparedForUser!==session.user.id) return;
+  workspaceDirty=true;workspaceChangeCount++;
+  if (!readConfig().syncEnabled)return;
   clearTimeout(syncTimer);
-  ui()?.setSyncStatus('Local changes saved. Cloud sync queued…');
+  ui()?.setSyncStatus('Saving shared changes to Supabase…');
   syncTimer = setTimeout(flushSync, 700);
 }
 
@@ -252,11 +294,11 @@ function hasPublicProfileContent(profile) {
 }
 
 async function initializePublicProfile() {
-  if (!client || !session?.user || publicProfileCheckedForUser === session.user.id || publicProfileCheckPromise) return publicProfileCheckPromise;
-  const userId = session.user.id;
+  if (!client || !session?.user || publicProfileCheckedForUser === workplaceOwner() || publicProfileCheckPromise) return publicProfileCheckPromise;
+  const userId = workplaceOwner();
   publicProfileCheckPromise = (async () => {
     const config = await getPublicProfileConfig();
-    if (!config?.userId || userId !== config.userId) {
+    if (!config?.userId || userId !== config.userId || !(workplaceCan('website') || workplaceCan('linktree') || workplaceCan('settings'))) {
       setPublicProfileStatus('Signed in, but this account does not own the public site.');
       return;
     }
@@ -289,7 +331,7 @@ async function initializePublicProfile() {
 }
 
 function queuePublicProfileSync(profile = storage()?.getPublicCreatorProfiles?.()) {
-  if (!profile) return;
+  if (!profile || !(workplaceCan('website') || workplaceCan('linktree') || workplaceCan('settings'))) return;
   pendingPublicProfile = structuredClone(profile);
   clearTimeout(publicProfileSyncTimer);
   if (!publicProfileHydrated) {
@@ -315,12 +357,12 @@ async function publishPendingPublicProfile() {
     if (!client || !session?.user) throw new Error('Connect and sign in to Supabase to publish website changes.');
     const config = await getPublicProfileConfig();
     if (!config?.userId || !config.supabaseUrl || !config.anonKey) throw new Error('The public profile config is missing its Supabase publication settings. Download and deploy a fresh public-profile.json.');
-    if (session.user.id !== config.userId) throw new Error('Sign in with the Supabase account that owns this public site.');
+    if (workplaceOwner() !== config.userId || !(workplaceCan('website') || workplaceCan('linktree') || workplaceCan('settings'))) throw new Error('Your workplace role does not allow publishing website changes.');
     // Safety net: if the local Linktree links are empty but the database still has
     // links, keep the database links instead of publishing an empty wipe.
     const localLinks = Array.isArray(profile.linktree?.links) ? profile.linktree.links : [];
     if (!localLinks.length) {
-      const { data: existingProfile } = await client.from('creator_public_profiles').select('profile').eq('user_id', session.user.id).maybeSingle();
+      const { data: existingProfile } = await client.from('creator_public_profiles').select('profile').eq('user_id', workplaceOwner()).maybeSingle();
       const dbLinks = existingProfile?.profile?.linktree?.links || (Array.isArray(existingProfile?.profile?.links) ? existingProfile.profile.links : []);
       if (Array.isArray(dbLinks) && dbLinks.length) {
         profile = structuredClone(profile);
@@ -332,7 +374,7 @@ async function publishPendingPublicProfile() {
     if (new TextEncoder().encode(profileText).byteLength > 500_000) throw new Error('The public profile is too large to publish. Reduce its text or product details.');
     if (profileText === lastPublishedPublicProfile) return;
     const { error } = await client.from('creator_public_profiles').upsert({
-      user_id: session.user.id,
+      user_id: workplaceOwner(),
       profile,
       updated_at: new Date().toISOString()
     }, { onConflict: 'user_id' });
@@ -351,8 +393,8 @@ async function publishPendingPublicProfile() {
 async function restoreSavedLinktree() {
   const status = document.getElementById('linktree-admin-status');
   try {
-    const user = await currentUser();
-    const { data, error } = await client.from('creator_workspaces').select('workspace_data').eq('user_id', user.id).maybeSingle();
+    await currentUser();
+    const { data, error } = await client.rpc('load_creator_workspace');
     if (error) throw error;
     const savedProfile = data?.workspace_data?.creatorProfile;
     if (!savedProfile || !Array.isArray(savedProfile.links) || !savedProfile.links.length) {
@@ -478,7 +520,9 @@ const authGate = {
     if (error) throw error;
   },
   async signOut() {
-    if (client) { const { error } = await client.auth.signOut(); if (error) throw error; }
+    await blogAdmin.prepareSignOut();
+    if(workspaceDirty){try{await uploadWorkspace();}catch(error){if(error.code!=='40001')throw error;await cloudPersistence.checkpoint(withoutLocalImageBytes(storage().getWorkspace()),'Unsaved team edits before sign-out');}}
+    if (client) { const { error } = await client.auth.signOut({scope:'local'}); if (error) throw error; }
     session = null; mfaReady = false; mfa.reset();
   },
   async verifyMfa(factorId, code) {
@@ -487,18 +531,30 @@ const authGate = {
     return checkedGateUser();
   },
   showSecuritySettings,
+  prepareWorkplace,
+  openBlog:()=>blogAdmin.refresh(),
   onChange(listener) { if (typeof listener === 'function') authListeners.push(listener); }
 };
 
 window.CreatorHQCloud = {
   queueSync,
+  reloadWorkplace:pullWorkspace,
+  saveNow:uploadWorkspace,
+  projectUrl:()=>readConfig().url,
+  refreshBlog:()=>blogAdmin.refresh(true),
+  savePersonalPreferences:preferences=>cloudPersistence.savePreferences(preferences),
+  captureCheckpoint:(snapshot,reason)=>cloudPersistence.checkpoint(withoutLocalImageBytes(snapshot),reason),
+  listCloudCheckpoints:()=>cloudPersistence.listCheckpoints(),
+  restoreCloudCheckpoint:async id=>{storage().replaceWorkspace(await cloudPersistence.restoreCheckpoint(id));queueSync();await uploadWorkspace();},
+  listMigrationArchives:()=>cloudPersistence.listImports(),
+  getMigrationArchive:id=>cloudPersistence.getImport(id),
   listWorkspaceHistory,
   restoreWorkspaceHistory,
   startContentPost,
   showContentPosts,
   refreshLinkedContentPosts,
   getDraftLibrary:()=>structuredClone(bufferLibrary()),
-  restoreDraftLibrary:drafts=>{localStorage.setItem(bufferLibraryKey(),JSON.stringify(Array.isArray(drafts)?drafts:[]));renderBufferDraftLibrary();},
+  restoreDraftLibrary:drafts=>{memoryBufferDrafts=structuredClone(Array.isArray(drafts)?drafts:[]);renderBufferDraftLibrary();},
   queuePublicProfileSync,
   restoreSavedLinktree,
   getPublicProfileConfig,
@@ -559,7 +615,7 @@ async function socialAnalyticsRequest(action, params = {}, authenticated = true)
 }
 
 async function syncSocialLinks() {
-  if (!session?.user || !client) return;
+  if (!session?.user || !client || !(workplaceCan('website') || workplaceCan('linktree') || workplaceCan('settings'))) return;
   const links = (storage()?.getWorkspace()?.creatorProfile?.links || []).filter(link => link.id && link.label && /^https?:\/\//i.test(link.url));
   const payload = links.map(link => ({ linkId: link.id, label: link.label, platform: link.platform || link.icon || 'other', url: link.url }));
   const result = await socialAnalyticsRequest('register', { links: payload });
@@ -641,6 +697,7 @@ async function refreshPlatformMetrics() {
 }
 
 async function refreshAnalyticsData() {
+  if(!(workplaceCan('analytics') || workplaceCan('social') || workplaceCan('settings')))return;
   if (document.hidden || !session?.user || !client || analyticsRefreshPromise) return analyticsRefreshPromise;
   const analyticsVisible = !document.getElementById('view-analytics')?.hidden;
   const settingsVisible = !document.getElementById('view-settings')?.hidden;
@@ -662,7 +719,7 @@ async function refreshAnalyticsData() {
 }
 
   async function refreshBufferData() {
-    if (document.hidden || !session?.user || !client || bufferRefreshPromise) return bufferRefreshPromise;
+    if (document.hidden || !session?.user || !client || !workplaceCan('social') || bufferRefreshPromise) return bufferRefreshPromise;
     const composeVisible = !document.getElementById('view-buffer-compose')?.hidden;
     const scheduledVisible = !document.getElementById('view-buffer-scheduled')?.hidden;
     if (!composeVisible && !scheduledVisible || Date.now() - lastBufferRefresh < BUFFER_REFRESH_MS) return;
@@ -671,14 +728,23 @@ async function refreshAnalyticsData() {
     finally { bufferRefreshPromise = null; }
   }
 
+  let lastAssetUrlRefresh=0;
+  async function refreshPrivateAssetUrls(){
+    if(document.hidden||!session?.user||!mfaReady||preparedForUser!==session.user.id||Date.now()-lastAssetUrlRefresh<600000)return;
+    lastAssetUrlRefresh=Date.now();
+    try{const snapshot=await cloudPersistence.hydrateAssets(storage().getWorkspace());for(const asset of snapshot.assets||[])if(asset.storagePath)storage().patchCloudAsset?.(asset.id,{previewUrl:asset.previewUrl||'',downloadUrl:asset.downloadUrl||''});}catch{lastAssetUrlRefresh=0;}
+  }
+  window.addEventListener('beforeunload',event=>{if(workspaceDirty){event.preventDefault();event.returnValue='';}});
   setInterval(() => {
     refreshAnalyticsData();
     refreshBufferData();
+    refreshPrivateAssetUrls();
   }, 60_000);
 document.addEventListener('visibilitychange', () => {
     if (!document.hidden) {
       refreshAnalyticsData();
       refreshBufferData();
+      refreshPrivateAssetUrls();
     }
 });
 async function connectSocialPlatform(provider) {
@@ -759,7 +825,7 @@ async function connectProject(urlValue, keyValue) {
 
   writeConfig({ ...readConfig(), url: url.origin, anonKey: keyValue.trim() });
   client = createClient(url.origin, keyValue.trim(), {
-    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+    auth: { persistSession: false, autoRefreshToken: true, detectSessionInUrl: true, flowType:'implicit' }
   });
   ui()?.setConnection(true, 'Project client initialized. Sign in to check the database connection.');
   const { data, error } = await client.auth.getSession();
@@ -773,7 +839,8 @@ async function connectProject(urlValue, keyValue) {
     mfaReady = false;
     clearTimeout(syncTimer); clearTimeout(publicProfileSyncTimer);
     if (!nextSession) {
-      mfa.reset();
+      workspaceContext=null;preparedForUser=null;workspaceDirty=false;workspaceRevision=null;clearInterval(workplacePoll);
+      mfa.reset();blogAdmin.reset();memoryBufferDrafts=[];currentBufferDraft=null;storage()?.setPersonalPreferences?.({});
       document.getElementById('account-security')?.replaceChildren();
     }
     if (event === 'PASSWORD_RECOVERY') recoveryMode = true;
@@ -783,6 +850,7 @@ async function connectProject(urlValue, keyValue) {
         const user = await checkedGateUser();
         if (revision !== authRevision) return;
         setAccountState();
+        if(workspaceDirty && preparedForUser===session?.user?.id && readConfig().syncEnabled)queueSync();
         authListeners.forEach(listener => { try { listener(event, user); } catch {} });
       } catch {
         if (revision !== authRevision) return;
@@ -954,7 +1022,7 @@ function ensureBufferComposerLayout() {
         scheduledView.className = 'view buffer-scheduled-view';
         scheduledView.id = 'view-buffer-scheduled';
         scheduledView.hidden = true;
-        scheduledView.innerHTML = `<div class="page-heading"><div><div class="eyebrow">Social Media Management</div><h1>Publishing planner</h1><p class="subtitle">Plan drafts, manage your queue, and follow posts from idea to published.</p></div><div class="button-row"><span class="chip" id="buffer-scheduled-connection">Checking Buffer</span><button class="button primary" type="button" data-view="buffer-compose">Compose post</button></div></div>`;
+        scheduledView.innerHTML = `<nav class="button-row" aria-label="Buffer workflow" style="margin-bottom:18px"><button class="button" data-view="content" data-buffer-view="content">Content pipeline</button><button class="button" data-view="buffer-compose" data-buffer-view="buffer-compose">Compose in Buffer</button><button class="button" data-view="buffer-scheduled" data-buffer-view="buffer-scheduled">Publishing planner</button></nav><div class="page-heading"><div><div class="eyebrow">Social Media Management</div><h1>Publishing planner</h1><p class="subtitle">Plan drafts, manage your queue, and follow posts from idea to published.</p></div><div class="button-row"><span class="chip" id="buffer-scheduled-connection">Checking Buffer</span><button class="button primary" type="button" data-view="buffer-compose">Compose post</button></div></div>`;
         document.getElementById('view-buffer-compose')?.insertAdjacentElement('afterend', scheduledView);
       }
       if (scheduledView) scheduledView.append(queuePanel);
@@ -1487,38 +1555,33 @@ function applyBufferSearch() {
 
 let bufferLoadGeneration = 0;
 let bufferMediaUploading = false;
-function bufferLibraryKey() { return `creator-hq-buffer-library-v1:${session?.user?.id || 'local'}`; }
-function bufferLibrary() {
-  try {
-    const list = JSON.parse(localStorage.getItem(bufferLibraryKey()) || '[]');
-    return Array.isArray(list) && list.length ? list : (storage()?.getSavedBufferDrafts?.() || []);
-  } catch { return []; }
-}
+function bufferLibrary() { return memoryBufferDrafts.length ? structuredClone(memoryBufferDrafts) : (storage()?.getSavedBufferDrafts?.() || []); }
+
 function saveBufferLibraryDraft(draft) {
   const list = bufferLibrary();
   const id = crypto.randomUUID();
   list.unshift({...draft,id,title:(draft.values['buffer-post-text'] || 'Untitled draft').split('\n')[0].slice(0,90)});
   if (list.length > 50) throw new Error('Your draft library is full. Remove an old draft before saving another.');
-  localStorage.setItem(bufferLibraryKey(),JSON.stringify(list));
+  memoryBufferDrafts=structuredClone(list);
   storage()?.bufferDraftsChanged?.(list);
 }
 function renderBufferDraftLibrary() {
   const host = document.getElementById('buffer-draft-library'); if (!host) return;
   const list = bufferLibrary();
-  host.innerHTML = `<div class="buffer-library-heading"><h3>Saved drafts <span class="chip">${list.length}</span></h3><span class="settings-hint">This account · workspace drafts</span></div>${list.length ? list.map(draft=>`<article class="buffer-library-row"><div><strong>${bufferHtml(draft.title)}</strong><p>${bufferHtml(new Date(draft.savedAt).toLocaleString())} · ${(draft.targets || []).length} channels</p></div><button class="button" type="button" data-load-buffer-draft="${bufferHtml(draft.id)}">Continue</button><button class="mini-button" type="button" data-remove-buffer-draft="${bufferHtml(draft.id)}" aria-label="Remove draft ${bufferHtml(draft.title)}">×</button></article>`).join('') : '<p class="settings-hint">Save several posts here while you plan. Use “Save as Buffer draft” to keep a draft in your Buffer account across devices.</p>'}`;
+  host.innerHTML = `<div class="buffer-library-heading"><h3>Saved drafts <span class="chip">${list.length}</span></h3><span class="settings-hint">Shared workplace · Supabase drafts</span></div>${list.length ? list.map(draft=>`<article class="buffer-library-row"><div><strong>${bufferHtml(draft.title)}</strong><p>${bufferHtml(new Date(draft.savedAt).toLocaleString())} · ${(draft.targets || []).length} channels</p></div><button class="button" type="button" data-load-buffer-draft="${bufferHtml(draft.id)}">Continue</button><button class="mini-button" type="button" data-remove-buffer-draft="${bufferHtml(draft.id)}" aria-label="Remove draft ${bufferHtml(draft.title)}">×</button></article>`).join('') : '<p class="settings-hint">Save several posts here while you plan. Use “Save as Buffer draft” to keep a draft in your Buffer account across devices.</p>'}`;
   host.querySelectorAll('[data-load-buffer-draft]').forEach(button=>button.onclick=async()=>{
     const draft = list.find(item=>item.id===button.dataset.loadBufferDraft);
     if (!draft) return;
     if (document.getElementById('buffer-post-text').value.trim() && !await window.CreatorHQDialogs.confirm('Open this saved draft?','Replace the current composer with this saved draft?','Open draft')) return;
     try {
-      localStorage.setItem(`creator-hq-buffer-draft-v1:${session?.user?.id || 'local'}`,JSON.stringify(draft));
+      currentBufferDraft=structuredClone(draft);
       document.getElementById('buffer-load-draft').click();
       document.querySelector('.nav-button[data-view="buffer-compose"]')?.click();
     } catch { ui()?.notify('Could not restore this draft.'); }
   });
   host.querySelectorAll('[data-remove-buffer-draft]').forEach(button=>button.onclick=async()=>{
     if (!await window.CreatorHQDialogs.confirm('Remove this saved draft?','This removes the draft from your draft library. It does not change posts in Buffer.','Remove draft')) return;
-    try { const remaining=list.filter(item=>item.id!==button.dataset.removeBufferDraft);localStorage.setItem(bufferLibraryKey(),JSON.stringify(remaining));storage()?.bufferDraftsChanged?.(remaining);renderBufferDraftLibrary(); }
+    try { const remaining=list.filter(item=>item.id!==button.dataset.removeBufferDraft);memoryBufferDrafts=structuredClone(remaining);storage()?.bufferDraftsChanged?.(remaining);renderBufferDraftLibrary(); }
     catch { ui()?.notify('Could not remove the draft.'); }
   });
 }
@@ -1567,17 +1630,17 @@ function ensureBufferConveniences() {
   if (!fields || !preview) return;
   fields.insertAdjacentHTML('afterbegin', `<div class="buffer-draft-tools"><div class="button-row"><button type="button" class="button" id="buffer-save-draft">Save draft</button><button type="button" class="button" id="buffer-load-draft">Restore draft</button></div><p class="settings-hint" id="buffer-draft-note" role="status">Saved drafts join workspace backups and cloud sync when enabled. Nothing publishes automatically.</p><label class="form-field"><span>Quick start</span><select class="field-control" id="buffer-quick-start"><option value="">Choose a starting point…</option><option value="live">Stream announcement</option><option value="clip">Share a clip</option><option value="vod">New video / VOD</option><option value="community">Community question</option></select></label></div>`);
   preview.insertAdjacentHTML('beforeend', '<div id="buffer-readiness" class="buffer-readiness" aria-live="polite"></div>');
-  const draftKey = () => `creator-hq-buffer-draft-v1:${session?.user?.id || 'local'}`;
+
   const ids = ['buffer-post-type', 'buffer-video-title', 'buffer-video-category', 'buffer-board-id', 'buffer-post-text', 'buffer-media-type', 'buffer-media-url', 'buffer-schedule-mode', 'buffer-due-at', 'buffer-content-source'];
-  document.getElementById('buffer-save-draft').onclick = () => {
+  document.getElementById('buffer-save-draft').onclick = async () => {
     rememberBufferCustomizations();
     const draft = { madeForKids: document.getElementById('buffer-video-kids').checked, organization: document.getElementById('buffer-organization').value, values: Object.fromEntries(ids.map(id => [id, document.getElementById(id).value])), targets: [...document.querySelectorAll('[data-buffer-target]:checked')].map(input => input.value), overrides: [...bufferCustomizations], savedAt: new Date().toISOString() };
-    try { localStorage.setItem(draftKey(), JSON.stringify(draft)); saveBufferLibraryDraft(draft); renderBufferDraftLibrary(); document.getElementById('buffer-draft-note').textContent = `Draft saved in this browser at ${new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}.`; }
-    catch { ui()?.notify('Could not save the draft. Browser storage may be full.'); }
+    try { currentBufferDraft=structuredClone(draft); saveBufferLibraryDraft(draft); await uploadWorkspace(); renderBufferDraftLibrary(); document.getElementById('buffer-draft-note').textContent = `Draft saved in Supabase at ${new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}.`; }
+    catch { ui()?.notify('Could not save the draft to Supabase. Keep this tab open and retry.'); }
   };
   document.getElementById('buffer-load-draft').onclick = () => {
     try {
-      const draft = JSON.parse(localStorage.getItem(draftKey()) || 'null');
+      const draft = currentBufferDraft || bufferLibrary()[0];
       if (!draft) return ui()?.notify('No saved draft for this account in this browser yet.');
       if (draft.organization && draft.organization !== document.getElementById('buffer-organization').value) return ui()?.notify('Choose the draft’s Buffer organization in Publishing planner first, then restore it.');
       document.getElementById('buffer-video-kids').checked = draft.madeForKids === true;
@@ -1733,17 +1796,7 @@ document.getElementById('cloud-resend-confirmation').addEventListener('click', a
   } catch (error) { reportError(error); }
 });
 
-document.getElementById('cloud-sign-out').addEventListener('click', async () => {
-  try {
-    writeConfig({ ...readConfig(), syncEnabled: false });
-    if (client) {
-      const { error } = await client.auth.signOut();
-      if (error) throw error;
-    }
-    session = null;
-    setAccountState();
-  } catch (error) { reportError(error); }
-});
+document.getElementById('cloud-sign-out').addEventListener('click',async()=>{try{await authGate.signOut();setAccountState();}catch(error){reportError(error);}});
 
 document.getElementById('cloud-push').addEventListener('click', async () => {
   try { await uploadWorkspace({ confirmOverwrite: true }); }
@@ -1755,10 +1808,7 @@ document.getElementById('cloud-pull').addEventListener('click', async () => {
   catch (error) { reportError(error); }
 });
 
-document.getElementById('cloud-disable').addEventListener('click', () => {
-  writeConfig({ ...readConfig(), syncEnabled: false });
-  ui()?.setSyncStatus('Automatic sync paused. Local changes will not be uploaded.');
-});
+document.getElementById('cloud-disable').addEventListener('click',async()=>{try{await uploadWorkspace();}catch(error){reportError(error);}});
 
 try {
   const config = readConfig();
@@ -1771,7 +1821,7 @@ try {
     document.getElementById('cloud-anon-key').value = projectKey;
     await connectProject(projectUrl, projectKey);
     storage()?.refreshSocialLinks?.();
-    if (config.syncEnabled && session?.user && mfaReady) queueSync();
+    if (config.syncEnabled && session?.user && mfaReady && preparedForUser===session.user.id) queueSync();
   }
 } catch (error) {
   ui()?.setConnection(false, `Could not initialize Supabase: ${message(error)}`);

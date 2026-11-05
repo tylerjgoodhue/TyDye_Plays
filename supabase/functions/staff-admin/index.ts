@@ -8,7 +8,7 @@ const PERMISSIONS = [
   "dashboard", "tasks", "schedule", "content", "assets", "analytics",
   "community", "shop", "website", "linktree", "social", "settings"
 ];
-const ROLES = ["owner", "admin", "staff", "viewer"];
+const ROLES = ["owner", "admin", "editor", "staff", "viewer"];
 
 function cleanPermissions(input: unknown): string[] | null {
   if (!Array.isArray(input)) return null;
@@ -97,6 +97,9 @@ Deno.serve(async request => {
     const admin = adminClient();
 
     if (action === "list") {
+      const {data: memberships,error: membershipError}=await admin.from('creator_workspace_members').select('user_id,role,permissions,active').eq('owner_id',caller.id);
+      if(membershipError)throw membershipError;
+      const membershipByUser=new Map((memberships||[]).map(member=>[member.user_id,member]));
       const page = Number.isInteger(body.page) && (body.page as number) > 0 ? (body.page as number) : 1;
       const { data, error } = await admin.auth.admin.listUsers({ page, perPage: 50 });
       if (error) throw error;
@@ -108,8 +111,9 @@ Deno.serve(async request => {
         emailConfirmed: Boolean(user.email_confirmed_at),
         banned: Boolean((user as { banned_until?: string }).banned_until && new Date((user as { banned_until?: string }).banned_until || "").getTime() > Date.now()),
         isOwner: caller.id === user.id,
-        role: (user.user_metadata as { role?: string } | null)?.role || "",
-        permissions: cleanPermissions((user.user_metadata as { permissions?: unknown } | null)?.permissions) || []
+        isMember: membershipByUser.has(user.id),
+        role: membershipByUser.get(user.id)?.role || "",
+        permissions: membershipByUser.get(user.id)?.permissions || []
       }));
       return json({ users, page, hasMore: Boolean((data as { nextPage?: number | null })?.nextPage) }, 200, origin);
     }
@@ -119,8 +123,10 @@ Deno.serve(async request => {
       const password = String(body.password || "");
       if (!EMAIL.test(email)) return json({ error: "Enter a valid email address for the new staff account." }, 400, origin);
       if (password.length < 8) return json({ error: "Use a password with at least 8 characters." }, 400, origin);
-      const role = ROLES.includes(String(body.role || "")) ? String(body.role) : "staff";
-      const permissions = cleanPermissions(body.permissions) ?? PERMISSIONS.filter(item => item !== "settings");
+      const role = ROLES.includes(String(body.role || "")) ? String(body.role) : "editor";
+      if(role==='owner')return json({error:'Use Admin for a staff account with broad access. The workplace owner stays the same.'},400,origin);
+      const defaults = role==='viewer' ? ['dashboard','analytics'] : role==='admin' ? PERMISSIONS.filter(item=>item!=='settings') : role==='editor' ? ['dashboard','tasks','schedule','content','assets'] : ['dashboard','tasks','schedule','content','assets','community'];
+      const permissions = cleanPermissions(body.permissions) ?? defaults;
       const { data, error } = await admin.auth.admin.createUser({
         email,
         password,
@@ -128,6 +134,8 @@ Deno.serve(async request => {
         user_metadata: { role: "staff", workspace: "Creator HQ", assignedRole: role, permissions }
       });
       if (error) throw error;
+      const {error: memberError}=await admin.from('creator_workspace_members').insert({user_id:data.user.id,owner_id:caller.id,role,permissions});
+      if(memberError){ await admin.auth.admin.deleteUser(data.user.id);throw memberError; }
       return json({ user: data.user ? { id: data.user.id, email: data.user.email || email } : null }, 200, origin);
     }
 
@@ -145,9 +153,10 @@ Deno.serve(async request => {
         if (body.password.length < 8) return json({ error: "Use a password with at least 8 characters." }, 400, origin);
         changes.password = body.password;
       }
+      const selfEdit = id.toLowerCase() === caller.id.toLowerCase();
+      if (!selfEdit && body.role === "owner") return json({error:"Only the workplace owner has the Owner role. Choose Admin for staff."},400,origin);
       if (!selfEdit && body.banned === true) changes.ban_duration = "876000h";
       if (!selfEdit && body.banned === false) changes.ban_duration = "none";
-      const selfEdit = id.toLowerCase() === caller.id.toLowerCase();
       const metadata: Record<string, unknown> = {};
       if (!selfEdit && typeof body.role === "string" && ROLES.includes(body.role)) metadata.assignedRole = body.role;
       const permissions = selfEdit ? null : cleanPermissions(body.permissions);
@@ -158,8 +167,19 @@ Deno.serve(async request => {
         changes.user_metadata = { ...(existing.user.user_metadata || {}), ...metadata };
       }
       if (!Object.keys(changes).length) return json({ error: "Nothing to update." }, 400, origin);
+      let existingMember = null;
+      if (!selfEdit) {
+        const {data: member,error: memberReadError}=await admin.from('creator_workspace_members').select('owner_id,role,permissions,active').eq('user_id',id).maybeSingle();
+        if(memberReadError)throw memberReadError;
+        if(member && member.owner_id!==caller.id)throw new Error('That account belongs to another workplace.');
+        existingMember=member;
+      }
       const { data, error } = await admin.auth.admin.updateUserById(id, changes);
       if (error) throw error;
+      if (!selfEdit) {
+        const {error: memberError}=await admin.from('creator_workspace_members').upsert({user_id:id,owner_id:caller.id,role:typeof body.role==='string' && ROLES.includes(body.role)?body.role:existingMember?.role||'editor',permissions:permissions||existingMember?.permissions||[],active:typeof body.banned==='boolean'?!body.banned:existingMember?.active??true},{onConflict:'user_id'});
+        if(memberError)throw new Error('Account updated, but workplace access could not be saved. Please retry Save changes.');
+      }
       return json({ user: data.user ? { id: data.user.id, email: data.user.email || "" } : null }, 200, origin);
     }
 

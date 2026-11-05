@@ -5,7 +5,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const output = fileURLToPath(new URL('../dist/', import.meta.url));
-const pages = ['index.html', 'profile.html', 'shop.html', 'product.html', 'cart.html', 'linktree.html', 'CreatorHQ/index.html'];
+const pages = ['index.html', 'profile.html', 'shop.html', 'product.html', 'cart.html', 'linktree.html', 'blog.html', 'blog-post.html', 'CreatorHQ/index.html'];
 let checked = 0;
 function syntax(source, module, label) {
   const result = spawnSync(process.execPath, ['--check', ...(module ? ['--input-type=module'] : [])], { input: source, encoding: 'utf8' });
@@ -27,7 +27,7 @@ for (const page of pages) {
     if (!(await stat(asset)).isFile()) throw new Error(`Missing asset in ${page}: ${reference}`);
   }
 }
-for (const script of ['storefront.js', 'public-site-utils.js', 'CreatorHQ/cloud-sync.js', 'CreatorHQ/auth-mfa.mjs']) {
+for (const script of ['storefront.js', 'public-site-utils.js', 'CreatorHQ/cloud-sync.js', 'CreatorHQ/auth-mfa.mjs','CreatorHQ/cloud-persistence.mjs','CreatorHQ/blog-admin.mjs','CreatorHQ/blog-utils.mjs','blog-public.mjs','blog-utils.mjs']) {
   syntax(await readFile(path.join(output, script), 'utf8'), script.endsWith('cloud-sync.js') || script.endsWith('.mjs'), script);
 }
 for (const config of ['public-profile.json', 'storefront-config.json']) JSON.parse(await readFile(path.join(output, config), 'utf8'));

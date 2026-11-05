@@ -1,3 +1,4 @@
+import { resolveWorkplace } from "../_shared/workspace.mjs";
 import { requireMfa } from "../_shared/mfa.mjs";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
@@ -75,7 +76,10 @@ Deno.serve(async (request) => {
   if (authError || !authData.user) return json({ error: "Your Creator HQ session expired. Sign in again." }, 401, origin);
   try { requireMfa(authData.user, accessToken); }
   catch (error) { return json({ error: error.message }, 403, origin); }
-  if (authData.user.id !== allowedUserId) return json({ error: "Buffer publishing is not enabled for this Creator HQ account." }, 403, origin);
+  let workplace;
+  try { workplace = await resolveWorkplace(authData.user, accessToken, supabaseUrl, supabaseKey, ['social']); }
+  catch (error) { return json({ error: error.message }, 403, origin); }
+  if (workplace.owner_id !== allowedUserId) return json({ error: 'This connection belongs to another workplace.' }, 403, origin);
 
   if (new URL(request.url).searchParams.get("action") === "uploadMedia") {
     if (Deno.env.get("BUFFER_MEDIA_UPLOADS_ENABLED") !== "true") return json({ error: "Publishing uploads are not enabled. Use a public media link, or ask the site owner to enable publishing uploads." }, 503, origin);
@@ -97,7 +101,7 @@ Deno.serve(async (request) => {
         const created = await admin.storage.createBucket(bucket, { public: true, fileSizeLimit: 50 * 1024 * 1024, allowedMimeTypes: Object.keys(extensions) });
         if (created.error && !/already exists/i.test(created.error.message)) throw created.error;
       } else if (!existing.data.public) throw new Error("The publishing media bucket must serve public links. Contact the site owner.");
-      const path = `${authData.user.id}/${crypto.randomUUID()}.${extensions[type]}`;
+      const path = `${workplace.owner_id}/${crypto.randomUUID()}.${extensions[type]}`;
       const uploaded = await admin.storage.from(bucket).upload(path, bytes, { contentType: type, upsert: false });
       if (uploaded.error) throw uploaded.error;
       return json({ url: admin.storage.from(bucket).getPublicUrl(path).data.publicUrl, type: type.startsWith("video/") ? "video" : "image" }, 200, origin);

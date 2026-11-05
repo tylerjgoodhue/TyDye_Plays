@@ -1,3 +1,4 @@
+import { resolveWorkplace, requireWorkplacePermission } from "../_shared/workspace.mjs";
 import { requireMfa } from "../_shared/mfa.mjs";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
@@ -56,7 +57,8 @@ async function authenticatedUser(request: Request) {
   const { data, error } = await client.auth.getUser(token);
   if (error || !data.user) throw new Error("Your Creator HQ session expired. Sign in again.");
   requireMfa(data.user, token);
-  return data.user;
+  const workplace = await resolveWorkplace(data.user, token, url, key, ['assets','content','social','settings']);
+  return { ...data.user, id: workplace.owner_id, actorId: data.user.id, workplace };
 }
 
 function functionBaseUrl(request: Request) {
@@ -185,6 +187,8 @@ Deno.serve(async request => {
   try {
     const user = await authenticatedUser(request);
     const admin = serviceClient();
+
+    if (action === "start" || action === "disconnect") requireWorkplacePermission(user.workplace,["settings"]);
 
     if (action === "start") {
       const { appKey, appSecret } = dropboxAppConfig();

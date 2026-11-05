@@ -20,15 +20,14 @@ test('workspace deletions are recoverable and restore preserves other records',(
  const f=fixture();f.run("moveToRecovery('tasks','task')");assert.equal(f.context.state.tasks.length,0);assert.equal(f.context.state.recoveryTrash.length,1);
  f.context.state.tasks.push({id:'different',title:'New task'});f.run('restoreRecoveryItem(state.recoveryTrash[0].id)');assert.equal(f.context.state.tasks.length,2);assert.equal(f.context.state.recoveryTrash.length,0);
 });
-test('a failed local save rolls back a deletion and does not queue cloud sync',()=>{
- const f=fixture();f.setFail(true);f.run("moveToRecovery('tasks','task')");assert.equal(f.context.state.tasks.length,1);assert.equal(f.context.state.recoveryTrash.length,0);assert.equal(f.queued(),0);
+test('workspace edits queue a Supabase save without writing browser storage',()=>{
+ const f=fixture();f.setFail(true);f.run("moveToRecovery('tasks','task')");assert.equal(f.context.state.tasks.length,0);assert.equal(f.context.state.recoveryTrash.length,1);assert.equal(f.queued(),1);assert.equal(f.saved.size,0);
 });
 test('recovery rejects unsupported collection names',()=>{
  const f=fixture();f.context.state.recoveryTrash=[{id:'bad',collection:'__proto__',record:{id:'bad'}}];f.run("restoreRecoveryItem('bad')");assert.equal(f.context.state.recoveryTrash.length,1);
 });
-test('checkpoints retain five versions and exclude local image bytes',()=>{
- const f=fixture();for(let i=0;i<7;i++)f.run(`captureLocalRecovery({assets:[{id:'image',dataUrl:'private-image'}],recoveryTrash:[{record:{dataUrl:'private-deleted-image'}}]},'Checkpoint ${i}')`);
- const list=f.run('localRecoveryHistory()');assert.equal(list.length,5);assert.equal(list[0].reason,'Checkpoint 6');assert.equal(list[0].workspace.assets[0].dataUrl,'');assert.equal(list[0].workspace.recoveryTrash[0].record.dataUrl,'');
+test('recovery checkpoints are delegated to Supabase instead of browser persistence',()=>{
+ const f=fixture();let sent;f.context.window.CreatorHQCloud.captureCheckpoint=async(snapshot,reason)=>{sent={snapshot,reason};};f.run("captureLocalRecovery({tasks:[{id:'task'}]},'Before restore')");assert.equal(sent.reason,'Before restore');assert.equal(sent.snapshot.tasks[0].id,'task');assert.equal(f.saved.size,0);
 });
 test('partial Buffer delivery cannot mark content as fully published',()=>{
  const f=fixture();f.context.state.content=[{id:'content',status:'Scheduled',bufferPostIds:['a','b']}];
@@ -54,7 +53,7 @@ test('Dropbox uploads preserve duplicate filenames and safely encode Unicode hea
 test('workspace restore rolls back if the replacement cannot be saved',()=>{
  const f=fixture();f.context.defaults={settings:{days:[1]},assets:[],tasks:[],streams:[],content:[],ideas:[],goals:[],metrics:[],crm:[],notificationPreferences:{},announcementDrafts:{}};f.context.ANNOUNCEMENT_TEMPLATES={};f.context.normalizeCreatorProfile=value=>value||{};
  const start=html.indexOf('        replaceWorkspace: workspace => {');const end=html.indexOf('\n      };\n      window.CreatorHQCloudUI',start);
- const api=f.run('({'+html.slice(start,end)+'})');f.setFail(true);assert.throws(()=>api.replaceWorkspace({settings:{days:[2]},tasks:[],streams:[]}),/current workspace was kept/);assert.equal(f.context.state.tasks[0].title,'Keep my task');
+ const api=f.run('({'+html.slice(start,end)+'})');f.run('saveState=()=>false');assert.throws(()=>api.replaceWorkspace({settings:{days:[2]},tasks:[],streams:[]}),/current workspace was kept/);assert.equal(f.context.state.tasks[0].title,'Keep my task');
 });
 
 test('website previews use the profile page instead of recursively loading CreatorHQ',()=>{

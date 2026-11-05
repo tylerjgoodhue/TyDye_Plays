@@ -1,3 +1,4 @@
+import { resolveWorkplace } from "../_shared/workspace.mjs";
 import { requireMfa } from "../_shared/mfa.mjs";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
@@ -183,7 +184,10 @@ Deno.serve(async (request) => {
   if (authError || !authData.user) return json({ error: "Your Creator HQ session expired. Sign in again." }, 401, origin);
   try { requireMfa(authData.user, accessToken); }
   catch (error) { return json({ error: error.message }, 403, origin); }
-  if (authData.user.id !== allowedUserId) return json({ error: "Fourthwall management is not enabled for this Creator HQ account." }, 403, origin);
+  let workplace;
+  try { workplace = await resolveWorkplace(authData.user, accessToken, supabaseUrl, supabaseKey, ['shop']); }
+  catch (error) { return json({ error: error.message }, 403, origin); }
+  if (workplace.owner_id !== allowedUserId) return json({ error: 'This connection belongs to another workplace.' }, 403, origin);
 
   const declaredLength = Number(request.headers.get("Content-Length") || 0);
   if (declaredLength > MAX_BODY_BYTES) return json({ error: "Request is too large. Artwork must be 10 MB or smaller." }, 413, origin);

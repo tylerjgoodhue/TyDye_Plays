@@ -60,14 +60,13 @@
     let configPromise;
     let config;
     let cart = null;
+    let routeRoot=null,homeNodes=null;
     let cartId = '';
     let storageKey = '';
     let busy = false;
-    const storage = {
-      get: key => { try { return localStorage.getItem(key); } catch { return null; } },
-      set: (key, value) => { try { localStorage.setItem(key, value); } catch {} },
-      remove: key => { try { localStorage.removeItem(key); } catch {} }
-    };
+    const cartReferences=new Map();
+    const storage={get:key=>cartReferences.get(key)||null,set:(key,value)=>cartReferences.set(key,value),remove:key=>cartReferences.delete(key)};
+
     async function configure() {
       if (!configPromise) configPromise = (async () => {
         const response = await fetch(new URL('storefront-config.json', base), { cache: 'no-store', signal: AbortSignal.timeout(12000) });
@@ -376,6 +375,7 @@
       await load();
     }
     async function renderPage(root) {
+      routeRoot=root;
       root.innerHTML = `${header()}<div class="fw-page" data-fw-page></div>${footer()}`;
       const host = root.querySelector('[data-fw-page]');
       attachNav();
@@ -383,13 +383,20 @@
       else if (location.pathname.endsWith('/shop.html')) { document.title = `Shop · ${name}`; await mountCollection(host, true); }
       else await renderProduct(host);
     }
-    window.addEventListener('pageshow', event => { if (event.persisted) location.reload(); });
-    window.addEventListener('storage', event => {
-      if (storageKey && event.key === storageKey) {
-        cartId = /^[a-zA-Z0-9_-]{1,160}$/.test(event.newValue || '') ? event.newValue : '';
-        readCart().catch(() => {});
-      }
+    const shopRoute=url=>url.origin===base.origin && ['shop.html','product.html','cart.html'].some(page=>url.pathname===new URL(page,base).pathname);
+    document.addEventListener('click',async event=>{
+      const anchor=event.target.closest('a[href]');if(!anchor||anchor.target||event.button||event.metaKey||event.ctrlKey||event.shiftKey||event.altKey)return;
+      const url=new URL(anchor.href);const root=document.getElementById('profile-root');if(!root)return;
+      const homeRoute=homeNodes && ['index.html','profile.html'].some(page=>url.pathname===new URL(page,base).pathname);
+      if(!shopRoute(url)&&!homeRoute)return;
+      event.preventDefault();
+      if(!shopRoute(new URL(location.href))&&!homeNodes && (location.pathname===base.pathname || ['index.html','profile.html'].some(page=>location.pathname===new URL(page,base).pathname))){homeNodes=document.createDocumentFragment();homeNodes.append(...root.childNodes);}
+      history.pushState({},'',url);routeRoot=root;
+      if(homeRoute){root.replaceChildren(homeNodes);homeNodes=null;if(url.hash)document.getElementById(url.hash.slice(1))?.scrollIntoView();}
+      else await renderPage(root);
+      if(!url.hash)window.scrollTo(0,0);
     });
+    window.addEventListener('popstate',async()=>{if(!routeRoot)return;if(shopRoute(new URL(location.href)))await renderPage(routeRoot);else if(homeNodes){routeRoot.replaceChildren(homeNodes);homeNodes=null;}else location.reload();});
     return { renderPage, mountCollection, attachNav };
   }
   window.CreatorStorefront = { create };

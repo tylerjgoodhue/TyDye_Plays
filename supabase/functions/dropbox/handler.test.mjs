@@ -7,12 +7,14 @@ let handler;
 let saved;
 let authenticated = true;
 let factors = [];
+let actorId="owner",workplaceRole="owner",selectedOwner="";
 let refreshRequests = 0;
 const origin = 'https://creator.example';
 const env = { SUPABASE_URL: 'https://project.example', SUPABASE_ANON_KEY: 'test-public', SUPABASE_SERVICE_ROLE_KEY: 'test-service', DROPBOX_APP_KEY: 'test-key', DROPBOX_APP_SECRET: 'test-secret', ALLOWED_APP_ORIGINS: origin, DROPBOX_REDIRECT_URI: 'https://project.example/functions/v1/dropbox' };
 globalThis.Deno = { env: { get: key => env[key] }, serve: fn => handler = fn };
-globalThis.__dropboxTestClient = () => ({ auth: { getUser: async () => ({ data: { user: authenticated ? { id: 'owner', factors } : null }, error: null }) }, from: () => ({ upsert: async row => { saved = row; return { error: null }; }, select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: { refresh_token: 'saved-refresh', account_name: 'Test' }, error: null }) }) }) }) });
+globalThis.__dropboxTestClient = () => ({ auth: { getUser: async () => ({ data: { user: authenticated ? { id: actorId, factors } : null }, error: null }) }, from: () => ({ upsert: async row => { saved = row; return { error: null }; }, select: () => ({ eq: (column,value) => {selectedOwner=value;return ({ maybeSingle: async () => ({ data: { refresh_token: 'saved-refresh', account_name: 'Test' }, error: null }) });} }) }) });
 globalThis.fetch = async (url, options = {}) => {
+  if (String(url).includes('/rpc/creator_workspace_context')) return new Response(JSON.stringify({owner_id:'owner',role:workplaceRole,permissions:workplaceRole==='owner'?[]:['content','assets']}),{status:200});
   if (String(url).includes('oauth2/token')) {
     const grant = new URLSearchParams(options.body).get('grant_type');
     if (grant === 'refresh_token') {
@@ -45,6 +47,7 @@ globalThis.fetch = async (url, options = {}) => {
 };
 let source = await readFile(new URL('./index.ts', import.meta.url), 'utf8');
 source = source.replace('import { createClient } from "npm:@supabase/supabase-js@2";', 'const createClient = globalThis.__dropboxTestClient;').replace('"./oauth.mjs"', JSON.stringify(new URL('./oauth.mjs', import.meta.url).href));
+source = source.replace('"../_shared/workspace.mjs"', JSON.stringify(new URL('../_shared/workspace.mjs', import.meta.url).href));
 source = source.replace('"../_shared/mfa.mjs"', JSON.stringify(new URL('../_shared/mfa.mjs', import.meta.url).href));
 await import('data:text/javascript;base64,' + Buffer.from(stripTypeScriptTypes(source)).toString('base64'));
 const start = body => new Request('https://project.example/functions/v1/dropbox?action=start', { method: 'POST', headers: { Origin: origin, Authorization: 'Bearer test', 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
@@ -128,4 +131,12 @@ test('enrolled password-only sessions cannot use Dropbox APIs',async()=>{
  factors=[{id:'factor',factor_type:'totp',status:'verified'}];
  try { assert.equal((await handler(start({action:'list'}))).status,403); }
  finally { factors=[]; }
+});
+
+test('editors browse the same Dropbox connection but cannot replace it',async()=>{
+ actorId='editor';workplaceRole='editor';
+ try{
+  const response=await handler(new Request('https://project.example/functions/v1/dropbox?action=list',{method:'POST',headers:{Origin:origin,Authorization:'Bearer test','Content-Type':'application/json'},body:JSON.stringify({path:''})}));
+  assert.equal(response.status,200);assert.equal(selectedOwner,'owner');assert.equal((await handler(start({}))).status,403);
+ }finally{actorId='owner';workplaceRole='owner';}
 });

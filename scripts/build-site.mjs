@@ -18,10 +18,10 @@ await mkdir(creatorHq, { recursive: true });
 
 await cp(path.join(root, 'profile.html'), path.join(output, 'index.html'));
 await cp(path.join(root, 'profile.html'), path.join(output, 'profile.html'));
-for (const page of ['product.html', 'shop.html', 'cart.html']) {
+for (const page of ['product.html', 'shop.html', 'cart.html', 'blog.html', 'blog-post.html']) {
 	await cp(path.join(root, 'profile.html'), path.join(output, page));
 }
-for (const asset of ['storefront.js', 'storefront.css', 'storefront-config.json', 'public-site-utils.js']) {
+for (const asset of ['storefront.js', 'storefront.css', 'storefront-config.json', 'public-site-utils.js', 'blog-public.mjs', 'blog-utils.mjs', 'blog.css']) {
 	await cp(path.join(root, asset), path.join(output, asset));
 }
 await cp(path.join(root, 'linktree.html'), path.join(output, 'linktree.html'));
@@ -42,3 +42,4 @@ await cp(path.join(root, 'cloud-sync.js'), path.join(creatorHq, 'cloud-sync.js')
 await cp(path.join(root, 'auth-mfa.mjs'), path.join(creatorHq, 'auth-mfa.mjs'));
 
 console.log(`Built public creator site at ${publicBasePath} and Creator HQ at ${publicBasePath}CreatorHQ/.`);
+for (const asset of ['cloud-persistence.mjs','blog-admin.mjs','blog-utils.mjs','blog.css','panel-theme.css']) await cp(path.join(root,asset),path.join(creatorHq,asset));

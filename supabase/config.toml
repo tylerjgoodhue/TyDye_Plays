@@ -450,3 +450,13 @@ entrypoint = "./functions/social-accounts/index.ts"
 enabled = true
 verify_jwt = false
 entrypoint = "./functions/dropbox/index.ts"
+
+[functions.blog-media]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/blog-media/index.ts"
+
+[functions.blog-feed]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/blog-feed/index.ts"

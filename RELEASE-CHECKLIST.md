@@ -2,14 +2,14 @@
 
 ## Automatic publishing checks
 
-GitHub Pages now runs all 62 tests before building. It then validates the seven
+GitHub Pages now runs all 107 tests before building. It then validates the nine
 built HTML pages, inline and external JavaScript syntax, local script/style assets,
 and public JSON configuration before uploading anything for deployment.
 
 Run locally with Node.js 22.13 or newer:
 
 ```sh
-node --test scripts/mfa.test.mjs scripts/contact-form.test.cjs scripts/public-site.test.cjs scripts/workflow.test.mjs supabase/functions/buffer/buffer.test.mjs supabase/functions/dropbox/handler.test.mjs supabase/functions/dropbox/oauth.test.mjs
+node --test scripts/blog-endpoints.test.mjs scripts/blog.test.mjs scripts/cloud-persistence.test.mjs scripts/shared-workplace.test.mjs scripts/settings.test.cjs scripts/mfa.test.mjs scripts/contact-form.test.cjs scripts/public-site.test.cjs scripts/workflow.test.mjs supabase/functions/buffer/buffer.test.mjs supabase/functions/dropbox/handler.test.mjs supabase/functions/dropbox/oauth.test.mjs supabase/functions/staff-admin/staff.test.mjs
 node scripts/build-site.mjs
 node scripts/check-release.mjs
 ```
@@ -48,3 +48,16 @@ completed purchase were not validated. Repeat a quick check on the deployed
 custom domain after pushing; local checks cannot verify GitHub's actual deployment.
 
 Authenticator setup and recovery instructions: [AUTHENTICATOR-SETUP.md](AUTHENTICATOR-SETUP.md).
+
+Shared workplace setup and collaboration: [SHARED-WORKPLACE.md](SHARED-WORKPLACE.md).
+
+## Cloud and journal checks — November 5, 2026
+
+- All 107 automated checks pass with Node 22.23.
+- Shared workspace, per-user preferences, legacy archive, private assets and blog migrations applied to the linked Supabase project.
+- Public blog media and RSS functions deployed. Database tests used synthetic accounts in a rolled-back transaction: future/draft/trash privacy, publishing roles, revision conflicts, image permissions and per-account isolation passed.
+- Full original HQ homepage retained; fresh cloud preferences restore all homepage widgets.
+- Synthetic interface walkthrough covers homepage, article library, formatted preview and responsive layout. No real article was published.
+- Frontend must still be committed and pushed. After deployment, sign in, confirm legacy migration and create a real draft before scheduling your first article.
+
+See [CLOUD-AND-JOURNAL.md](CLOUD-AND-JOURNAL.md) for the editorial workflow and storage behavior.

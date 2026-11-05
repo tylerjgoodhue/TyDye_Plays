@@ -2,19 +2,21 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {stripTypeScriptTypes} from 'node:module';
-let factors=[], handler, lastQuery='', signedIn=true, userId='owner', uploaded=false, missingBucket=false, createdBucket=false;
+let editorPermissions=['content'], factors=[], handler, lastQuery='', signedIn=true, userId='owner', uploaded=false, missingBucket=false, createdBucket=false;
 const origin='https://creator.example';
 const channels=[{id:'fb',service:'facebook'},{id:'ig',service:'instagram'},{id:'yt',service:'youtube'},{id:'locked',service:'twitter',isLocked:true}];
 const env={BUFFER_MEDIA_UPLOADS_ENABLED:'true',SUPABASE_URL:'https://project.example',SUPABASE_ANON_KEY:'public-test',SUPABASE_SERVICE_ROLE_KEY:'service-test',BUFFER_API_KEY:'buffer-test',BUFFER_ALLOWED_USER_ID:'owner',ALLOWED_APP_ORIGINS:origin};
 globalThis.Deno={env:{get:key=>env[key]},serve:fn=>handler=fn};
 globalThis.__bufferClient=()=>({auth:{getUser:async()=>({data:{user:signedIn?{id:userId,factors}:null},error:null})},storage:{getBucket:async()=>missingBucket ? {data:null,error:{statusCode:'404'}} : ({data:{public:true},error:null}),createBucket:async(name,options)=>{assert.equal(options.public,true);createdBucket=true;missingBucket=false;return {error:null};},from:()=>({upload:async(path,bytes,options)=>{assert.ok(path.startsWith('owner/'));assert.equal(bytes.byteLength,4);assert.equal(options.contentType,'image/png');uploaded=true;return {error:null};},getPublicUrl:path=>({data:{publicUrl:`https://project.example/storage/v1/object/public/creatorhq-buffer-media/${path}`}})})}});
 globalThis.fetch=async(url,options)=>{
+ if(String(url).includes('/rpc/creator_workspace_context'))return userId==='owner' || userId==='editor' ? new Response(JSON.stringify({owner_id:'owner',role:userId==='owner'?'owner':'editor',permissions:userId==='owner'?[]:editorPermissions}),{status:200}) : new Response(JSON.stringify({message:'Not a workplace member'}),{status:403});
  const {query}=JSON.parse(options.body);lastQuery=query;
  const data=query.includes('post(input:')?{post:query.includes('missing')?null:{id:'linked',status:'sent',channelId:'fb'}}:query.includes('account { organizations')?{account:{organizations:[{id:'org'}]}}:query.includes('createPost(')?{createPost:{post:{id:'new-post',status:'draft'}}}:query.includes('editPost(')?{editPost:{post:{id:'edited'}}}:query.includes('posts(')?{posts:{edges:[],pageInfo:{hasNextPage:false}}}: {channels};
  return new Response(JSON.stringify({data}),{status:200});
 };
 let source=await readFile(new URL('./index.ts',import.meta.url),'utf8');
 source=source.replace('import { createClient } from "npm:@supabase/supabase-js@2";','const createClient=globalThis.__bufferClient;');
+source = source.replace('"../_shared/workspace.mjs"', JSON.stringify(new URL('../_shared/workspace.mjs', import.meta.url).href));
 source = source.replace('"../_shared/mfa.mjs"', JSON.stringify(new URL('../_shared/mfa.mjs', import.meta.url).href));
 await import('data:text/javascript;base64,'+Buffer.from(stripTypeScriptTypes(source)).toString('base64'));
 const request=payload=>new Request('https://project.example/functions/v1/buffer',{method:'POST',headers:{Origin:origin,Authorization:'Bearer test','Content-Type':'application/json'},body:JSON.stringify(payload)});
@@ -49,7 +51,7 @@ test('creates YouTube posts with a title, category and audience selection',async
  await handler(request({action:'schedule',organizationId:'org',targets:[{channelId:'yt',text:'Description',assetType:'video',assetUrl:'https://media.example/video.mp4',videoTitle:'My stream',categoryId:'20',madeForKids:false}]}));
  assert.ok(lastQuery.includes('title: "My stream"'));assert.ok(lastQuery.includes('categoryId: "20"'));assert.ok(lastQuery.includes('madeForKids: false'));
 });
-test('requires the configured owner before uploading media or changing posts',async()=>{
+test('rejects non-members before uploading media or changing posts',async()=>{
  signedIn=false;assert.equal((await handler(request({action:'posts'}))).status,401);signedIn=true;
  userId='other';assert.equal((await handler(request({action:'posts'}))).status,403);userId='owner';
 });
@@ -87,4 +89,9 @@ test('enrolled password-only sessions cannot use Buffer APIs',async()=>{
  factors=[{id:'factor',factor_type:'totp',status:'verified'}];
  try { assert.equal((await handler(request({action:'organizations'}))).status,403); }
  finally { factors=[]; }
+});
+
+test('approved staff use the workplace Buffer connection while content-only editors cannot publish',async()=>{
+ userId='editor';editorPermissions=['content'];
+ try{assert.equal((await handler(request({action:'workspace'}))).status,403);editorPermissions=['social'];assert.equal((await handler(request({action:'workspace'}))).status,200);}finally{userId='owner';editorPermissions=['content'];}
 });
