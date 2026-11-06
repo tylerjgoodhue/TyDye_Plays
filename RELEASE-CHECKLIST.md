@@ -2,7 +2,7 @@
 
 ## Automatic publishing checks
 
-GitHub Pages now runs all 115 tests before building. It then validates the nine
+GitHub Pages now runs all 117 tests before building. It then validates the nine
 built HTML pages, inline and external JavaScript syntax, local script/style assets,
 and public JSON configuration before uploading anything for deployment.
 
@@ -63,3 +63,5 @@ Shared workplace setup and collaboration: [SHARED-WORKPLACE.md](SHARED-WORKPLACE
 See [CLOUD-AND-JOURNAL.md](CLOUD-AND-JOURNAL.md) for the editorial workflow and storage behavior.
 
 November 6 Buffer workflow checks: 115 tests pass, including import deduplication, stage reversals, partial delivery, preserved notes, explicit linking and role-safe homepage actions.
+
+Compact workflow: six rows per page, active-only default, published-history access, stage totals, and filter/page reset behavior verified. All 117 automated tests pass.

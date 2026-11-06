@@ -61,3 +61,17 @@ test('an editor opened while a team update is loading is not overwritten by that
  let modal=false,replaced=false;const context=vm.createContext({session:{user:{id:'editor'}},mfaReady:true,preparedForUser:'editor',workspaceDirty:false,syncing:false,workspaceChangeCount:1,workspaceRevision:1,document:{hidden:false,querySelector:selector=>selector==='.modal-backdrop'&&modal?{}:null},client:{rpc:async()=>{modal=true;return {data:{revision:2,workspace_data:{content:[]}}};}},ui:()=>({}),storage:()=>({replaceWorkspace(){replaced=true;}})});
  const a=cloud.indexOf('async function refreshSharedWorkplace()'),b=cloud.indexOf('let authRevision',a);vm.runInContext(cloud.slice(a,b),context);await vm.runInContext('refreshSharedWorkplace()',context);assert.equal(replaced,false);
 });
+
+function compactWorkflowFixture(){
+ const board={innerHTML:'',dataset:{}},stage={value:'active'},search={value:''},platform={value:'all'};
+ const content=Array.from({length:17},(_,i)=>({id:`item-${String(i).padStart(2,'0')}`,title:`Clip ${i}`,status:i===16?'Published':'Editing',platform:'YouTube',priority:'Medium'}));
+ const context=vm.createContext({window:{},bufferWorkflowStage,state:{content},document:{getElementById:id=>({'content-board':board,'content-stage-filter':stage,'content-search':search,'content-platform-filter':platform}[id])},escapeHtml:String,userHasAccess:()=>false,contentPublishingStatus:()=>''});
+ const a=html.indexOf('      function renderContentBoard()'),b=html.indexOf('      function renderIdeas()',a);vm.runInContext(html.slice(a,b),context);
+ return {board,stage,search,content,render:()=>vm.runInContext('renderContentBoard()',context)};
+}
+test('compact workflow bounds each page and retains the complete collection',()=>{
+ const f=compactWorkflowFixture();f.render();assert.equal((f.board.innerHTML.match(/data-content-card=/g)||[]).length,6);assert.match(f.board.innerHTML,/1–6 of 16/);assert.doesNotMatch(f.board.innerHTML,/data-content-card="item-16"/);f.board.dataset.page='2';f.render();assert.equal((f.board.innerHTML.match(/data-content-card=/g)||[]).length,4);assert.match(f.board.innerHTML,/Page 3 of 3/);assert.equal(f.content.length,17);
+});
+test('changing filters resets pagination and published history stays available',()=>{
+ const f=compactWorkflowFixture();f.render();f.board.dataset.page='2';f.stage.value='Published';f.render();assert.equal(f.board.dataset.page,'0');assert.match(f.board.innerHTML,/data-content-card="item-16"/);f.search.value='does not exist';f.render();assert.match(f.board.innerHTML,/No content in this view/);assert.match(f.board.innerHTML,/Page 1 of 1/);assert.equal(f.content.length,17);
+});

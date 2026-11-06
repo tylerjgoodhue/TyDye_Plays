@@ -85,3 +85,5 @@ Each external Buffer post is imported once. A multi-channel post created in Crea
 Homepage workflow counts and Today’s next steps use the same linked states. They count workflow items, so one multi-channel content item counts once. Existing role permissions remain unchanged: content access is needed to edit the workflow; social access is needed to read/manage Buffer. Both permissions (or owner access) are required to synchronize automatically. Content-only editors can see the last shared synced states.
 
 The Buffer function's linked-post lookup was deployed with complete post details. Frontend changes require a GitHub push. No real posts were scheduled or changed during verification.
+
+The workflow uses a compact paginated list (six items per page). Active content is the default; Published and All stages retain access to history. Stage totals remain visible and clickable. Search/platform/stage changes reset the page; no content is deleted or archived by filtering.
