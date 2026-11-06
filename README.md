@@ -1,16 +1,16 @@
 # Creator HQ
 
-A local-first creator workspace built as a single-page HTML application, with Supabase Auth required to open the workspace and optional cloud snapshot sync. No build step or package install is required.
+A shared creator workspace built as a single-page HTML application, with Supabase Auth, shared workspace records, and private asset storage. Normal operation keeps transient editing state in memory and saves durable records in Supabase. No package install is required.
 
 ## Sign in
 
-Creator HQ is locked behind Supabase Auth. Opening the app shows a secure sign-in screen that requires an account email and password (verified by Supabase Auth; sessions persist until sign-out). There is no self-signup: only the owner and staff have accounts. Create editor accounts in CreatorHQ’s **Staff** area so they join the shared workplace; accounts created manually in Supabase also need explicit workplace membership, and in **Authentication → Providers → Email** turn off **Allow new users to sign up** so no one can register themselves. **Forgot password?** emails a reset link, and the Cloud sync settings still support GitHub sign-in and confirmation-email resend. The app only renders after an authenticated session exists, and signing out locks it again.
+Creator HQ is locked behind Supabase Auth. Opening the app shows a secure sign-in screen that requires an account email and password (verified by Supabase Auth; sessions are kept in memory). There is no self-signup: only the owner and staff have accounts. Create editor accounts in CreatorHQ’s **Staff** area so they join the shared workplace; accounts created manually in Supabase also need explicit workplace membership, and in **Authentication → Providers → Email** turn off **Allow new users to sign up** so no one can register themselves. **Forgot password?** emails a reset link, and the Cloud sync settings still support GitHub sign-in and confirmation-email resend. The app only renders after an authenticated session exists, and signing out locks it again.
 
 ## Run locally
 
-Open `index.html` in a modern browser, or serve this folder with any static file server. Without a configured cloud project, the app stores its workspace in browser `localStorage` under `creator-hq-v1`.
+Open `index.html` in a modern browser, or serve this folder with any static file server. A configured Supabase project and a workplace account are required to open and save shared work. The app does not save workspace data in persistent browser storage.
 
-Cloud sync loads Supabase JS from `esm.sh`, so the browser needs network access to that CDN when the cloud module starts. The rest of the local workspace remains available if that module cannot load.
+Cloud sync loads Supabase JS from `esm.sh`, so the browser needs network access to that CDN when the cloud module starts. Sign-in and cloud saving require that module to load.
 
 ## Deploy with GitHub Pages
 
@@ -38,7 +38,8 @@ To test the production layout locally, run `node scripts/build-site.mjs` and ser
 - Task board with search, filters, recurring work, and drag-and-drop
 - Weekly stream rhythm, individual sessions, completion history, and ICS export
 - Content pipeline, searchable ideas, goals, weekly review, and routines
-- Asset links and small image previews (650 KB per image)
+- Asset links and small image previews (650 KB per manually uploaded image)
+- Gloss Studio: live candy lettering, presets, transparent PNG export, and editable designs saved with PNGs in the shared Supabase asset library ([details](GLOSS-STUDIO.md))
 - Connected-platform analytics, community events/feedback, local reminders, and collaboration tracking
 - Linktree click analytics for links managed on the Linktree page (requires the `social-analytics` Edge Function and migration)
 - JSON backup export and import

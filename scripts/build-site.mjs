@@ -43,3 +43,6 @@ await cp(path.join(root, 'auth-mfa.mjs'), path.join(creatorHq, 'auth-mfa.mjs'));
 
 console.log(`Built public creator site at ${publicBasePath} and Creator HQ at ${publicBasePath}CreatorHQ/.`);
 for (const asset of ['buffer-workflow.mjs', 'cloud-persistence.mjs','blog-admin.mjs','blog-utils.mjs','blog.css','panel-theme.css']) await cp(path.join(root,asset),path.join(creatorHq,asset));
+
+for (const asset of ['gloss-entry.mjs','gloss-studio.mjs','gloss-utils.mjs','gloss-studio.css']) await cp(path.join(root,asset),path.join(creatorHq,asset));
+await cp(path.join(root,'gloss-fonts'),path.join(creatorHq,'gloss-fonts'),{recursive:true});

@@ -762,6 +762,7 @@ button.buffer-calendar-number:hover { background:var(--accent);color:#172015; }
 </style>
   <link rel="stylesheet" href="./blog.css">
   <link rel="stylesheet" href="./panel-theme.css">
+  <link rel="stylesheet" href="./gloss-studio.css?v=20261106">
 </head>
 <body>
   <div class="app" id="app">
@@ -793,6 +794,7 @@ button.buffer-calendar-number:hover { background:var(--accent);color:#172015; }
         <button class="nav-button" data-view="goals"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/><path d="m15 9 5-5"/></svg><span>Goals & review</span></button>
         <button class="nav-button" data-view="routines"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 6h16M4 12h16M4 18h16"/><path d="m7 6 1 1 2-2m-3 6 1 1 2-2m-3 6 1 1 2-2"/></svg><span>Routines</span></button>
         <button class="nav-button" data-view="assets"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9" r="1.5"/><path d="m21 15-5-5L5 20"/></svg><span>Asset library</span></button>
+        <button class="nav-button" data-view="gloss"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="m12 3 2.2 6.8L21 12l-6.8 2.2L12 21l-2.2-6.8L3 12l6.8-2.2L12 3Z"/><path d="m20 2 .6 1.4L22 4l-1.4.6L20 6l-.6-1.4L18 4l1.4-.6L20 2Z"/></svg><span>Gloss Studio</span></button>
       </div></details>
       <details class="nav-group"><summary class="nav-label">Operations<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m7 10 5 5 5-5"/></svg></summary>
       <div class="nav">
@@ -886,6 +888,7 @@ button.buffer-calendar-number:hover { background:var(--accent);color:#172015; }
           <div class="architecture-note" style="margin-top:14px"><strong>Keep your rest days on purpose</strong><p>Routines are prompts, not streaks. Skipping a day does not create a backlog, and your weekly stream schedule keeps its rest days.</p></div>
         </section>
 
+        <section class="view" id="view-gloss" hidden><div id="gloss-studio-root"><p class="settings-hint" role="status">Loading Gloss Studio…</p></div></section>
         <section class="view" id="view-assets" hidden>
           <div class="page-heading"><div><div class="eyebrow">Keep your creative kit close</div><h1>Asset library</h1><p class="subtitle">Organize helpful links and small reference files for your creator work.</p></div><button class="button primary" data-action="add-asset"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>Add asset</button></div>
           <div class="workflow-toolbar"><div class="search-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="m16 16 4 4"/></svg><input class="field-control" id="asset-search" type="search" placeholder="Search assets, folders, tags..." aria-label="Search assets"></div><select class="field-control" id="asset-type-filter" aria-label="Filter assets by type"><option value="all">All types</option><option>Branding</option><option>Overlay</option><option>Thumbnail</option><option>Video</option><option>Audio</option><option>Document</option><option>Link</option><option>Other</option></select></div>
@@ -1395,7 +1398,7 @@ const defaults = {
         const search = (document.getElementById('asset-search')?.value || '').trim().toLowerCase();
         const type = document.getElementById('asset-type-filter')?.value || 'all';
         const assets = state.assets.filter(asset => (!search || `${asset.title} ${asset.folder || ''} ${asset.tags || ''} ${asset.type}`.toLowerCase().includes(search)) && (type === 'all' || asset.type === type));
-        document.getElementById('asset-grid').innerHTML = assets.length ? assets.map(asset => { const preview = asset.previewUrl || (asset.dataUrl && /^data:image\/(png|jpeg|gif|webp);base64,/i.test(asset.dataUrl) ? asset.dataUrl : ''); return `<article class="asset-card"><div class="asset-preview">${preview ? `<img src="${escapeHtml(preview)}" alt="${escapeHtml(asset.title)}">` : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9" r="1.5"/><path d="m21 15-5-5L5 20"/></svg>'}</div><span class="chip">${escapeHtml(asset.type)}</span><h3>${escapeHtml(asset.title)}</h3><p>${escapeHtml([asset.folder, asset.tags].filter(Boolean).join(' · ') || asset.fileName || 'No notes')}</p>${asset.url || asset.downloadUrl ? `<a class="asset-link" href="${escapeHtml(asset.url || asset.downloadUrl)}" target="_blank" rel="noopener noreferrer">${escapeHtml(asset.fileName || asset.url || 'Download file')}</a>` : ''}<div class="card-actions"><button class="mini-button" data-edit-asset="${escapeHtml(asset.id)}" aria-label="Edit ${escapeHtml(asset.title)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m14 5 5 5M4 20l4-.8L19 8a2.1 2.1 0 0 0-3-3L5 16l-1 4Z"/></svg></button><button class="mini-button delete" data-delete-asset="${escapeHtml(asset.id)}" aria-label="Delete ${escapeHtml(asset.title)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M10 11v6m4-6v6M5 7l1 14h12l1-14M9 7V4h6v3"/></svg></button></div></article>`; }).join('') : '<div class="empty-state" style="grid-column:1/-1"><div><div class="empty-icon">+</div><strong>Your creative kit, in one place</strong><span>Add a brand link, overlay reference, thumbnail, or small asset file.</span><button class="button" data-action="add-asset">Add first asset</button></div></div>';
+        document.getElementById('asset-grid').innerHTML = assets.length ? assets.map(asset => { const preview = asset.previewUrl || (asset.dataUrl && /^data:image\/(png|jpeg|gif|webp);base64,/i.test(asset.dataUrl) ? asset.dataUrl : ''); return `<article class="asset-card"><div class="asset-preview">${preview ? `<img src="${escapeHtml(preview)}" alt="${escapeHtml(asset.title)}">` : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9" r="1.5"/><path d="m21 15-5-5L5 20"/></svg>'}</div><span class="chip">${escapeHtml(asset.type)}</span><h3>${escapeHtml(asset.title)}</h3><p>${escapeHtml([asset.folder, asset.tags].filter(Boolean).join(' · ') || asset.fileName || 'No notes')}</p>${asset.url || asset.downloadUrl ? `<a class="asset-link" href="${escapeHtml(asset.url || asset.downloadUrl)}" target="_blank" rel="noopener noreferrer">${escapeHtml(asset.fileName || asset.url || 'Download file')}</a>` : ''}${asset.glossDesign ? `<button class="button" type="button" data-open-gloss="${escapeHtml(asset.id)}">Edit lettering</button>` : ''}<div class="card-actions"><button class="mini-button" data-edit-asset="${escapeHtml(asset.id)}" aria-label="Edit ${escapeHtml(asset.title)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m14 5 5 5M4 20l4-.8L19 8a2.1 2.1 0 0 0-3-3L5 16l-1 4Z"/></svg></button><button class="mini-button delete" data-delete-asset="${escapeHtml(asset.id)}" aria-label="Delete ${escapeHtml(asset.title)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M10 11v6m4-6v6M5 7l1 14h12l1-14M9 7V4h6v3"/></svg></button></div></article>`; }).join('') : '<div class="empty-state" style="grid-column:1/-1"><div><div class="empty-icon">+</div><strong>Your creative kit, in one place</strong><span>Add a brand link, overlay reference, thumbnail, or small asset file.</span><button class="button" data-action="add-asset">Add first asset</button></div></div>';
         document.querySelectorAll('#asset-grid a').forEach(link => { const url = safeHttpUrl(link.getAttribute('href')); if (url) { link.href = url; } else { link.remove(); } });
       }
       function analyticsMetricLabel(metric) {
@@ -2160,7 +2163,7 @@ const defaults = {
         staff: { label: 'Staff — day-to-day creator work', permissions: ['dashboard', 'tasks', 'schedule', 'content', 'assets', 'community'] },
         viewer: { label: 'Viewer — dashboard & analytics only', permissions: ['dashboard', 'analytics'] }
       };
-      const VIEW_PERMISSIONS = { dashboard: 'dashboard', tasks: 'tasks', schedule: 'schedule', content: 'content', ideas: 'content', goals: 'content', routines: 'content', assets: 'assets', analytics: 'analytics', community: 'community', notifications: 'community', crm: 'community', shop: 'shop', website: 'website', linktree: 'linktree', 'buffer-compose': 'social', 'buffer-scheduled': 'social', cloud: 'settings', settings: 'settings', dropbox: 'assets' };
+      const VIEW_PERMISSIONS = { dashboard: 'dashboard', tasks: 'tasks', schedule: 'schedule', content: 'content', ideas: 'content', goals: 'content', routines: 'content', assets: 'assets', gloss: 'assets', analytics: 'analytics', community: 'community', notifications: 'community', crm: 'community', shop: 'shop', website: 'website', linktree: 'linktree', 'buffer-compose': 'social', 'buffer-scheduled': 'social', cloud: 'settings', settings: 'settings', dropbox: 'assets' };
       const staffRoleSelectMarkup = () => `<div class="form-field"><label for="staff-role-select">Role</label><select id="staff-role-select" data-staff-role-select>${Object.entries(STAFF_ROLE_PRESETS).map(([key, preset]) => `<option value="${key}">${escapeHtml(preset.label)}</option>`).join('')}<option value="">Custom — individual permissions</option></select></div>`;
       const staffPermissionMarkup = () => `<fieldset style="border:1px solid #2c342c;border-radius:9px;padding:12px;margin:12px 0 0;display:grid;gap:7px"><legend style="padding:0 6px;font-size:11px;font-weight:700;text-transform:uppercase;color:#a8b0a5">Permissions</legend>${STAFF_PERMISSIONS.map(item => `<label style="display:flex;align-items:center;gap:9px;font-size:12px"><input type="checkbox" data-staff-permission="${item.key}" style="width:auto"> ${escapeHtml(item.label)}</label>`).join('')}</fieldset>`;
       const readStaffPermissionChecks = scope => [...(scope || document).querySelectorAll('[data-staff-permission]')].filter(input => input.checked).map(input => input.dataset.staffPermission);
@@ -2523,9 +2526,24 @@ const defaults = {
         for(const link of links){if(!valid(link.url))issues.push(`Check the address for “${link.label||'Untitled link'}”.`);if(seen.has(link.url))issues.push(`“${link.label||link.url}” repeats another link.`);seen.add(link.url);}
         host.innerHTML=`<div class="panel-head"><h2>Website readiness</h2><span class="chip">${issues.length?issues.length+' things to check':'Links look ready'}</span></div><div class="panel-body">${issues.length?`<ul>${issues.map(issue=>`<li>${escapeHtml(issue)}</li>`).join('')}</ul>`:'<p class="settings-hint">Your configured links have valid addresses. Preview the site to check your content and layout.</p>'}<p class="settings-hint">This checks missing, repeated, and invalid addresses. It does not verify that other websites are online.</p></div>`;
       }
-      function renderAll() { applyAccent(); renderProfile(); renderDashboard(); renderTaskBoard(); renderSchedule(); renderContentBoard(); renderIdeas(); renderGoals(); renderRoutines(); renderAssets(); renderAnalytics(); renderCommunity(); renderNotifications(); renderCrm(); renderSettings(); renderCreatorProfile(); renderLinktree(); renderStaff(); renderActionDashboard(); renderWebsiteReadiness(); }
+      function renderAll() { applyAccent(); renderProfile(); renderDashboard(); renderTaskBoard(); renderSchedule(); renderContentBoard(); renderIdeas(); renderGoals(); renderRoutines(); renderAssets(); renderAnalytics(); renderCommunity(); renderNotifications(); renderCrm(); renderSettings(); renderCreatorProfile(); renderLinktree(); renderStaff(); renderActionDashboard(); renderWebsiteReadiness(); window.CreatorHQGloss?.refreshLibrary(); }
       window.CreatorHQDialogs={confirm:hqConfirm,prompt:hqPrompt};
+      window.CreatorHQNavigate=name=>setView(name);
       window.CreatorHQStorage = {
+        getGlossAssets:()=>structuredClone(state.assets.filter(asset=>asset.glossDesign)),
+        saveGlossAsset:async({id,design,dataUrl,fileName})=>{
+          if(!signedInEmail || !userHasAccess('gloss'))throw new Error('Sign in with access to the asset library before saving.');
+          if(!window.CreatorHQCloud?.saveNow)throw new Error('Cloud saving is still loading. Try again in a moment.');
+          if(!/^[0-9a-f-]{36}$/i.test(id)||!/^data:image\/png;base64,/i.test(dataUrl)||dataUrl.length>8500000)throw new Error('This lettering image could not be saved.');
+          const existing=state.assets.find(asset=>asset.id===id);
+          if(existing&&!existing.glossDesign)throw new Error('That asset is not a Gloss Studio design.');
+          const title=String(design.title||design.text.split('\n')[0]||'Gloss lettering').trim().slice(0,80)||'Gloss lettering';
+          const record={id,title,type:'Branding',folder:'Gloss Studio',tags:'gloss, lettering',fileName,dataUrl,mimeType:'image/png',url:'',storagePath:'',previewUrl:'',downloadUrl:'',glossDesign:structuredClone({...design,title}),createdAt:existing?.createdAt||new Date().toISOString(),updatedAt:new Date().toISOString()};
+          if(existing)Object.assign(existing,record);else state.assets.unshift(record);
+          saveState();renderAssets();await window.CreatorHQCloud.saveNow();
+          return {id,title};
+        },
+
         setPersonalPreferences:preferences=>{personalPreferences=preferences||{};},
         patchCloudAsset:(id,patch)=>{const asset=state.assets.find(item=>item.id===id);if(asset){Object.assign(asset,patch);renderAssets();}},
         getWorkspace: () => structuredClone({...state,bufferDraftLibrary:window.CreatorHQCloud?.getDraftLibrary?.()||state.bufferDraftLibrary||[]}),
@@ -2691,7 +2709,7 @@ const defaults = {
         document.querySelectorAll('.view').forEach(view => { view.hidden = view.id !== `view-${name}`; });
         document.querySelectorAll('.nav-button[data-view]').forEach(button => button.classList.toggle('active', button.dataset.view === name && (!button.dataset.shopTab || button.dataset.shopTab === activeShopTab)));
         document.querySelector(`.nav-button[data-view="${name}"]`)?.closest('.nav-group')?.setAttribute('open', '');
-        document.getElementById('breadcrumb-current').textContent = ({ dashboard: 'Creator HQ', dropbox:'Dropbox',staff:'Staff',activity:'Activity log', tasks: 'Tasks', schedule: 'Stream schedule', 'buffer-compose': 'Compose', 'buffer-scheduled': 'Publishing planner', content: 'Buffer workflow', ideas: 'Ideas vault', goals: 'Goals & review', routines: 'Routines', assets: 'Asset library', analytics: 'Analytics', community: 'Community hub', notifications: 'Reminders', crm: 'Collaborations', website: 'Twitch website', shop: 'Shop', linktree: 'Linktree', cloud: 'Cloud sync', settings: 'Workspace settings', account: 'User settings', blog: 'Journal & publishing' })[name] || 'Creator HQ';
+        document.getElementById('breadcrumb-current').textContent = ({ dashboard: 'Creator HQ', dropbox:'Dropbox',staff:'Staff',activity:'Activity log', tasks: 'Tasks', schedule: 'Stream schedule', 'buffer-compose': 'Compose', 'buffer-scheduled': 'Publishing planner', content: 'Buffer workflow', ideas: 'Ideas vault', goals: 'Goals & review', routines: 'Routines', assets: 'Asset library', gloss: 'Gloss Studio', analytics: 'Analytics', community: 'Community hub', notifications: 'Reminders', crm: 'Collaborations', website: 'Twitch website', shop: 'Shop', linktree: 'Linktree', cloud: 'Cloud sync', settings: 'Workspace settings', account: 'User settings', blog: 'Journal & publishing' })[name] || 'Creator HQ';
         document.getElementById('sidebar').classList.remove('mobile-open');
         if (name === 'tasks') renderTaskBoard();
         if(name==='content'){renderContentBoard();window.scrollTo?.({top:0,behavior:'auto'});}
@@ -2699,6 +2717,7 @@ const defaults = {
         if (name === 'staff') refreshStaffList();
         if (name === 'dropbox') refreshDropboxStatus();
         if (name === 'activity') renderActivity();
+        if (name === 'gloss') window.CreatorHQGloss?.open().catch(error=>toast(error.message));
         if (name === 'shop') renderShop();
         if (name === 'linktree') renderLinktree();
         if (name === 'blog') window.CreatorHQCloud?.authGate?.openBlog().catch(error=>toast(error.message));
@@ -2707,6 +2726,7 @@ const defaults = {
         if (name === 'content' || name === 'dashboard' || name === 'buffer-compose' || name === 'buffer-scheduled') window.CreatorHQCloud?.refreshBufferData?.();
       }
       function lockWorkspace() {
+        window.CreatorHQGloss?.reset();
         document.getElementById('modal-root').replaceChildren();
         document.getElementById('app').hidden = true;
         document.body.classList.add('auth-locked');
@@ -3076,6 +3096,7 @@ const defaults = {
         const editGoal = event.target.closest('[data-edit-goal]'); if (editGoal) { const goal = state.goals.find(record => record.id === editGoal.dataset.editGoal); if (goal) goalModal(goal); }
         const incrementGoal = event.target.closest('[data-goal-increment]'); if (incrementGoal) { const goal = state.goals.find(record => record.id === incrementGoal.dataset.goalIncrement); if (goal) { goal.current = Math.min(goal.target, Number(goal.current) + 1); goal.updatedAt = new Date().toISOString(); saveState(); renderAll(); toast('Goal progress updated'); } }
         const deleteGoal=event.target.closest('[data-delete-goal]');if(deleteGoal)moveToRecovery('goals',deleteGoal.dataset.deleteGoal);
+        const glossAsset=event.target.closest('[data-open-gloss]');if(glossAsset){setView('gloss');window.CreatorHQGloss?.open(glossAsset.dataset.openGloss).catch(error=>toast(error.message));return;}
         const editAsset = event.target.closest('[data-edit-asset]'); if (editAsset) { const asset = state.assets.find(record => record.id === editAsset.dataset.editAsset); if (asset) assetModal(asset); }
         const deleteAsset=event.target.closest('[data-delete-asset]');if(deleteAsset)moveToRecovery('assets',deleteAsset.dataset.deleteAsset);
         const deleteMetric = event.target.closest('[data-delete-metric]'); if (deleteMetric) { state.metrics = state.metrics.filter(record => record.id !== deleteMetric.dataset.deleteMetric); saveState(); renderAll(); toast('Metric entry deleted'); }
@@ -3430,6 +3451,7 @@ const defaults = {
       renderAll(); secureGate().catch(error => showAuth(error.message || 'Could not verify your account. Try again.'));
     })();
   </script>
+  <script type="module" src="./gloss-entry.mjs?v=20261106"></script>
   <script type="module" src="./cloud-sync.js?v=20261106-compact-workflow-v2"></script>
 </body>
 </html>
