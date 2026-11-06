@@ -1,3 +1,5 @@
+import * as bufferWorkflow from './buffer-workflow.mjs';
+window.CreatorHQBufferWorkflow=bufferWorkflow;
 import { createCloudPersistence } from './cloud-persistence.mjs';
 import { createBlogAdmin } from './blog-admin.mjs';
 import { createMfa, renderSecurity } from './auth-mfa.mjs';
@@ -553,6 +555,7 @@ window.CreatorHQCloud = {
   startContentPost,
   showContentPosts,
   refreshLinkedContentPosts,
+  syncBufferWorkflow,
   getDraftLibrary:()=>structuredClone(bufferLibrary()),
   restoreDraftLibrary:drafts=>{memoryBufferDrafts=structuredClone(Array.isArray(drafts)?drafts:[]);renderBufferDraftLibrary();},
   queuePublicProfileSync,
@@ -720,6 +723,8 @@ async function refreshAnalyticsData() {
 
   async function refreshBufferData() {
     if (document.hidden || !session?.user || !client || !workplaceCan('social') || bufferRefreshPromise) return bufferRefreshPromise;
+    const workflowVisible = !document.getElementById('view-content')?.hidden || !document.getElementById('view-dashboard')?.hidden;
+    if(workflowVisible){await syncBufferWorkflow().catch(()=>{});return;}
     const composeVisible = !document.getElementById('view-buffer-compose')?.hidden;
     const scheduledVisible = !document.getElementById('view-buffer-scheduled')?.hidden;
     if (!composeVisible && !scheduledVisible || Date.now() - lastBufferRefresh < BUFFER_REFRESH_MS) return;
@@ -1022,7 +1027,7 @@ function ensureBufferComposerLayout() {
         scheduledView.className = 'view buffer-scheduled-view';
         scheduledView.id = 'view-buffer-scheduled';
         scheduledView.hidden = true;
-        scheduledView.innerHTML = `<nav class="button-row" aria-label="Buffer workflow" style="margin-bottom:18px"><button class="button" data-view="content" data-buffer-view="content">Content pipeline</button><button class="button" data-view="buffer-compose" data-buffer-view="buffer-compose">Compose in Buffer</button><button class="button" data-view="buffer-scheduled" data-buffer-view="buffer-scheduled">Publishing planner</button></nav><div class="page-heading"><div><div class="eyebrow">Social Media Management</div><h1>Publishing planner</h1><p class="subtitle">Plan drafts, manage your queue, and follow posts from idea to published.</p></div><div class="button-row"><span class="chip" id="buffer-scheduled-connection">Checking Buffer</span><button class="button primary" type="button" data-view="buffer-compose">Compose post</button></div></div>`;
+        scheduledView.innerHTML = `<nav class="button-row" aria-label="Buffer workflow" style="margin-bottom:18px"><button class="button" data-view="content" data-buffer-view="content">Buffer workflow</button><button class="button" data-view="buffer-compose" data-buffer-view="buffer-compose">Compose in Buffer</button><button class="button" data-view="buffer-scheduled" data-buffer-view="buffer-scheduled">Publishing planner</button></nav><div class="page-heading"><div><div class="eyebrow">Social Media Management</div><h1>Publishing planner</h1><p class="subtitle">Plan drafts, manage your queue, and follow posts from idea to published.</p></div><div class="button-row"><span class="chip" id="buffer-scheduled-connection">Checking Buffer</span><button class="button primary" type="button" data-view="buffer-compose">Compose post</button></div></div>`;
         document.getElementById('view-buffer-compose')?.insertAdjacentElement('afterend', scheduledView);
       }
       if (scheduledView) scheduledView.append(queuePanel);
@@ -1128,6 +1133,11 @@ function openBufferPost(post) {
   const readOnly = ['sent', 'sending', 'needs_approval'].includes(post.status) || (Array.isArray(post.allowedActions) && !post.allowedActions.includes('updatePost'));
   modal.innerHTML = `<div class="modal-backdrop" data-backdrop><form class="modal buffer-editor-modal" id="buffer-post-edit-form" role="dialog" aria-modal="true" aria-labelledby="buffer-post-title"><div class="modal-head"><div><p class="buffer-editor-kicker">${bufferHtml(post.status)}</p><h2 id="buffer-post-title">${readOnly ? 'Post details' : 'Edit post'}</h2><p>${bufferHtml(channel?.name || 'Channel')} · ${bufferHtml(channel?.service || '')}</p></div><button type="button" class="mini-button" data-close-modal aria-label="Close">×</button></div><div class="buffer-editor-layout"><div class="buffer-editor-fields"><label class="form-field"><span>Post copy</span><textarea name="text" maxlength="5000" required ${readOnly ? 'readonly' : ''}>${bufferHtml(post.text)}</textarea></label>${readOnly ? '<p class="settings-hint">Reuse this post to create a new version. Approval and delivery stay managed by Buffer.</p>' : `<label class="form-field"><span>What should happen?</span><select class="field-control" name="mode"><option value="">Keep current schedule / draft</option><option value="addToQueue">Add to next queue slot</option><option value="customScheduled">Choose a new publishing time</option><option value="draft">Save as draft (remove from queue)</option></select></label><label class="form-field" id="buffer-edit-date-field" hidden><span>Publishing time (this device’s timezone)</span><input class="field-control" name="dueAt" type="datetime-local" value="${post.dueAt ? bufferLocalDateTime(post.dueAt) : ''}"></label><p class="settings-hint">Existing media and platform settings are preserved. Keeping the schedule only updates the copy.</p>`}${post.error?.message ? `<p class="buffer-post-failure">${bufferHtml(post.error.message)}</p>` : ''}${/^https:\/\//.test(post.externalLink || '') ? `<a class="button" target="_blank" rel="noopener noreferrer" href="${bufferHtml(post.externalLink)}">View published post ↗</a>` : ''}<p role="status" id="buffer-edit-error" class="settings-hint"></p></div><aside class="buffer-editor-preview" id="buffer-edit-live">${bufferPreviewMarkup(post,channel)}</aside></div><div class="modal-actions"><button class="button" type="button" id="buffer-reuse">Reuse in composer</button>${readOnly ? '' : '<button class="button primary" type="submit">Save changes</button>'}</div></form></div>`;
   const form = document.getElementById('buffer-post-edit-form');
+  const items=storage()?.getWorkspace()?.content||[],linked=items.find(item=>(item.bufferPostIds||[]).includes(post.id));
+  const linkBox=document.createElement('div');linkBox.className='buffer-upload-box';linkBox.innerHTML=`<label class="form-field"><span>Connected workflow item</span><select class="field-control" id="buffer-link-content">${items.map(item=>`<option value="${bufferHtml(item.id)}" ${item.id===linked?.id?'selected':''}>${bufferHtml(item.title)}</option>`).join('')}</select></label><button class="button" type="button" id="buffer-save-content-link">Connect to this content</button><p class="settings-hint" id="buffer-link-result" role="status">${linked?'This post and its stage appear in your Buffer workflow.':'Connect this post to planned content.'}</p>`;
+  form.querySelector('.buffer-editor-fields').append(linkBox);linkBox.hidden=!workplaceCan('content');
+  linkBox.querySelector('button').onclick=async event=>{event.currentTarget.disabled=true;try{storage()?.linkBufferPost?.(document.getElementById('buffer-link-content').value,post);await uploadWorkspace();document.getElementById('buffer-link-result').textContent='Connected. Workflow and homepage stages updated.';}catch(error){document.getElementById('buffer-link-result').textContent=error.message;}finally{event.currentTarget.disabled=false;}};
+
   form.elements.text.oninput = () => { document.getElementById('buffer-edit-live').innerHTML = bufferPreviewMarkup({...post,text:form.elements.text.value},channel); };
   if (!readOnly) form.elements.mode.onchange = () => { document.getElementById('buffer-edit-date-field').hidden = form.elements.mode.value !== 'customScheduled'; };
   document.getElementById('buffer-reuse').onclick = async () => {
@@ -1151,7 +1161,8 @@ function openBufferPost(post) {
       const mode = form.elements.mode.value;
       const due = new Date(form.elements.dueAt.value);
       if (mode === 'customScheduled' && (!Number.isFinite(due.getTime()) || due <= new Date())) throw new Error('Choose a future publishing time.');
-      await callBuffer('editPost',{id:post.id,text:form.elements.text.value.trim(),mode:mode || undefined,dueAt:mode === 'customScheduled' ? due.toISOString() : undefined});
+      const updated=await callBuffer('editPost',{id:post.id,text:form.elements.text.value.trim(),mode:mode || undefined,dueAt:mode === 'customScheduled' ? due.toISOString() : undefined});
+      if(updated.post&&workplaceCan('content'))storage()?.reconcileBufferPosts?.([updated.post]);
       modal.innerHTML = ''; await loadBufferPosts(); ui()?.notify('Post updated in Buffer.');
     } catch(error) { document.getElementById('buffer-edit-error').textContent = error.message; }
     finally { button.disabled = false; }
@@ -1162,7 +1173,7 @@ function openBufferPostList(posts) {
   const modalRoot = document.getElementById('modal-root');
   if (!modalRoot || !posts.length) return;
   const organization = selectedBufferOrganization();
-  modalRoot.innerHTML = `<div class="modal-backdrop" data-backdrop><section class="modal" role="dialog" aria-modal="true" aria-labelledby="buffer-day-posts-title"><div class="modal-head"><h2 id="buffer-day-posts-title">Scheduled posts</h2><button type="button" class="mini-button" data-close-modal aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div><div class="modal-body">${posts.map(post => {
+  modalRoot.innerHTML = `<div class="modal-backdrop" data-backdrop><section class="modal" role="dialog" aria-modal="true" aria-labelledby="buffer-day-posts-title"><div class="modal-head"><h2 id="buffer-day-posts-title">Connected Buffer posts</h2><button type="button" class="mini-button" data-close-modal aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div><div class="modal-body">${posts.map(post => {
     const channel = organization?.channels?.find(item => item.id === post.channelId);
     return `<button type="button" class="buffer-calendar-post" data-buffer-post="${bufferHtml(post.id)}">${bufferHtml(post.dueAt ? new Date(post.dueAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : '')} · ${bufferHtml(channel?.name || 'Buffer post')} — ${bufferHtml(post.text || '')}</button>`;
   }).join('')}<div class="modal-actions"><button type="button" class="button" data-close-modal>Close</button></div></div></section></div>`;
@@ -1267,28 +1278,49 @@ function renderBufferTargetCustomizations() {
   renderBufferComposerPreview();
 }
 
-async function refreshLinkedContentPosts(contentId){
+let workflowSyncPromise=null,lastWorkflowSync=0;
+async function syncBufferWorkflow({force=false}={}){
+ if(workflowSyncPromise)return workflowSyncPromise;
+ if(!bufferOrganizations.length)return;
+ if(!session?.user||!workplaceCan('social')||!workplaceCan('content')||(!force&&Date.now()-lastWorkflowSync<60000))return;
+ const actor=session.user.id;
+ workflowSyncPromise=(async()=>{
+  let more=false;const seen=new Set();
+  for(const organization of bufferOrganizations){
+   for(const status of ['draft','needs_approval','scheduled','error','sent']){
+    const result=await callBuffer('posts',{organizationId:organization.id,status});
+    if(session?.user?.id!==actor||preparedForUser!==actor)return;
+    for(const post of result.posts||[])seen.add(post.id);
+    storage()?.reconcileBufferPosts?.(result.posts||[],organization.id);more ||= Boolean(result.hasNextPage);
+   }
+  }
+  await refreshLinkedContentPosts(null,seen);lastWorkflowSync=Date.now();
+  storage()?.setBufferWorkflowNotice?.(more?'Synced recent Buffer posts. Open the planner and load more to import older posts.':'Synced with Buffer. Stages update automatically while CreatorHQ is open.');
+ })().catch(error=>{storage()?.setBufferWorkflowNotice?.('Buffer refresh failed. Showing last saved stages. '+error.message);throw error;}).finally(()=>{workflowSyncPromise=null;});return workflowSyncPromise;
+}
+async function refreshLinkedContentPosts(contentId,skipIds=new Set()){
   const items=(storage()?.getWorkspace()?.content||[]).filter(item=>!contentId||item.id===contentId);
-  const ids=[...new Set(items.flatMap(item=>item.bufferPostIds||[]))];
-  let unresolved=0;
-  for(let offset=0;offset<ids.length;offset+=10){const result=await callBuffer('contentPosts',{ids:ids.slice(offset,offset+10)});storage()?.reconcileBufferPosts?.(result.posts||[]);unresolved+=(result.unresolved||0);}
+  const ids=[...new Set(items.flatMap(item=>item.bufferPostIds||[]))].filter(id=>!skipIds.has(id));
+  let unresolved=0;const posts=[];
+  for(let offset=0;offset<ids.length;offset+=10){const result=await callBuffer('contentPosts',{ids:ids.slice(offset,offset+10)});posts.push(...(result.posts||[]));storage()?.reconcileBufferPosts?.(result.posts||[]);unresolved+=(result.unresolved||0);}
   if(unresolved)throw new Error(`${unresolved} linked posts could not be checked. Their previous status was kept.`);
+  return posts;
 }
 async function showContentPosts(contentId){
   const item=(storage()?.getWorkspace()?.content||[]).find(item=>item.id===contentId);if(!item)return;
-  try{await refreshLinkedContentPosts(contentId);}catch(error){ui()?.notify(error.message);}
+  let resolved=[];try{resolved=await refreshLinkedContentPosts(contentId);}catch(error){ui()?.notify(error.message);}
   const latest=(storage()?.getWorkspace()?.content||[]).find(item=>item.id===contentId)||item;
   const states=Object.values(latest.bufferPostStates||{});
-  const status=states.some(post=>post.status==='error')?'error':states.some(post=>post.status==='draft')?'draft':states.length&&states.every(post=>post.status==='sent')?'sent':'scheduled';
+  const status=states.some(post=>post.status==='error')?'error':states.some(post=>post.status==='needs_approval')?'needs_approval':states.some(post=>post.status==='draft')?'draft':states.length&&states.every(post=>post.status==='sent')?'sent':'scheduled';
   document.getElementById('buffer-status-filter').value=status;
   document.getElementById('buffer-search').value='';
   await loadBufferPosts();
-  const ids=new Set(item.bufferPostIds||[]);const linked=bufferPosts.filter(post=>ids.has(post.id));
+  const ids=new Set(item.bufferPostIds||[]);const linked=resolved.length?resolved:bufferPosts.filter(post=>ids.has(post.id));
   if(linked.length===1)openBufferPost(linked[0]);else if(linked.length)openBufferPostList(linked);else ui()?.notify('The planner is showing this content’s status. Load more posts if the linked post is older.');
 }
 function startContentPost(contentId){
   const item=(storage()?.getWorkspace()?.content||[]).find(item=>item.id===contentId);if(!item)return;
-  renderBufferContentSources();const picker=document.getElementById('buffer-content-source');picker.value=contentId;picker.dispatchEvent(new Event('change',{bubbles:true}));
+  renderBufferContentSources();const saved=item.bufferLibraryDraftId&&bufferLibrary().find(draft=>draft.id===item.bufferLibraryDraftId);if(saved){currentBufferDraft=structuredClone(saved);document.getElementById('buffer-load-draft').click();return;}const picker=document.getElementById('buffer-content-source');picker.value=contentId;picker.dispatchEvent(new Event('change',{bubbles:true}));
 }
 function renderContentPublishingFiles(item){
   let host=document.getElementById('buffer-content-files');
@@ -1336,11 +1368,12 @@ function ensureBufferMediaControls() {
 function renderBufferContentSources() {
   const picker = ensureBufferContentPicker();
   if (!picker) return;
-  const items = storage()?.getWorkspace()?.content || [];
+  const items = storage()?.getWorkspace()?.content || [];const previous=picker.value;
   picker.innerHTML = '<option value="">Write a new post</option>' + items
-    .filter(item => item.status !== 'Published')
+    .filter(item => bufferWorkflow.stage(item) !== 'Published')
     .map(item => `<option value="${bufferHtml(item.id)}">${bufferHtml(item.title)}${item.platform ? ` · ${bufferHtml(item.platform)}` : ''}</option>`)
     .join('');
+  if(items.some(item=>item.id===previous&&bufferWorkflow.stage(item)!=='Published'))picker.value=previous;
 }
 
 async function loadBufferWorkspace() {
@@ -1363,9 +1396,10 @@ async function loadBufferWorkspace() {
     if (bufferOrganizations.some(org => org.id === previousOrganization)) selector.value = previousOrganization;
     renderBufferChannels();
     renderBufferPlannerSummary();
+    if(workplaceCan('content')){const drafts=bufferLibrary();let migrated=false;for(const draft of drafts){draft.values=draft.values||{};const item=storage()?.getWorkspace()?.content?.find(item=>item.id===draft.values['buffer-content-source']);if(!item||!item.bufferLibraryDraftId){draft.values['buffer-content-source']=storage()?.ensureBufferDraftContent?.(draft.id,draft)||'';migrated=true;}}if(migrated){memoryBufferDrafts=structuredClone(drafts);storage()?.bufferDraftsChanged?.(drafts);}}
     renderBufferDraftLibrary();
     setBufferStatus(bufferOrganizations.length ? `Connected to Buffer account ${result.account?.email || ''}. Your channels are ready.` : 'Buffer is connected, but this account has no organizations or channels yet.', true);
-    if (bufferOrganizations.length) await loadBufferPosts();
+    if (bufferOrganizations.length) { await loadBufferPosts(); await syncBufferWorkflow(); }
   } catch (error) {
     const detail = error.message || 'Buffer connection failed.';
     if (detail.includes('BUFFER_API_KEY')) {
@@ -1417,7 +1451,7 @@ async function loadBufferPosts({ append = false } = {}) {
     document.getElementById('buffer-load-more').textContent = 'Load next 50';
     document.getElementById('buffer-queue').hidden = bufferQueueView !== 'list';
     document.getElementById('buffer-calendar').hidden = bufferQueueView !== 'calendar';
-    storage()?.reconcileBufferPosts?.(bufferPosts);
+    if(workplaceCan('content'))storage()?.reconcileBufferPosts?.(bufferPosts,organization.id);
     applyBufferSearch();
     renderBufferPlannerSummary();
     renderBufferCalendar();
@@ -1461,13 +1495,14 @@ async function scheduleBufferPost() {
     mode: custom ? 'customScheduled' : document.getElementById('buffer-schedule-mode').value === 'draft' ? 'draft' : 'addToQueue',
     dueAt: custom ? new Date(localDateTime).toISOString() : undefined
   });
-  const successes = (result.results || []).filter(entry => entry.post);
+  const successes = (result.results || []).filter(entry => entry.post).map(entry=>({...entry,post:{...entry.post,text:targets.find(target=>target.channelId===entry.post.channelId)?.text||sharedText,channelService:channels.find(channel=>channel.id===entry.post.channelId)?.service||'Buffer'}}));
   const failures = (result.results || []).filter(entry => entry.error);
   storage()?.reportIssue?.('buffer-publish',failures.length?`${failures.length} social posts need attention.`:'','buffer-compose');
-  if (contentId && successes.length) storage()?.markContentScheduled?.(contentId, successes.map(entry => entry.post));
+  let workflowSaveError='';
+  if (successes.length && workplaceCan('content')) { storage()?.attachBufferBatch?.(contentId,successes.map(entry=>entry.post));try{await uploadWorkspace();}catch(error){workflowSaveError='These posts were created in Buffer. Their workflow links are still in this open page because Supabase could not save. Use Save pending changes before leaving; do not submit the same posts again.';ui()?.notify(workflowSaveError);} }
   const channelNames = new Map(channels.map(channel => [channel.id, channel.name]));
   const summary = `${successes.length} of ${targets.length} channel${targets.length === 1 ? '' : 's'} ${document.getElementById('buffer-schedule-mode').value === 'draft' ? 'saved as Buffer drafts' : custom ? 'scheduled' : 'added to queue'}.`;
-  document.getElementById('buffer-batch-result').innerHTML = `<strong>${bufferHtml(summary)}</strong>${failures.length ? `<ul>${failures.map(item => `<li>${bufferHtml(channelNames.get(item.channelId) || 'Channel')}: ${bufferHtml(item.error)}</li>`).join('')}</ul>` : ''}`;
+  document.getElementById('buffer-batch-result').innerHTML = `<strong>${bufferHtml(summary)}</strong>${workflowSaveError?`<p class="buffer-post-failure">${bufferHtml(workflowSaveError)}</p>`:''}${failures.length ? `<ul>${failures.map(item => `<li>${bufferHtml(channelNames.get(item.channelId) || 'Channel')}: ${bufferHtml(item.error)}</li>`).join('')}</ul>` : ''}`;
   document.getElementById('buffer-batch-result').hidden = false;
   if (!successes.length) throw new Error(failures.map(item => item.error).join('; ') || 'Buffer did not schedule any posts.');
   if (failures.length) {
@@ -1559,7 +1594,11 @@ function bufferLibrary() { return memoryBufferDrafts.length ? structuredClone(me
 
 function saveBufferLibraryDraft(draft) {
   const list = bufferLibrary();
+  if(list.length>=50)throw new Error('Your draft library is full. Remove an old draft before saving another.');
   const id = crypto.randomUUID();
+  const contentId=workplaceCan('content')?(storage()?.ensureBufferDraftContent?.(id,draft)||''):'';
+  draft.values['buffer-content-source']=contentId;
+  renderBufferContentSources();document.getElementById('buffer-content-source').value=contentId;
   list.unshift({...draft,id,title:(draft.values['buffer-post-text'] || 'Untitled draft').split('\n')[0].slice(0,90)});
   if (list.length > 50) throw new Error('Your draft library is full. Remove an old draft before saving another.');
   memoryBufferDrafts=structuredClone(list);
@@ -1628,20 +1667,20 @@ function ensureBufferConveniences() {
   const fields = document.getElementById('buffer-composer-fields');
   const preview = document.querySelector('.buffer-composer-preview');
   if (!fields || !preview) return;
-  fields.insertAdjacentHTML('afterbegin', `<div class="buffer-draft-tools"><div class="button-row"><button type="button" class="button" id="buffer-save-draft">Save draft</button><button type="button" class="button" id="buffer-load-draft">Restore draft</button></div><p class="settings-hint" id="buffer-draft-note" role="status">Saved drafts join workspace backups and cloud sync when enabled. Nothing publishes automatically.</p><label class="form-field"><span>Quick start</span><select class="field-control" id="buffer-quick-start"><option value="">Choose a starting point…</option><option value="live">Stream announcement</option><option value="clip">Share a clip</option><option value="vod">New video / VOD</option><option value="community">Community question</option></select></label></div>`);
+  fields.insertAdjacentHTML('afterbegin', `<div class="buffer-draft-tools"><div class="button-row"><button type="button" class="button" id="buffer-save-draft">Save draft</button><button type="button" class="button" id="buffer-load-draft">Restore draft</button></div><p class="settings-hint" id="buffer-draft-note" role="status">Saved drafts are part of your shared Buffer workflow and save in Supabase. Nothing publishes automatically.</p><label class="form-field"><span>Quick start</span><select class="field-control" id="buffer-quick-start"><option value="">Choose a starting point…</option><option value="live">Stream announcement</option><option value="clip">Share a clip</option><option value="vod">New video / VOD</option><option value="community">Community question</option></select></label></div>`);
   preview.insertAdjacentHTML('beforeend', '<div id="buffer-readiness" class="buffer-readiness" aria-live="polite"></div>');
 
   const ids = ['buffer-post-type', 'buffer-video-title', 'buffer-video-category', 'buffer-board-id', 'buffer-post-text', 'buffer-media-type', 'buffer-media-url', 'buffer-schedule-mode', 'buffer-due-at', 'buffer-content-source'];
   document.getElementById('buffer-save-draft').onclick = async () => {
     rememberBufferCustomizations();
     const draft = { madeForKids: document.getElementById('buffer-video-kids').checked, organization: document.getElementById('buffer-organization').value, values: Object.fromEntries(ids.map(id => [id, document.getElementById(id).value])), targets: [...document.querySelectorAll('[data-buffer-target]:checked')].map(input => input.value), overrides: [...bufferCustomizations], savedAt: new Date().toISOString() };
-    try { currentBufferDraft=structuredClone(draft); saveBufferLibraryDraft(draft); await uploadWorkspace(); renderBufferDraftLibrary(); document.getElementById('buffer-draft-note').textContent = `Draft saved in Supabase at ${new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}.`; }
+    try { saveBufferLibraryDraft(draft); currentBufferDraft=structuredClone(draft); await uploadWorkspace(); renderBufferDraftLibrary(); document.getElementById('buffer-draft-note').textContent = `Draft saved in Supabase at ${new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}.`; }
     catch { ui()?.notify('Could not save the draft to Supabase. Keep this tab open and retry.'); }
   };
   document.getElementById('buffer-load-draft').onclick = () => {
     try {
       const draft = currentBufferDraft || bufferLibrary()[0];
-      if (!draft) return ui()?.notify('No saved draft for this account in this browser yet.');
+      if (!draft) return ui()?.notify('No saved draft in this workplace yet.');
       if (draft.organization && draft.organization !== document.getElementById('buffer-organization').value) return ui()?.notify('Choose the draft’s Buffer organization in Publishing planner first, then restore it.');
       document.getElementById('buffer-video-kids').checked = draft.madeForKids === true;
       ids.forEach(id => { if (typeof draft.values?.[id] === 'string') document.getElementById(id).value = draft.values[id]; });

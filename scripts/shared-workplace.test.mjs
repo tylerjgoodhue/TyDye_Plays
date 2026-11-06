@@ -1,4 +1,5 @@
 import {test} from 'node:test';import assert from 'node:assert/strict';import vm from 'node:vm';import {readFile} from 'node:fs/promises';
+import {stage as bufferWorkflowStage} from '../buffer-workflow.mjs';
 import {resolveWorkplace,requireWorkplacePermission} from '../supabase/functions/_shared/workspace.mjs';
 const html=await readFile(new URL('../index.html',import.meta.url),'utf8');const cloud=await readFile(new URL('../cloud-sync.js',import.meta.url),'utf8');
 test('workspace permissions come from membership, not editable account metadata',()=>{
@@ -17,8 +18,8 @@ test('non-members cannot replace server membership with self-assigned roles',asy
 });
 function dashboard(publish){
  const refresh={};const host={innerHTML:'',querySelector:()=>refresh};let refreshed=0;
- const state={content:[{id:'ready',title:'Ready edit',status:'Ready to Post'},{id:'due',title:'Today post',status:'Scheduled',publishDate:'2026-11-05'},{id:'failed',title:'Retry me',status:'Scheduled',failed:true}],tasks:[{status:'To Do',dueDate:'2026-11-04'}],integrationIssues:[]};
- const context=vm.createContext({state,document:{getElementById:id=>id==='view-dashboard'?{}:host},localDateKey:()=> '2026-11-05',contentPublishingStatus:item=>item.failed?'Needs attention':item.status,escapeHtml:String,userHasAccess:view=>!view.startsWith('buffer-')||publish,window:{CreatorHQCloud:{refreshLinkedContentPosts:async()=>refreshed++}},toast(){},Date});
+ const state={content:[{id:'ready',title:'Ready edit',status:'Ready to Post'},{id:'due',title:'Today post',status:'Scheduled',bufferPostIds:['due'],bufferPostStates:{due:{id:'due',status:'scheduled',dueAt:'2026-11-05T20:00:00Z'}}},{id:'failed',title:'Retry me',status:'Scheduled',failed:true}],tasks:[{status:'To Do',dueDate:'2026-11-04'}],integrationIssues:[]};
+ const context=vm.createContext({state,document:{getElementById:id=>id==='view-dashboard'?{}:host},localDateKey:()=> '2026-11-05',bufferWorkflowStage,contentPublishingStatus:item=>item.failed?'Needs attention':item.status,escapeHtml:String,userHasAccess:view=>!view.startsWith('buffer-')||publish,window:{CreatorHQCloud:{syncBufferWorkflow:async()=>refreshed++}},toast(){},Date});
  const a=html.indexOf('      function renderActionDashboard()'),b=html.indexOf('      function loadState()',a);vm.runInContext(html.slice(a,b)+'\nrenderActionDashboard()',context);
  return {host,refresh,refreshed:()=>refreshed};
 }
@@ -49,7 +50,7 @@ test('an editor loads the shared content before the workspace is unlocked',async
  assert.deepEqual(order,['load','unlock']);assert.equal(context.signedInUserId,'editor-account');assert.equal(state.settings.name,'Shared creator');
 });
 test('shared content platform text cannot inject markup into another member’s pipeline',()=>{
- const board={innerHTML:''};const context=vm.createContext({state:{content:[{id:'content',title:'Shared edit',status:'Ready to Post',platform:'<img src=x onerror=alert(1)>',priority:'Medium'}]},CONTENT_STAGES:['Ready to Post'],document:{getElementById:id=>id==='content-board'?board:{value:id==='content-platform-filter'?'all':''}},escapeHtml:value=>String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]),userHasAccess:()=>false,contentPublishingStatus:()=>''});
+ const board={innerHTML:''};const context=vm.createContext({window:{},bufferWorkflowStage,state:{content:[{id:'content',title:'Shared edit',status:'Ready to Post',platform:'<img src=x onerror=alert(1)>',priority:'Medium'}]},CONTENT_STAGES:['Ready to Post'],document:{getElementById:id=>id==='content-board'?board:{value:id==='content-platform-filter'?'all':''}},escapeHtml:value=>String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]),userHasAccess:()=>false,contentPublishingStatus:()=>''});
  const a=html.indexOf('      function renderContentBoard()'),b=html.indexOf('      function renderIdeas()',a);vm.runInContext(html.slice(a,b)+'\nrenderContentBoard()',context);assert.doesNotMatch(board.innerHTML,/<img src=x/);assert.match(board.innerHTML,/&lt;img src=x/);
 });
 test('team polling preserves open content-editor forms before they reach local state',async()=>{

@@ -73,3 +73,15 @@ concurrent-save rejection; MFA; and membership self-enrollment denial. Automated
 tests cover editor account provisioning, shared integration use, the homepage
 next-step renderer, and loading shared content before unlocking the app. UI
 walkthroughs use synthetic content, not real editor accounts or live posts.
+
+## Integrated Buffer workflow — November 6, 2026
+
+Content preparation and Buffer now use one workflow. Existing content IDs, notes, and Dropbox links stay in place. Linked posts determine delivery stages automatically: Buffer draft, needs review, scheduled, partly published, published, or needs attention. CreatorHQ-only drafts stay visibly distinct until sent to Buffer. Manual dragging is limited to preparation; it cannot pretend a post was scheduled or published.
+
+On connection and while the homepage/workflow is visible, authorized accounts import up to 50 recent posts per status per organization, refresh existing linked posts, and save changes in Supabase. More history can be imported with the planner's Load next 50 button. Refreshes do not remove records merely because an API page omits them. A failed read retains previous states. This is polling while the app is open, not a webhook service.
+
+Each external Buffer post is imported once. A multi-channel post created in CreatorHQ links its successful channel posts to one content item. Open a Buffer post and use Connected workflow item to join an imported post to existing production work. Unmodified automatic entries merge; custom notes/files and production records remain. Partial channel failures remain visible and do not mark an entire content item published.
+
+Homepage workflow counts and Today’s next steps use the same linked states. They count workflow items, so one multi-channel content item counts once. Existing role permissions remain unchanged: content access is needed to edit the workflow; social access is needed to read/manage Buffer. Both permissions (or owner access) are required to synchronize automatically. Content-only editors can see the last shared synced states.
+
+The Buffer function's linked-post lookup was deployed with complete post details. Frontend changes require a GitHub push. No real posts were scheduled or changed during verification.

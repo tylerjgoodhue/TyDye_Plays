@@ -42,4 +42,4 @@ await cp(path.join(root, 'cloud-sync.js'), path.join(creatorHq, 'cloud-sync.js')
 await cp(path.join(root, 'auth-mfa.mjs'), path.join(creatorHq, 'auth-mfa.mjs'));
 
 console.log(`Built public creator site at ${publicBasePath} and Creator HQ at ${publicBasePath}CreatorHQ/.`);
-for (const asset of ['cloud-persistence.mjs','blog-admin.mjs','blog-utils.mjs','blog.css','panel-theme.css']) await cp(path.join(root,asset),path.join(creatorHq,asset));
+for (const asset of ['buffer-workflow.mjs', 'cloud-persistence.mjs','blog-admin.mjs','blog-utils.mjs','blog.css','panel-theme.css']) await cp(path.join(root,asset),path.join(creatorHq,asset));

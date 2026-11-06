@@ -9,3 +9,6 @@ body{background:radial-gradient(ellipse at 85% 0,#6b217528,transparent 45%),#0d0
 /* Keep controls within narrow screens, including native file inputs. */
 .blog-editor-sidebar>.panel{min-width:0;width:100%;box-sizing:border-box}.blog-editor-sidebar input[type=file]{width:100%;min-width:0;max-width:100%;box-sizing:border-box}
 @media(max-width:760px){.topbar{gap:8px;flex-wrap:wrap;padding-top:10px;padding-bottom:10px}.topbar>div:first-child{min-width:0;flex:1}.topbar .breadcrumbs{min-width:0}.topbar .breadcrumbs>span:first-child,.topbar .breadcrumbs>span:nth-child(2){display:none}.topbar .top-actions{gap:6px}.topbar #team-workplace-refresh{font-size:10px;padding:6px;max-width:78px}.topbar .hq-save-status{margin-left:auto;max-width:100%;white-space:normal}.blog-admin-preview{padding:20px}}
+
+.pipeline-line{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.pipeline-step{font:inherit;color:inherit;text-align:left;cursor:pointer}.pipeline-step:hover{border-color:#c084fc88;background:#322039}.workflow-board{grid-template-columns:none;grid-auto-flow:column;grid-auto-columns:245px}.workflow-card>p{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+@media(max-width:560px){.pipeline-line{grid-template-columns:repeat(2,minmax(0,1fr))}}

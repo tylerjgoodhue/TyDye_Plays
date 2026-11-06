@@ -132,7 +132,7 @@ Deno.serve(async (request) => {
       const ids=Array.isArray(payload.ids)?payload.ids:[];
       if(!ids.length||ids.length>20||ids.some((id:unknown)=>typeof id!=="string"||!id||id.length>200))return json({error:"Choose between 1 and 20 linked posts."},400,origin);
       const results=await Promise.allSettled(ids.map(async(id:string)=>{
-        const data=await bufferQuery(bufferKey,`query { post(input:{id:${escapeGraphQLString(id)}}) { id status dueAt channelId error {message} externalLink } }`);
+        const data=await bufferQuery(bufferKey,`query { post(input:{id:${escapeGraphQLString(id)}}) { id text status dueAt channelId channelService allowedActions sentAt assets { id type source thumbnail mimeType } error {message} externalLink } }`);
         if(!data.post)throw new Error("Post unavailable");return data.post;
       }));
       return json({posts:results.filter(result=>result.status==="fulfilled").map(result=>(result as PromiseFulfilledResult<unknown>).value),unresolved:results.filter(result=>result.status==="rejected").length},200,origin);
