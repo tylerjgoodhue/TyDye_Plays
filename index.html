@@ -2933,6 +2933,10 @@ const defaults = {
         document.getElementById('asset-form').addEventListener('submit', async event => {
           event.preventDefault(); const form = new FormData(event.currentTarget); const title = String(form.get('title') || '').trim(); const url = String(form.get('url') || '').trim(); if (!title) return;
           if (url && !/^https?:\/\//i.test(url)) { toast('Asset links must start with http:// or https://'); return; }
+          const selectedFile = form.get('file');
+          const file = selectedFile && selectedFile.size > 0 ? selectedFile : null;
+          if (file && !['image/png', 'image/jpeg', 'image/gif', 'image/webp'].includes(file.type)) { toast('Choose a PNG, JPEG, GIF or WebP image'); return; }
+          if (file && file.size > 650 * 1024) { toast('Choose an image smaller than 650 KB'); return; }
           let dataUrl = asset?.dataUrl || ''; let mimeType = asset?.mimeType || ''; let fileName = asset?.fileName || '';
           if (file) {
             try { dataUrl = await new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(String(reader.result)); reader.onerror = reject; reader.readAsDataURL(file); }); mimeType = file.type; fileName = file.name; }
